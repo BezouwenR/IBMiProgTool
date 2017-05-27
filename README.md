@@ -9,7 +9,7 @@ User documentation can be found in the subdirectory "helpfiles" and it is also a
 
 This application replaces some functions of the System i Navigator, which ceased to work in Windows 10, especially simple transfer of files between IBM i and PC, displaying and editing of files and the like. In addition, the application enables compiling source members or stream files and finding errors from the compilation listing.
 
-When editing source files, hihglighting of blocks (if - endif, dow - enddo, etc.) can be set on or off.
+When editing source files, hihglighting of blocks in diffrent languages (e.g. if - endif, dow - enddo, etc. in RPG) can be set on or off.
 
 When compiling, you can select the source type (e.g. RPGLE or RPG) compile command (e.g. CRTBNDRPG, CRTRPGMOD), set the correct library list, and other options. You can observe the result of the compilation in the spooled file.
 
