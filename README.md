@@ -1,6 +1,8 @@
 # IBMiProgTool
 IBM i Programming Tool
 
+Created by Vladimír Župka, 2017
+
 This project is not installed, it is ready to use as a Java application in the directory of the project name. The application requires Java SE 8 installed in PC.
 
 User documentation can be found in the subdirectory "helpfiles" and it is also accessible under the menu Help in the running application.
