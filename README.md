@@ -20,6 +20,7 @@ The application has been created and tested in systems macOS and Windows 10. Rem
 
 Start the application by clicking on the IBMiProgTool.jar file.
 
+- - - - - - - - - - 
 
 Toto je NetBeans projekt. Projekt se neinstaluje, je okamžitě k použití jako Java aplikace v adresáři projektu. Aplikace vyžaduje Javu SE 8 instalovanou v PC.
 
