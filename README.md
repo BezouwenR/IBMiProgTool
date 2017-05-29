@@ -3,6 +3,8 @@ IBM i Programming Tool
 
 Created by Vladimír Župka, 2017
 
+vzupka@gmail.com
+
 
 This is a NetBeans project. The project is not installed, it is ready to use as a Java application in the directory of the project. The application requires Java SE 8 installed in PC.
 
