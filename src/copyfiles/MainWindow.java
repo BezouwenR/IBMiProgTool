@@ -85,575 +85,562 @@ import javax.swing.tree.TreeSelectionModel;
 
 /**
  * This is the main class of the application CopyFilesIBMi;
- * 
+ *
  * Create a window containing file trees along with inner classes; Left side of
  * the window corresponds to the local host (PC); Right side is for IBM i
  * server.
- * 
+ *
  * @author Vladimír Župka 2016
  */
 public class MainWindow extends JFrame {
 
-   // This value set to *true* displays Info messages.
-   // This value set to *false* suppresses Info messages.
-   // ==================================================
-   final boolean ALLOW_INFO_MESSAGES = true;
-   // ==================================================
+    // This value set to *true* displays Info messages.
+    // This value set to *false* suppresses Info messages.
+    // ==================================================
+    final boolean ALLOW_INFO_MESSAGES = true;
+    // ==================================================
 
-   Properties sysProp;
-   String operatingSystem;
-   final String WINDOWS = "WINDOWS";
-   final String UNIX = "UNIX";
+    Properties sysProp;
+    String operatingSystem;
+    final String WINDOWS = "WINDOWS";
+    final String UNIX = "UNIX";
 
-   final Color DIM_BLUE = new Color(50, 60, 160);
-   final Color DIM_RED = new Color(190, 60, 50);
-   final Color DIM_PINK = new Color(170, 58, 128);
+    final Color DIM_BLUE = new Color(50, 60, 160);
+    final Color DIM_RED = new Color(190, 60, 50);
+    final Color DIM_PINK = new Color(170, 58, 128);
 
-   int mainWindowX;
-   int mainWindowY;
-   int compileWindowX;
-   int compileWindowY;
-
-   int windowWidth = 1100;
-   int windowHeight = 745;
-
-   int borderWidth = 10;
-
-   int splitPaneInnerWidth = windowWidth;
-
-   Container cont;
-
-   GroupLayout globalPanelLayout;
-   GroupLayout panelTopLayout;
-
-   JPanel globalPanel;
-
-   JMenuBar menuBar;
-   JMenu helpMenu;
-   JMenuItem helpMenuItemEN;
-   JMenuItem helpMenuItemCZ;
-
-   JPanel panelTop;
-   JPanel panelPathLeft;
-   JPanel panelPathRight;
-
-   JScrollPane scrollPaneLeft;
-   JScrollPane scrollPaneRight;
-
-   JPanel panelLeft;
-   JPanel panelRight;
-
-   JSplitPane splitPaneInner;
-   JSplitPane splitPaneOuter;
-
-   JTree leftTree;
-   DefaultMutableTreeNode leftTopNode;
-   DefaultTreeModel leftTreeModel;
-   TreeSelectionModel leftTreeSelModel;
-   TreeMap<String, Integer> leftTreeMap = new TreeMap<>();
-   TreePath leftSelectedPath;
-   TreePath targetTreePath;
-   Integer leftRow;
-
-   boolean nodes = true;
-   boolean noNodes = false;
-
-   JTree rightTree;
-   DefaultMutableTreeNode rightTopNode;
-   DefaultTreeModel rightTreeModel;
-   TreeSelectionModel rightTreeSelModel;
-   TreeMap<String, Integer> rightTreeMap = new TreeMap<>();
-   TreePath rightSelectedPath;
-   Integer rightRow;
-
-   JTree copySourceTree;
-   JTree dragSourceTree;
-
-   JList<String> messageList;
-   Vector<String> msgVector = new Vector<>();
-   String msgText;
-   String row;
-   MessageScrollPaneAdjustmentListenerMax messageScrollPaneAdjustmentListenerMax;
-
-   DefaultMutableTreeNode leftNode;
-   TransferHandler.TransferSupport leftInfo;
-
-   IFSFile[] ifsFiles;
-   IFSFile ifsFile;
-
-   DefaultMutableTreeNode rightNode;
-   TransferHandler.TransferSupport rightInfo;
-
-   DefaultMutableTreeNode targetNode;
-   DefaultMutableTreeNode nodeLevel2;
-   DefaultMutableTreeNode nodeLevel3;
-
-   AS400 remoteServer;
-
-   String language = "cs-CZ";
-
-   JLabel userNameLabel = new JLabel("User name:");
-   JTextField userNameTextField = new JTextField();
-
-   JLabel hostLabel = new JLabel("IBM i server:");
-   JTextField hostTextField = new JTextField();
-
-   JLabel disksLabel = new JLabel("Windows disks:");
-   JComboBox<String> disksComboBox = new JComboBox<>();
-
-   ArrayList<String> charsets;
-   String pcCharset;
-   JComboBox<String> pcCharComboBox;
-   JLabel pcCharsetLabel = new JLabel("PC charset:");
-   String[] pcCharSetNames = {
-         // DEFAULT
-         "*DEFAULT",
-         // UNICODE
-         "UNICODE based:", "--------------", "UTF-8", "UTF-16",
-         // ASCII
-         "ASCII based:", "------------", "US-ASCII", "windows-1250", "windows-1251", "windows-1252",
-         "windows-1253", "windows-1254", "windows-1255", "windows-1256", "windows-1257",
-         "windows-1258", "windows-31j",
-         //
-         "ISO-8859-1", "ISO-8859-2", "ISO-8859-3", "ISO-8859-4", "ISO-8859-5", "ISO-8859-6",
-         "ISO-8859-7", "ISO-8859-8", "ISO-8859-9", "ISO-8859-13", "ISO-8859-15", "ISO-2022-CN",
-         "ISO-2022-JP", "ISO-2022-JP-2", "ISO-2022-KR", "JIS_X0201", "JIS_X0212-1990", "KOI8-R",
-         "KOI8-U", "Shift_JIS", "TIS-620",
-         //
-         "IBM437", "IBM737", "IBM775", "IBM850", "IBM852", "IBM857", "IBM858", "IBM862", "IBM866",
-         "IBM1046", "IBM874", "IBM-Thai",
-         //
-         "Big5", "Big5-HKSCS", "CESU-8", "EUC-JP", "EUC-KR", "GB18030", "GB2312", "GBK",
-         //
-         "x-Big5-HKSCS-2001", "x-Big5-Solaris", "x-COMPOUND_TEXT", "x-euc-jp-linux", "x-EUC-TW",
-         "x-eucJP-Open",
-         //
-         "x-IBM1006", "x-IBM1025", "x-IBM1046", "x-IBM1097", "x-IBM1098", "x-IBM1112", "x-IBM1122",
-         "x-IBM1123", "x-IBM1124", "x-IBM1364", "x-IBM1381", "x-IBM1383", "x-IBM300", "x-IBM33722",
-         "x-IBM737", "x-IBM833", "x-IBM834", "x-IBM856", "x-IBM874", "x-IBM875", "x-IBM921",
-         "x-IBM922", "x-IBM930", "x-IBM933", "x-IBM935", "x-IBM937", "x-IBM939", "x-IBM942",
-         "x-IBM942C", "x-IBM943", "x-IBM943C", "x-IBM948", "x-IBM949", "x-IBM949C", " x-IBM950",
-         "x-IBM964", "x-IBM970",
-         //
-         "x-ISCII91", "x-ISO-2022-CN-CNS", "x-ISO-2022-CN-GB", "x-iso-8859-11", "x-JIS0208",
-         "x-JISAutoDetect", "x-Johab",
-         //
-         "x-MacArabic", "x-MacCentralEurope", "x-MacCroatian", "x-MacCyrillic", "x-MacDingbat",
-         "x-MacGreek", "x-MacHebrew", "x-MacIceland", "x-MacRoman", "x-MacRomania", "x-MacSymbol",
-         "x-MacThai", "x-MacTurkish", "x-MacUkraine",
-         //
-         "x-MS932_0213", "x-MS950-HKSCS", "x-MS950-HKSCS-XP", "x-mswin-936", "x-PCK", "x-SJIS_0213",
-         //
-         "x-UTF-16LE-BOM", "X-UTF-32BE-BOM", "X-UTF-32LE-BOM",
-         //
-         "x-windows-50220", "x-windows-50221", "x-windows-874", "x-windows-949", "x-windows-950",
-         "x-windows-iso2022jp",
-         // EBCDIC
-         "EBCDIC based:", "-------------", "IBM037", "IBM273", "IBM277", "IBM278", "IBM280",
-         "IBM284", "IBM285", "IBM290", "IBM297", "IBM300", "IBM420", "IBM424", "IBM437", "IBM500",
-         "IBM775", "IBM850", "IBM852", "IBM855", "IBM857", "IBM860", "IBM861", "IBM862", "IBM863",
-         "IBM864", "IBM865", "IBM866", "IBM868", "IBM869", "IBM870", "IBM871", "IBM918", "IBM1025",
-         "IBM1026", "IBM01140", "IBM01141", "IBM01142", "IBM01143", "IBM01144", "IBM01145",
-         "IBM01146", "IBM01147", "IBM01148", "IBM01149", };
-
-   ArrayList<String> ccsids;
-   String ibmCcsid;
-   int ibmCcsidInt;
-   JComboBox<String> ibmCcsidComboBox;
-   JLabel ibmCcsidLabel = new JLabel("IBM i CCSID:");
-   String[] ibmCcsids = {
-         // Default
-         "*DEFAULT",
-         // Universal
-         "65535",
-         // EBCDIC
-         "EBCDIC:", "-------", "37", "256", "273", "277", "278", "280", "284", "285", "290", "297",
-         "300", "420", "423", "424", "425", "500", "818", "833", "834", "835", "836", "837", "838",
-         "870", "871", "875", "880", "905", "924", "1025", "1026", "1027", "1097", "1112", "1122",
-         "1123", "1130", "1132", "1137", "1153", "1154", "1155", "1156", "1157", "1158", "1160",
-         "1164", "1166", "1175", "4396", "4930", "4933", "5123", "5233", "8612", "9030", "12708",
-         "13121", "13124", "28709", "62211", "62224", "62235", "62245",
-         // ASCII
-         "ASCII:", "------", "367", "437", "813", "819", "850", "851", "852", "855", "857", "858",
-         "860", "861", "862", "863", "864", "865", "866", "868", "869", "874", "891", "987", "903",
-         "904", "912", "814", "915", "916", "920", "921", "922", "923", "1008", "1009", "1010",
-         "1011", "1012", "1013", "1014", "1015", "1016", "1017", "1018", "1019", "1025", "1026",
-         "1089", "1098", "1124", "1125", "1126", "1129", "1131", "1133", "1026", "1250", "1251",
-         "1252", "1253", "1254", "1255", "1256", "1257", "1258", "1275", "1280", "1281", "1282",
-         "1283", "1364", "1371", "1377", "1388", "1399",
-         // UNICODE
-         "UNICODE:", "--------", "1200" /* UTF-16 */, "1208" /* UTF-8 */,
-         "13488" /* UCS-2 */, };
-
-   ArrayList<String> sourceTypes;
-   String sourceType;
-   JComboBox<String> sourceTypeComboBox;
-   JLabel sourceTypeLabel = new JLabel("IBM i source type:");
-   String[] sourceFileTypes = { "*DEFAULT", "C", "CBL", "CBLLE", "CLLE", "CLP", "CMD", "CPP",
-         "DSPF", "LF", "MNU", "MNUCMD", "MNUDDS", "PF", "PLI", "PRTF", "REXX", "RPG", "RPGLE",
-         "SQLC", "SQLCPP", "SQLCBL", "SQLCBLLE", "SQLPLI", "SQLRPG", "SQLRPGLE", "TBL", "TXT", };
-
-   JLabel sourceRecordLengthLabel = new JLabel("Source line length:");
-   JTextField sourceRecordLengthTextField = new JTextField();
-
-   JLabel sourceRecordPrefixLabel = new JLabel("Complete source record:");
-   JCheckBox sourceRecordPrefixCheckBox = new JCheckBox();
-
-   JLabel overwriteOutputFileLabel = new JLabel("Overwrite data:");
-   JCheckBox overwriteOutputFileCheckBox = new JCheckBox();
-
-   JLabel libraryPrefixLabel = new JLabel("IBM i library prefix:");
-   JTextField libraryPrefixTextField = new JTextField();
-
-   JLabel leftPathLabel = new JLabel("Local Path:");
-   JComboBox<String> leftPathComboBox = new JComboBox<>();
-   LeftPathActionListener leftPathActionListener = new LeftPathActionListener();
-
-   JLabel rightPathLabel = new JLabel("Remote Path:");
-   JComboBox<String> rightPathComboBox = new JComboBox<>();
-
-   JScrollPane scrollMessagePane = new JScrollPane(messageList);
-
-   JButton connectReconnectButton = new JButton("Connect/Reconnect");
-
-   // Menu items for PC
-   JMenuItem copyFromLeft = new JMenuItem("Copy");
-   JMenuItem pasteToLeft = new JMenuItem("Paste");
-   JMenuItem displayPcFile = new JMenuItem("Display");
-   JMenuItem editPcFile = new JMenuItem("Edit");
-   JMenuItem renamePcFile = new JMenuItem("Rename");
-   JMenuItem insertSpooledFile = new JMenuItem("Insert spooled file");
-
-   JMenuItem createPcDirectory = new JMenuItem("New PC directory");
-   JMenuItem createPcFile = new JMenuItem("New PC file");
-   JMenuItem movePcObjectToTrash = new JMenuItem("Move to trash");
-
-   // Menu items for IBM i
-   JMenuItem copyFromRight = new JMenuItem("Copy");
-   JMenuItem pasteToRight = new JMenuItem("Paste");
-
-   JMenuItem createSourcePhysicalFile = new JMenuItem("New source physical file");
-   JMenuItem createSourceMember = new JMenuItem("New source member");
-   JMenuItem createSaveFile = new JMenuItem("New save file");
-   JMenuItem deleteSourceMember = new JMenuItem("Delete source member");
-   JMenuItem deleteSourcePhysicalFile = new JMenuItem("Delete source physical file");
-   JMenuItem clearSaveFile = new JMenuItem("Clear save file");
-   JMenuItem deleteSaveFile = new JMenuItem("Delete save file");
-   JMenuItem workWithSpooledFiles = new JMenuItem("Work with spooled files");
-   JMenuItem displaySourceMember = new JMenuItem("Display");
-   JMenuItem editSourceMember = new JMenuItem("Edit");
-
-   JMenuItem compileSourceMember = new JMenuItem("Compile Source Member");
-   Compile compile;
-
-   JMenuItem copyLibrary = new JMenuItem("Copy library");
-   JMenuItem clearLibrary = new JMenuItem("Clear library");
-   JMenuItem deleteLibrary = new JMenuItem("Delete library");
-   JMenuItem createIfsDirectory = new JMenuItem("New IFS directory");
-   JMenuItem createIfsFile = new JMenuItem("New IFS File");
-   JMenuItem deleteIfsObject = new JMenuItem("Delete");
-   JMenuItem displayIfsFile = new JMenuItem("Display");
-   JMenuItem editIfsFile = new JMenuItem("Edit");
-   JMenuItem renameIfsFile = new JMenuItem("Rename");
-   JMenuItem compileIfsFile = new JMenuItem("Compile IFS file");
-
-   JPopupMenu leftTreePopupMenu = new JPopupMenu();
-   JPopupMenu rightTreePopupMenu = new JPopupMenu();
-
-   FileSystem fileSystem = FileSystems.getDefault();
-   Iterable<Path> rootDirectories;
-   String pcFileSep; // PC file separator ( / in unix, \ in Windows )
-   String leftRoot;
-   boolean leftRootChanged;
-   String firstLeftRootSymbol; // / in unix, C:\ in Windows
-   String rightRoot;
-
-   String leftPathString;
-   String[] leftPathStrings;
-   RowMapper leftRowMapper;
-
-   String rightPathString;
-   String[] rightPathStrings;
-   RowMapper rightRowMapper;
-
-   String sourcePathString;
-   String targetPathString;
-   String clipboardPathString;
-   String[] clipboardPathStrings;
-
-   String ifsPathStringPrefix;
-   String pcPathStringPrefix;
-
-   MouseListener leftTreeMouseListener;
-   TreeSelectionListener leftTreeSelectionListener;
-
-   MouseListener rightTreeMouseListener;
-
-   // Current coordinates from mouse click
-   static int currentX;
-   static int currentY;
-
-   // Constants for properties
-   final String PROP_COMMENT = "Copy files between IBM i and PC, edit and compile.";
-   Path parPath = Paths.get(System.getProperty("user.dir"), "paramfiles", "Parameters.txt");
-   Path errPath = Paths.get(System.getProperty("user.dir"), "logfiles", "err.txt");
-   Path outPath = Paths.get(System.getProperty("user.dir"), "logfiles", "out.txt");
-   String encoding = System.getProperty("file.encoding", "UTF-8");
-   Properties properties;
-   BufferedWriter outfile;
-   BufferedReader infile;
-
-   OutputStream errStream;
-   OutputStream outStream;
-
-   /**
-    * Constructor.
-    */
-   public MainWindow() {
-
-      // Redirect System.err, System.out to log files err.txt, out.txt
-      // in directory "logfiles"
-      try {
-         errStream = Files.newOutputStream(errPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-         outStream = Files.newOutputStream(outPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-      } catch (Exception e) {
-         e.printStackTrace();
-      }
-      PrintStream errPrintStream = new PrintStream(errStream);
-      PrintStream outPrintStream = new PrintStream(outStream);
-      // PrintStream console = System.out;
-      System.setErr(errPrintStream);
-      System.setOut(outPrintStream);
-
-      // Get list of root directories (important for Windows)
-      rootDirectories = fileSystem.getRootDirectories();
-
-      // Get or set application properties
-      // ---------------------------------
-      sysProp = System.getProperties();
-
-      // Root symbols for local host are different in Windows and unix
-      //
-      if (sysProp.get("os.name").toString().contains("Windows")) {
-         operatingSystem = WINDOWS;
-         // Windows:
-         // We take C:\ as the first root symbol
-         firstLeftRootSymbol = "C:\\";
-         pcFileSep = "\\"; // single \
-
-         // Insert Windows disk names (A:\, B:\, ...) in the combo box
-         for (Path diskPath : rootDirectories) {
-            disksComboBox.addItem(diskPath.toString());
-         }
-         // Set C:\ as selected disk name
-         disksComboBox.setSelectedItem("C:\\");
-      } else {
-         // Unix systems:
-         operatingSystem = UNIX;
-         firstLeftRootSymbol = "/";
-         pcFileSep = "/";
-      }
-      // Menu bar in Mac operating system will be in the system menu bar
-      if (sysProp.get("os.name").toString().toUpperCase().contains("MAC")) {
-         System.setProperty("apple.laf.useScreenMenuBar", "false");
-      }
-
-      // Get values from application properties from Parameters.txt file
-      properties = new Properties();
-
-      // If the Parameters.txt file does not exist, create one
-      // with default values
-      try {
-         if (Files.notExists(parPath)) {
-            Files.createFile(parPath);
-            properties.setProperty("AUTHOR", "© Vladimír Župka, 2017 ");
-            properties.setProperty("HOST", "193.179.195.133");
-            properties.setProperty("USERNAME", "USERNAME");
-            properties.setProperty("IBM_CCSID", "*DEFAULT");
-            properties.setProperty("SOURCE_TYPE", "*DEFAULT");
-            properties.setProperty("PC_CHARSET", "*DEFAULT");
-            properties.setProperty("SOURCE_RECORD_PREFIX", ""); // or "Y"
-            properties.setProperty("OVERWRITE_FILE", ""); // or "Y"
-            properties.setProperty("LIBRARY_PREFIX", "");
-            properties.setProperty("SOURCE_RECORD_LENGTH", "100");
-            properties.setProperty("LEFT_PATH", firstLeftRootSymbol);
-            properties.setProperty("RIGHT_PATH", "/");
-            properties.setProperty("MAIN_WINDOW_X", "40");
-            properties.setProperty("MAIN_WINDOW_Y", "40");
-            properties.setProperty("COMPILE_WINDOW_X", "240");
-            properties.setProperty("COMPILE_WINDOW_Y", "40");
-            properties.setProperty("FONT_SIZE", "12");
-            properties.setProperty("CARET", "Short caret"); // or Long caret
-            properties.setProperty("HIGHLIGHT_BLOCKS", "*NONE");
-            // Create a new text file in directory "paramfiles"
-            outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-            properties.store(outfile, PROP_COMMENT);
-            outfile.close();
-         }
-
-         // Get values from properties and set variables and text fields
-         infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
-         properties.load(infile);
-
-         // Set color to button text
-         connectReconnectButton.setForeground(DIM_BLUE);
-
-         // Text field to specify IBM i host IP address or domain name
-         hostTextField.setText(properties.getProperty("HOST"));
-         hostTextField.setPreferredSize(new Dimension(150, 20));
-         hostTextField.setMinimumSize(new Dimension(150, 20));
-         hostTextField.setMaximumSize(new Dimension(150, 20));
-
-         userNameTextField.setText(properties.getProperty("USERNAME"));
-         userNameTextField.setPreferredSize(new Dimension(90, 20));
-         userNameTextField.setMinimumSize(new Dimension(90, 20));
-         userNameTextField.setMaximumSize(new Dimension(90, 20));
-
-         disksComboBox.setPreferredSize(new Dimension(40, 20));
-         disksComboBox.setMinimumSize(new Dimension(40, 20));
-         disksComboBox.setMaximumSize(new Dimension(40, 20));
-
-         ibmCcsid = properties.getProperty("IBM_CCSID");
-         ccsids = new ArrayList<>();
-         ccsids.addAll(Arrays.asList(ibmCcsids));
-         ibmCcsidComboBox = new JComboBox(ccsids.toArray());
-         ibmCcsidComboBox.setPreferredSize(new Dimension(100, 20));
-         ibmCcsidComboBox.setMinimumSize(new Dimension(100, 20));
-         ibmCcsidComboBox.setMaximumSize(new Dimension(100, 20));
-         ibmCcsidComboBox.setEditable(true);
-         ibmCcsidComboBox.setSelectedItem(ibmCcsid);
-
-         sourceType = properties.getProperty("SOURCE_TYPE");
-         sourceTypes = new ArrayList<>();
-         sourceTypes.addAll(Arrays.asList(sourceFileTypes));
-         sourceTypeComboBox = new JComboBox(sourceTypes.toArray());
-         sourceTypeComboBox.setPreferredSize(new Dimension(110, 20));
-         sourceTypeComboBox.setMinimumSize(new Dimension(110, 20));
-         sourceTypeComboBox.setMaximumSize(new Dimension(110, 20));
-         sourceTypeComboBox.setEditable(true);
-         sourceTypeComboBox.setSelectedItem(sourceType);
-
-         // Create PC charset combo box
-         pcCharset = properties.getProperty("PC_CHARSET");
-         charsets = new ArrayList<>();
-         charsets.addAll(Arrays.asList(pcCharSetNames));
-         pcCharComboBox = new JComboBox(charsets.toArray());
-         pcCharComboBox.setPreferredSize(new Dimension(180, 20));
-         pcCharComboBox.setMinimumSize(new Dimension(180, 20));
-         pcCharComboBox.setMaximumSize(new Dimension(180, 20));
-         pcCharComboBox.setEditable(true);
-         pcCharComboBox.setSelectedItem(pcCharset);
-
-         sourceRecordPrefixCheckBox.setSelected(properties.getProperty("SOURCE_RECORD_PREFIX").isEmpty() ? false : true);
-
-         overwriteOutputFileCheckBox
-               .setSelected(properties.getProperty("OVERWRITE_FILE").isEmpty() ? false : true);
-
-         libraryPrefixTextField.setText(properties.getProperty("LIBRARY_PREFIX"));
-         libraryPrefixTextField.setPreferredSize(new Dimension(110, 20));
-         libraryPrefixTextField.setMinimumSize(new Dimension(110, 20));
-         libraryPrefixTextField.setMaximumSize(new Dimension(110, 20));
-
-         sourceRecordLengthTextField.setText(properties.getProperty("SOURCE_RECORD_LENGTH"));
-         sourceRecordLengthTextField.setPreferredSize(new Dimension(60, 20));
-         sourceRecordLengthTextField.setMinimumSize(new Dimension(60, 20));
-         sourceRecordLengthTextField.setMaximumSize(new Dimension(60, 20));
-
-         // Correct path strings and update them in properties
-         leftPathString = correctLeftPathString(properties.getProperty("LEFT_PATH"));
-         rightPathString = correctRightPathString(properties.getProperty("RIGHT_PATH"));
-
-         rightRoot = properties.getProperty("RIGHT_PATH");
-
-         // Set window coordinates from application properties
-         mainWindowX = new Integer((String) properties.get("MAIN_WINDOW_X"));
-         mainWindowY = new Integer((String) properties.get("MAIN_WINDOW_Y"));
-
-      } catch (IOException ioe) {
-         ioe.printStackTrace();
-      }
-   }
-
-   /**
-    * Create window containing trees with initial files in upper part; Left tree
-    * shows local file system; Right tree shows IBM i file system (IFS).
-    */
-   public void createWindow() {
-      cont = getContentPane();
-      globalPanel = new JPanel();
-      globalPanelLayout = new GroupLayout(globalPanel);
-
-      menuBar = new JMenuBar();
-      helpMenu = new JMenu("Help");
-      helpMenuItemEN = new JMenuItem("Help English");
-      helpMenuItemCZ = new JMenuItem("Nápověda česky");
-
-      helpMenu.add(helpMenuItemEN);
-      helpMenu.add(helpMenuItemCZ);
-      menuBar.add(helpMenu);
-
-      setJMenuBar(menuBar);
-
-      panelTop = new JPanel();
-
-      panelTopLayout = new GroupLayout(panelTop);
-      panelTop.setLayout(panelTopLayout);
-
-      panelPathLeft = new JPanel();
-      panelPathLeft.setLayout(new BoxLayout(panelPathLeft, BoxLayout.LINE_AXIS));
-
-      scrollPaneLeft = new JScrollPane();
-      scrollPaneLeft.setBorder(BorderFactory.createEmptyBorder());
-
-      panelPathRight = new JPanel();
-      panelPathRight.setLayout(new BoxLayout(panelPathRight, BoxLayout.LINE_AXIS));
-
-      scrollPaneRight = new JScrollPane();
-      scrollPaneRight.setBorder(BorderFactory.createEmptyBorder());
-
-      // Windows: Disks combo box is included in order to choose proper root
-      // directory (A:\, C:\, ...)
-      Component diskLabelWin;
-      Component disksComboBoxWin;
-      if (operatingSystem.equals(WINDOWS)) {
-         diskLabelWin = disksLabel;
-         disksComboBoxWin = disksComboBox;
-      } else { //
-         // Unix (Mac): Empty component instead of combo box
-         diskLabelWin = new JLabel("");
-         disksComboBoxWin = new JLabel("");
-      }
-
-      // Lay out components in panelTop
-      panelTopLayout.setAutoCreateGaps(false);
-      panelTopLayout.setAutoCreateContainerGaps(false);
-      panelTopLayout.setHorizontalGroup(panelTopLayout.createParallelGroup(Alignment.LEADING)
-            .addGroup(panelTopLayout.createSequentialGroup()
-                  .addComponent(userNameLabel)
-                  .addComponent(userNameTextField)
-                  .addComponent(hostLabel)
-                  .addComponent(hostTextField)
-                  .addComponent(libraryPrefixLabel)
-                  .addComponent(libraryPrefixTextField)
-                  .addComponent(sourceTypeLabel)
-                  .addComponent(sourceTypeComboBox)
-                  .addComponent(connectReconnectButton))
-            .addGroup(panelTopLayout.createSequentialGroup()
-                  .addComponent(pcCharsetLabel)
-                  .addComponent(pcCharComboBox)
-                  .addComponent(ibmCcsidLabel)
-                  .addComponent(ibmCcsidComboBox)
-                  .addComponent(sourceRecordLengthLabel)
-                  .addComponent(sourceRecordLengthTextField)
-                  .addComponent(sourceRecordPrefixLabel)
-                  .addComponent(sourceRecordPrefixCheckBox)
-                  .addComponent(overwriteOutputFileLabel)
-                  .addComponent(overwriteOutputFileCheckBox)
-                  .addComponent(diskLabelWin)
-                  .addComponent(disksComboBoxWin)));
-      panelTopLayout
-            .setVerticalGroup(panelTopLayout.createSequentialGroup()
-                  .addGroup(panelTopLayout.createParallelGroup(Alignment.CENTER)
+    int mainWindowX;
+    int mainWindowY;
+    int compileWindowX;
+    int compileWindowY;
+
+    int windowWidth = 1100;
+    int windowHeight = 745;
+
+    int borderWidth = 10;
+
+    int splitPaneInnerWidth = windowWidth;
+
+    Container cont;
+
+    GroupLayout globalPanelLayout;
+    GroupLayout panelTopLayout;
+
+    JPanel globalPanel;
+
+    JMenuBar menuBar;
+    JMenu helpMenu;
+    JMenuItem helpMenuItemEN;
+    JMenuItem helpMenuItemCZ;
+
+    JPanel panelTop;
+    JPanel panelPathLeft;
+    JPanel panelPathRight;
+
+    JScrollPane scrollPaneLeft;
+    JScrollPane scrollPaneRight;
+
+    JPanel panelLeft;
+    JPanel panelRight;
+
+    JSplitPane splitPaneInner;
+    JSplitPane splitPaneOuter;
+
+    JTree leftTree;
+    DefaultMutableTreeNode leftTopNode;
+    DefaultTreeModel leftTreeModel;
+    TreeSelectionModel leftTreeSelModel;
+    TreeMap<String, Integer> leftTreeMap = new TreeMap<>();
+    TreePath leftSelectedPath;
+    TreePath targetTreePath;
+    Integer leftRow;
+
+    boolean nodes = true;
+    boolean noNodes = false;
+
+    JTree rightTree;
+    DefaultMutableTreeNode rightTopNode;
+    DefaultTreeModel rightTreeModel;
+    TreeSelectionModel rightTreeSelModel;
+    TreeMap<String, Integer> rightTreeMap = new TreeMap<>();
+    TreePath rightSelectedPath;
+    Integer rightRow;
+
+    JTree copySourceTree;
+    JTree dragSourceTree;
+
+    JList<String> messageList;
+    Vector<String> msgVector = new Vector<>();
+    String msgText;
+    String row;
+    MessageScrollPaneAdjustmentListenerMax messageScrollPaneAdjustmentListenerMax;
+
+    DefaultMutableTreeNode leftNode;
+    TransferHandler.TransferSupport leftInfo;
+
+    IFSFile[] ifsFiles;
+    IFSFile ifsFile;
+
+    DefaultMutableTreeNode rightNode;
+    TransferHandler.TransferSupport rightInfo;
+
+    DefaultMutableTreeNode targetNode;
+    DefaultMutableTreeNode nodeLevel2;
+    DefaultMutableTreeNode nodeLevel3;
+
+    AS400 remoteServer;
+
+    String language = "cs-CZ";
+
+    JLabel userNameLabel = new JLabel("User name:");
+    JTextField userNameTextField = new JTextField();
+
+    JLabel hostLabel = new JLabel("IBM i server:");
+    JTextField hostTextField = new JTextField();
+
+    JLabel disksLabel = new JLabel("Windows disks:");
+    JComboBox<String> disksComboBox = new JComboBox<>();
+
+    ArrayList<String> charsets;
+    String pcCharset;
+    JComboBox<String> pcCharComboBox;
+    JLabel pcCharsetLabel = new JLabel("PC charset:");
+    String[] pcCharSetNames = {
+        // DEFAULT
+        "*DEFAULT",
+        // UNICODE
+        "UNICODE based:", "--------------", "UTF-8", "UTF-16",
+        // ASCII
+        "ASCII based:", "------------", "US-ASCII", "windows-1250", "windows-1251", "windows-1252",
+        "windows-1253", "windows-1254", "windows-1255", "windows-1256", "windows-1257",
+        "windows-1258", "windows-31j",
+        //
+        "ISO-8859-1", "ISO-8859-2", "ISO-8859-3", "ISO-8859-4", "ISO-8859-5", "ISO-8859-6",
+        "ISO-8859-7", "ISO-8859-8", "ISO-8859-9", "ISO-8859-13", "ISO-8859-15", "ISO-2022-CN",
+        "ISO-2022-JP", "ISO-2022-JP-2", "ISO-2022-KR", "JIS_X0201", "JIS_X0212-1990", "KOI8-R",
+        "KOI8-U", "Shift_JIS", "TIS-620",
+        //
+        "IBM437", "IBM737", "IBM775", "IBM850", "IBM852", "IBM857", "IBM858", "IBM862", "IBM866",
+        "IBM1046", "IBM874", "IBM-Thai",
+        //
+        "Big5", "Big5-HKSCS", "CESU-8", "EUC-JP", "EUC-KR", "GB18030", "GB2312", "GBK",
+        //
+        "x-Big5-HKSCS-2001", "x-Big5-Solaris", "x-COMPOUND_TEXT", "x-euc-jp-linux", "x-EUC-TW",
+        "x-eucJP-Open",
+        //
+        "x-IBM1006", "x-IBM1025", "x-IBM1046", "x-IBM1097", "x-IBM1098", "x-IBM1112", "x-IBM1122",
+        "x-IBM1123", "x-IBM1124", "x-IBM1364", "x-IBM1381", "x-IBM1383", "x-IBM300", "x-IBM33722",
+        "x-IBM737", "x-IBM833", "x-IBM834", "x-IBM856", "x-IBM874", "x-IBM875", "x-IBM921",
+        "x-IBM922", "x-IBM930", "x-IBM933", "x-IBM935", "x-IBM937", "x-IBM939", "x-IBM942",
+        "x-IBM942C", "x-IBM943", "x-IBM943C", "x-IBM948", "x-IBM949", "x-IBM949C", " x-IBM950",
+        "x-IBM964", "x-IBM970",
+        //
+        "x-ISCII91", "x-ISO-2022-CN-CNS", "x-ISO-2022-CN-GB", "x-iso-8859-11", "x-JIS0208",
+        "x-JISAutoDetect", "x-Johab",
+        //
+        "x-MacArabic", "x-MacCentralEurope", "x-MacCroatian", "x-MacCyrillic", "x-MacDingbat",
+        "x-MacGreek", "x-MacHebrew", "x-MacIceland", "x-MacRoman", "x-MacRomania", "x-MacSymbol",
+        "x-MacThai", "x-MacTurkish", "x-MacUkraine",
+        //
+        "x-MS932_0213", "x-MS950-HKSCS", "x-MS950-HKSCS-XP", "x-mswin-936", "x-PCK", "x-SJIS_0213",
+        //
+        "x-UTF-16LE-BOM", "X-UTF-32BE-BOM", "X-UTF-32LE-BOM",
+        //
+        "x-windows-50220", "x-windows-50221", "x-windows-874", "x-windows-949", "x-windows-950",
+        "x-windows-iso2022jp",
+        // EBCDIC
+        "EBCDIC based:", "-------------", "IBM037", "IBM273", "IBM277", "IBM278", "IBM280",
+        "IBM284", "IBM285", "IBM290", "IBM297", "IBM300", "IBM420", "IBM424", "IBM437", "IBM500",
+        "IBM775", "IBM850", "IBM852", "IBM855", "IBM857", "IBM860", "IBM861", "IBM862", "IBM863",
+        "IBM864", "IBM865", "IBM866", "IBM868", "IBM869", "IBM870", "IBM871", "IBM918", "IBM1025",
+        "IBM1026", "IBM01140", "IBM01141", "IBM01142", "IBM01143", "IBM01144", "IBM01145",
+        "IBM01146", "IBM01147", "IBM01148", "IBM01149",};
+
+    ArrayList<String> ccsids;
+    String ibmCcsid;
+    int ibmCcsidInt;
+    JComboBox<String> ibmCcsidComboBox;
+    JLabel ibmCcsidLabel = new JLabel("IBM i CCSID:");
+    String[] ibmCcsids = {
+        // Default
+        "*DEFAULT",
+        // Universal
+        "65535",
+        // EBCDIC
+        "EBCDIC:", "-------", "37", "256", "273", "277", "278", "280", "284", "285", "290", "297",
+        "300", "420", "423", "424", "425", "500", "818", "833", "834", "835", "836", "837", "838",
+        "870", "871", "875", "880", "905", "924", "1025", "1026", "1027", "1097", "1112", "1122",
+        "1123", "1130", "1132", "1137", "1153", "1154", "1155", "1156", "1157", "1158", "1160",
+        "1164", "1166", "1175", "4396", "4930", "4933", "5123", "5233", "8612", "9030", "12708",
+        "13121", "13124", "28709", "62211", "62224", "62235", "62245",
+        // ASCII
+        "ASCII:", "------", "367", "437", "813", "819", "850", "851", "852", "855", "857", "858",
+        "860", "861", "862", "863", "864", "865", "866", "868", "869", "874", "891", "987", "903",
+        "904", "912", "814", "915", "916", "920", "921", "922", "923", "1008", "1009", "1010",
+        "1011", "1012", "1013", "1014", "1015", "1016", "1017", "1018", "1019", "1025", "1026",
+        "1089", "1098", "1124", "1125", "1126", "1129", "1131", "1133", "1026", "1250", "1251",
+        "1252", "1253", "1254", "1255", "1256", "1257", "1258", "1275", "1280", "1281", "1282",
+        "1283", "1364", "1371", "1377", "1388", "1399",
+        // UNICODE
+        "UNICODE:", "--------", "1200" /* UTF-16 */, "1208" /* UTF-8 */,
+        "13488" /* UCS-2 */,};
+
+    ArrayList<String> sourceTypes;
+    String sourceType;
+    JComboBox<String> sourceTypeComboBox;
+    JLabel sourceTypeLabel = new JLabel("IBM i source type:");
+    String[] sourceFileTypes = {"*DEFAULT", "C", "CBL", "CBLLE", "CLLE", "CLP", "CMD", "CPP",
+        "DSPF", "LF", "MNU", "MNUCMD", "MNUDDS", "PF", "PLI", "PRTF", "REXX", "RPG", "RPGLE",
+        "SQLC", "SQLCPP", "SQLCBL", "SQLCBLLE", "SQLPLI", "SQLRPG", "SQLRPGLE", "TBL", "TXT",};
+
+    JLabel sourceRecordLengthLabel = new JLabel("Source line length:");
+    JTextField sourceRecordLengthTextField = new JTextField();
+
+    JLabel sourceRecordPrefixLabel = new JLabel("Complete source record:");
+    JCheckBox sourceRecordPrefixCheckBox = new JCheckBox();
+
+    JLabel overwriteOutputFileLabel = new JLabel("Overwrite data:");
+    JCheckBox overwriteOutputFileCheckBox = new JCheckBox();
+
+    JLabel libraryPrefixLabel = new JLabel("IBM i library prefix:");
+    JTextField libraryPrefixTextField = new JTextField();
+
+    JLabel leftPathLabel = new JLabel("Local Path:");
+    JComboBox<String> leftPathComboBox = new JComboBox<>();
+    LeftPathActionListener leftPathActionListener = new LeftPathActionListener();
+
+    JLabel rightPathLabel = new JLabel("Remote Path:");
+    JComboBox<String> rightPathComboBox = new JComboBox<>();
+
+    JScrollPane scrollMessagePane = new JScrollPane(messageList);
+
+    JButton connectReconnectButton = new JButton("Connect/Reconnect");
+
+    // Menu items for PC
+    JMenuItem copyFromLeft = new JMenuItem("Copy");
+    JMenuItem pasteToLeft = new JMenuItem("Paste");
+    JMenuItem displayPcFile = new JMenuItem("Display");
+    JMenuItem editPcFile = new JMenuItem("Edit");
+    JMenuItem renamePcFile = new JMenuItem("Rename");
+    JMenuItem insertSpooledFile = new JMenuItem("Insert spooled file");
+
+    JMenuItem createPcDirectory = new JMenuItem("New PC directory");
+    JMenuItem createPcFile = new JMenuItem("New PC file");
+    JMenuItem movePcObjectToTrash = new JMenuItem("Move to trash");
+
+    // Menu items for IBM i
+    JMenuItem copyFromRight = new JMenuItem("Copy");
+    JMenuItem pasteToRight = new JMenuItem("Paste");
+
+    JMenuItem createSourcePhysicalFile = new JMenuItem("New source physical file");
+    JMenuItem createSourceMember = new JMenuItem("New source member");
+    JMenuItem createSaveFile = new JMenuItem("New save file");
+    JMenuItem deleteSourceMember = new JMenuItem("Delete source member");
+    JMenuItem deleteSourcePhysicalFile = new JMenuItem("Delete source physical file");
+    JMenuItem clearSaveFile = new JMenuItem("Clear save file");
+    JMenuItem deleteSaveFile = new JMenuItem("Delete save file");
+    JMenuItem workWithSpooledFiles = new JMenuItem("Work with spooled files");
+    JMenuItem displaySourceMember = new JMenuItem("Display");
+    JMenuItem editSourceMember = new JMenuItem("Edit");
+
+    JMenuItem compileSourceMember = new JMenuItem("Compile Source Member");
+    Compile compile;
+
+    JMenuItem copyLibrary = new JMenuItem("Copy library");
+    JMenuItem clearLibrary = new JMenuItem("Clear library");
+    JMenuItem deleteLibrary = new JMenuItem("Delete library");
+    JMenuItem createIfsDirectory = new JMenuItem("New IFS directory");
+    JMenuItem createIfsFile = new JMenuItem("New IFS File");
+    JMenuItem deleteIfsObject = new JMenuItem("Delete");
+    JMenuItem displayIfsFile = new JMenuItem("Display");
+    JMenuItem editIfsFile = new JMenuItem("Edit");
+    JMenuItem renameIfsFile = new JMenuItem("Rename");
+    JMenuItem compileIfsFile = new JMenuItem("Compile IFS file");
+
+    JPopupMenu leftTreePopupMenu = new JPopupMenu();
+    JPopupMenu rightTreePopupMenu = new JPopupMenu();
+
+    FileSystem fileSystem = FileSystems.getDefault();
+    Iterable<Path> rootDirectories;
+    String pcFileSep; // PC file separator ( / in unix, \ in Windows )
+    String leftRoot;
+    boolean leftRootChanged;
+    String firstLeftRootSymbol; // / in unix, C:\ in Windows
+    String rightRoot;
+
+    String leftPathString;
+    String[] leftPathStrings;
+    RowMapper leftRowMapper;
+
+    String rightPathString;
+    String[] rightPathStrings;
+    RowMapper rightRowMapper;
+
+    String sourcePathString;
+    String targetPathString;
+    String clipboardPathString;
+    String[] clipboardPathStrings;
+
+    String ifsPathStringPrefix;
+    String pcPathStringPrefix;
+
+    MouseListener leftTreeMouseListener;
+    TreeSelectionListener leftTreeSelectionListener;
+
+    MouseListener rightTreeMouseListener;
+
+    // Current coordinates from mouse click
+    static int currentX;
+    static int currentY;
+
+    // Constants for properties
+    final String PROP_COMMENT = "Copy files between IBM i and PC, edit and compile.";
+
+
+    Path paramfilesPath = Paths.get(System.getProperty("user.dir"), "paramfiles");
+    Path logfilesPath = Paths.get(System.getProperty("user.dir"), "logfiles");
+
+    Path parPath = Paths.get(System.getProperty("user.dir"), "paramfiles", "Parameters.txt");
+    Path errPath = Paths.get(System.getProperty("user.dir"), "logfiles", "err.txt");
+    Path outPath = Paths.get(System.getProperty("user.dir"), "logfiles", "out.txt");
+    String encoding = System.getProperty("file.encoding", "UTF-8");
+    Properties properties;
+    BufferedWriter outfile;
+    BufferedReader infile;
+
+    OutputStream errStream;
+    OutputStream outStream;
+
+    /**
+     * Constructor.
+     */
+    public MainWindow() {
+
+        try {
+            // If directory "paramfiles" does not exist, create one.
+            if (!Files.exists(paramfilesPath)) {
+                Files.createDirectory(paramfilesPath);
+            }
+            // If directory "logfiles" does not exist, create one.
+            if (!Files.exists(logfilesPath)) {
+                Files.createDirectory(logfilesPath);
+            }
+            // Redirect System.err, System.out to log files err.txt, out.txt in directory "logfiles"
+            errStream = Files.newOutputStream(errPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            outStream = Files.newOutputStream(outPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        PrintStream errPrintStream = new PrintStream(errStream);
+        PrintStream outPrintStream = new PrintStream(outStream);
+        // PrintStream console = System.out;
+        System.setErr(errPrintStream);
+        System.setOut(outPrintStream);
+
+        // Get list of root directories (important for Windows)
+        rootDirectories = fileSystem.getRootDirectories();
+
+        // Get or set application properties
+        // ---------------------------------
+        sysProp = System.getProperties();
+
+        // Root symbols for local host are different in Windows and unix
+        //
+        if (sysProp.get("os.name").toString().contains("Windows")) {
+            operatingSystem = WINDOWS;
+            // Windows:
+            // We take C:\ as the first root symbol
+            firstLeftRootSymbol = "C:\\";
+            pcFileSep = "\\"; // single \
+
+            // Insert Windows disk names (A:\, B:\, ...) in the combo box
+            for (Path diskPath : rootDirectories) {
+                disksComboBox.addItem(diskPath.toString());
+            }
+            // Set C:\ as selected disk name
+            disksComboBox.setSelectedItem("C:\\");
+        } else {
+            // Unix systems:
+            operatingSystem = UNIX;
+            firstLeftRootSymbol = "/";
+            pcFileSep = "/";
+        }
+        // Menu bar in Mac operating system will be in the system menu bar
+        if (sysProp.get("os.name").toString().toUpperCase().contains("MAC")) {
+            System.setProperty("apple.laf.useScreenMenuBar", "false");
+        }
+
+        // Get values from application properties from Parameters.txt file
+        properties = new Properties();
+
+        // If the Parameters.txt file does not exist, create one
+        // with default values
+        try {
+            if (Files.notExists(parPath)) {
+                Files.createFile(parPath);
+                properties.setProperty("AUTHOR", "© Vladimír Župka, 2017 ");
+                properties.setProperty("HOST", "");
+                properties.setProperty("USERNAME", "");
+                properties.setProperty("IBM_CCSID", "*DEFAULT");
+                properties.setProperty("SOURCE_TYPE", "*DEFAULT");
+                properties.setProperty("PC_CHARSET", "*DEFAULT");
+                properties.setProperty("SOURCE_RECORD_PREFIX", ""); // or "Y"
+                properties.setProperty("OVERWRITE_FILE", ""); // or "Y"
+                properties.setProperty("LIBRARY_PREFIX", "");
+                properties.setProperty("SOURCE_RECORD_LENGTH", "100");
+                properties.setProperty("LEFT_PATH", firstLeftRootSymbol);
+                properties.setProperty("RIGHT_PATH", "/");
+                properties.setProperty("MAIN_WINDOW_X", "40");
+                properties.setProperty("MAIN_WINDOW_Y", "40");
+                properties.setProperty("COMPILE_WINDOW_X", "240");
+                properties.setProperty("COMPILE_WINDOW_Y", "40");
+                properties.setProperty("FONT_SIZE", "12");
+                properties.setProperty("CARET", "Short caret"); // or Long caret
+                properties.setProperty("HIGHLIGHT_BLOCKS", "*NONE");
+                // Create a new text file in directory "paramfiles"
+                outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+            }
+
+            // Get values from properties and set variables and text fields
+            infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+            properties.load(infile);
+
+            // Set color to button text
+            connectReconnectButton.setForeground(DIM_BLUE);
+
+            // Text field to specify IBM i host IP address or domain name
+            hostTextField.setText(properties.getProperty("HOST"));
+            hostTextField.setPreferredSize(new Dimension(150, 20));
+            hostTextField.setMinimumSize(new Dimension(150, 20));
+            hostTextField.setMaximumSize(new Dimension(150, 20));
+
+            userNameTextField.setText(properties.getProperty("USERNAME"));
+            userNameTextField.setPreferredSize(new Dimension(90, 20));
+            userNameTextField.setMinimumSize(new Dimension(90, 20));
+            userNameTextField.setMaximumSize(new Dimension(90, 20));
+
+            disksComboBox.setPreferredSize(new Dimension(40, 20));
+            disksComboBox.setMinimumSize(new Dimension(40, 20));
+            disksComboBox.setMaximumSize(new Dimension(40, 20));
+
+            ibmCcsid = properties.getProperty("IBM_CCSID");
+            ccsids = new ArrayList<>();
+            ccsids.addAll(Arrays.asList(ibmCcsids));
+            ibmCcsidComboBox = new JComboBox(ccsids.toArray());
+            ibmCcsidComboBox.setPreferredSize(new Dimension(100, 20));
+            ibmCcsidComboBox.setMinimumSize(new Dimension(100, 20));
+            ibmCcsidComboBox.setMaximumSize(new Dimension(100, 20));
+            ibmCcsidComboBox.setEditable(true);
+            ibmCcsidComboBox.setSelectedItem(ibmCcsid);
+
+            sourceType = properties.getProperty("SOURCE_TYPE");
+            sourceTypes = new ArrayList<>();
+            sourceTypes.addAll(Arrays.asList(sourceFileTypes));
+            sourceTypeComboBox = new JComboBox(sourceTypes.toArray());
+            sourceTypeComboBox.setPreferredSize(new Dimension(110, 20));
+            sourceTypeComboBox.setMinimumSize(new Dimension(110, 20));
+            sourceTypeComboBox.setMaximumSize(new Dimension(110, 20));
+            sourceTypeComboBox.setEditable(true);
+            sourceTypeComboBox.setSelectedItem(sourceType);
+
+            // Create PC charset combo box
+            pcCharset = properties.getProperty("PC_CHARSET");
+            charsets = new ArrayList<>();
+            charsets.addAll(Arrays.asList(pcCharSetNames));
+            pcCharComboBox = new JComboBox(charsets.toArray());
+            pcCharComboBox.setPreferredSize(new Dimension(180, 20));
+            pcCharComboBox.setMinimumSize(new Dimension(180, 20));
+            pcCharComboBox.setMaximumSize(new Dimension(180, 20));
+            pcCharComboBox.setEditable(true);
+            pcCharComboBox.setSelectedItem(pcCharset);
+
+            sourceRecordPrefixCheckBox.setSelected(properties.getProperty("SOURCE_RECORD_PREFIX").isEmpty() ? false : true);
+
+            overwriteOutputFileCheckBox
+                    .setSelected(properties.getProperty("OVERWRITE_FILE").isEmpty() ? false : true);
+
+            libraryPrefixTextField.setText(properties.getProperty("LIBRARY_PREFIX"));
+            libraryPrefixTextField.setPreferredSize(new Dimension(110, 20));
+            libraryPrefixTextField.setMinimumSize(new Dimension(110, 20));
+            libraryPrefixTextField.setMaximumSize(new Dimension(110, 20));
+
+            sourceRecordLengthTextField.setText(properties.getProperty("SOURCE_RECORD_LENGTH"));
+            sourceRecordLengthTextField.setPreferredSize(new Dimension(60, 20));
+            sourceRecordLengthTextField.setMinimumSize(new Dimension(60, 20));
+            sourceRecordLengthTextField.setMaximumSize(new Dimension(60, 20));
+
+            // Correct path strings and update them in properties
+            leftPathString = correctLeftPathString(properties.getProperty("LEFT_PATH"));
+            rightPathString = correctRightPathString(properties.getProperty("RIGHT_PATH"));
+
+            rightRoot = properties.getProperty("RIGHT_PATH");
+
+            // Set window coordinates from application properties
+            mainWindowX = new Integer((String) properties.get("MAIN_WINDOW_X"));
+            mainWindowY = new Integer((String) properties.get("MAIN_WINDOW_Y"));
+
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
+    /**
+     * Create window containing trees with initial files in upper part; Left tree
+     * shows local file system; Right tree shows IBM i file system (IFS).
+     */
+    public void createWindow() {
+        cont = getContentPane();
+        globalPanel = new JPanel();
+        globalPanelLayout = new GroupLayout(globalPanel);
+
+        menuBar = new JMenuBar();
+        helpMenu = new JMenu("Help");
+        helpMenuItemEN = new JMenuItem("Help English");
+        helpMenuItemCZ = new JMenuItem("Nápověda česky");
+
+        helpMenu.add(helpMenuItemEN);
+        helpMenu.add(helpMenuItemCZ);
+        menuBar.add(helpMenu);
+
+        setJMenuBar(menuBar);
+
+        panelTop = new JPanel();
+
+        panelTopLayout = new GroupLayout(panelTop);
+        panelTop.setLayout(panelTopLayout);
+
+        panelPathLeft = new JPanel();
+        panelPathLeft.setLayout(new BoxLayout(panelPathLeft, BoxLayout.LINE_AXIS));
+
+        scrollPaneLeft = new JScrollPane();
+        scrollPaneLeft.setBorder(BorderFactory.createEmptyBorder());
+
+        panelPathRight = new JPanel();
+        panelPathRight.setLayout(new BoxLayout(panelPathRight, BoxLayout.LINE_AXIS));
+
+        scrollPaneRight = new JScrollPane();
+        scrollPaneRight.setBorder(BorderFactory.createEmptyBorder());
+
+        // Windows: Disks combo box is included in order to choose proper root
+        // directory (A:\, C:\, ...)
+        Component diskLabelWin;
+        Component disksComboBoxWin;
+        if (operatingSystem.equals(WINDOWS)) {
+            diskLabelWin = disksLabel;
+            disksComboBoxWin = disksComboBox;
+        } else { //
+            // Unix (Mac): Empty component instead of combo box
+            diskLabelWin = new JLabel("");
+            disksComboBoxWin = new JLabel("");
+        }
+
+        // Lay out components in panelTop
+        panelTopLayout.setAutoCreateGaps(false);
+        panelTopLayout.setAutoCreateContainerGaps(false);
+        panelTopLayout.setHorizontalGroup(panelTopLayout.createParallelGroup(Alignment.LEADING)
+                .addGroup(panelTopLayout.createSequentialGroup()
                         .addComponent(userNameLabel)
                         .addComponent(userNameTextField)
                         .addComponent(hostLabel)
@@ -663,7 +650,7 @@ public class MainWindow extends JFrame {
                         .addComponent(sourceTypeLabel)
                         .addComponent(sourceTypeComboBox)
                         .addComponent(connectReconnectButton))
-                  .addGroup(panelTopLayout.createParallelGroup(Alignment.CENTER)
+                .addGroup(panelTopLayout.createSequentialGroup()
                         .addComponent(pcCharsetLabel)
                         .addComponent(pcCharComboBox)
                         .addComponent(ibmCcsidLabel)
@@ -676,2538 +663,2560 @@ public class MainWindow extends JFrame {
                         .addComponent(overwriteOutputFileCheckBox)
                         .addComponent(diskLabelWin)
                         .addComponent(disksComboBoxWin)));
-      panelTop.setLayout(panelTopLayout);
+        panelTopLayout
+                .setVerticalGroup(panelTopLayout.createSequentialGroup()
+                        .addGroup(panelTopLayout.createParallelGroup(Alignment.CENTER)
+                                .addComponent(userNameLabel)
+                                .addComponent(userNameTextField)
+                                .addComponent(hostLabel)
+                                .addComponent(hostTextField)
+                                .addComponent(libraryPrefixLabel)
+                                .addComponent(libraryPrefixTextField)
+                                .addComponent(sourceTypeLabel)
+                                .addComponent(sourceTypeComboBox)
+                                .addComponent(connectReconnectButton))
+                        .addGroup(panelTopLayout.createParallelGroup(Alignment.CENTER)
+                                .addComponent(pcCharsetLabel)
+                                .addComponent(pcCharComboBox)
+                                .addComponent(ibmCcsidLabel)
+                                .addComponent(ibmCcsidComboBox)
+                                .addComponent(sourceRecordLengthLabel)
+                                .addComponent(sourceRecordLengthTextField)
+                                .addComponent(sourceRecordPrefixLabel)
+                                .addComponent(sourceRecordPrefixCheckBox)
+                                .addComponent(overwriteOutputFileLabel)
+                                .addComponent(overwriteOutputFileCheckBox)
+                                .addComponent(diskLabelWin)
+                                .addComponent(disksComboBoxWin)));
+        panelTop.setLayout(panelTopLayout);
 
-      panelPathLeft.add(leftPathLabel);
+        panelPathLeft.add(leftPathLabel);
 
-      leftPathComboBox.setEditable(true);
-      panelPathLeft.add(leftPathComboBox);
+        leftPathComboBox.setEditable(true);
+        panelPathLeft.add(leftPathComboBox);
 
-      panelPathRight.add(rightPathLabel);
+        panelPathRight.add(rightPathLabel);
 
-      rightPathComboBox.setEditable(true);
-      panelPathRight.add(rightPathComboBox);
+        rightPathComboBox.setEditable(true);
+        panelPathRight.add(rightPathComboBox);
 
-      panelLeft = new JPanel();
-      panelLeft.setLayout(new BorderLayout());
-      panelLeft.add(panelPathLeft, BorderLayout.NORTH);
-      panelLeft.add(scrollPaneLeft, BorderLayout.CENTER);
+        panelLeft = new JPanel();
+        panelLeft.setLayout(new BorderLayout());
+        panelLeft.add(panelPathLeft, BorderLayout.NORTH);
+        panelLeft.add(scrollPaneLeft, BorderLayout.CENTER);
 
-      panelRight = new JPanel();
-      panelRight.setLayout(new BorderLayout());
-      panelRight.add(panelPathRight, BorderLayout.NORTH);
-      panelRight.add(scrollPaneRight, BorderLayout.CENTER);
+        panelRight = new JPanel();
+        panelRight.setLayout(new BorderLayout());
+        panelRight.add(panelPathRight, BorderLayout.NORTH);
+        panelRight.add(scrollPaneRight, BorderLayout.CENTER);
 
-      // Split pane inner - divided by horizontal divider
-      splitPaneInner = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-      splitPaneInner.setLeftComponent(panelLeft);
-      splitPaneInner.setRightComponent(panelRight);
-      splitPaneInner.setDividerSize(6);
-      splitPaneInner.setBorder(BorderFactory.createEmptyBorder());
+        // Split pane inner - divided by horizontal divider
+        splitPaneInner = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPaneInner.setLeftComponent(panelLeft);
+        splitPaneInner.setRightComponent(panelRight);
+        splitPaneInner.setDividerSize(6);
+        splitPaneInner.setBorder(BorderFactory.createEmptyBorder());
 
-      // Scroll pane for message list
-      scrollMessagePane.setBorder(BorderFactory.createEmptyBorder());
+        // Scroll pane for message list
+        scrollMessagePane.setBorder(BorderFactory.createEmptyBorder());
 
-      // Split pane outer - divided by vertical divider
-      splitPaneOuter = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-      splitPaneOuter.setTopComponent(splitPaneInner);
-      splitPaneOuter.setBottomComponent(scrollMessagePane);
-      splitPaneOuter.setDividerSize(6);
-      splitPaneOuter.setBorder(BorderFactory.createEmptyBorder());
+        // Split pane outer - divided by vertical divider
+        splitPaneOuter = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        splitPaneOuter.setTopComponent(splitPaneInner);
+        splitPaneOuter.setBottomComponent(scrollMessagePane);
+        splitPaneOuter.setDividerSize(6);
+        splitPaneOuter.setBorder(BorderFactory.createEmptyBorder());
 
-      // This listener keeps the scroll pane at the LAST MESSAGE.
-      messageScrollPaneAdjustmentListenerMax = new MessageScrollPaneAdjustmentListenerMax();
+        // This listener keeps the scroll pane at the LAST MESSAGE.
+        messageScrollPaneAdjustmentListenerMax = new MessageScrollPaneAdjustmentListenerMax();
 
-      // List of messages for placint into message scroll pane
-      messageList = new JList<String>();
-      // Decision what color the message will get
-      messageList.setCellRenderer(new DefaultListCellRenderer() {
-         @Override
-         public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-            Component component = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            if (value.toString().startsWith("Comp")) {
-               this.setForeground(DIM_BLUE);
-            } else if (value.toString().startsWith("Err")) {
-               this.setForeground(DIM_RED);
-            } else if (value.toString().startsWith("Info")) {
-               this.setForeground(Color.GRAY);
-            } else if (value.toString().startsWith("Wait")) {
-               this.setForeground(DIM_PINK);
-            } else {
-               this.setForeground(Color.BLACK);
+        // List of messages for placint into message scroll pane
+        messageList = new JList<String>();
+        // Decision what color the message will get
+        messageList.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                Component component = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value.toString().startsWith("Comp")) {
+                    this.setForeground(DIM_BLUE);
+                } else if (value.toString().startsWith("Err")) {
+                    this.setForeground(DIM_RED);
+                } else if (value.toString().startsWith("Info")) {
+                    this.setForeground(Color.GRAY);
+                } else if (value.toString().startsWith("Wait")) {
+                    this.setForeground(DIM_PINK);
+                } else {
+                    this.setForeground(Color.BLACK);
+                }
+                return component;
             }
-            return component;
-         }
-      });
+        });
 
-      // Build messageTable and put it to scrollMessagePane and panelMessages
-      buildMessageList();
+        // Build messageTable and put it to scrollMessagePane and panelMessages
+        buildMessageList();
 
-      // Create left tree showing local file system
-      // ----------------
-      leftRoot = properties.getProperty("LEFT_PATH");
+        // Create left tree showing local file system
+        // ----------------
+        leftRoot = properties.getProperty("LEFT_PATH");
 
-      // Set left path string as selected in the left combo box
-      leftPathComboBox.setSelectedItem(leftPathString);
-      // Set ALSO RIGHT PATH string in the right combo box
-      rightPathComboBox.setSelectedItem(rightPathString);
+        // Set left path string as selected in the left combo box
+        leftPathComboBox.setSelectedItem(leftPathString);
+        // Set ALSO RIGHT PATH string in the right combo box
+        rightPathComboBox.setSelectedItem(rightPathString);
 
-      // ----------------------------------------------
-      // Create new left side
-      // ----------------------------------------------
-      // Create split panes containing the PC file tree on the left side of the window
-      createNewLeftSide(leftRoot);
+        // ----------------------------------------------
+        // Create new left side
+        // ----------------------------------------------
+        // Create split panes containing the PC file tree on the left side of the window
+        createNewLeftSide(leftRoot);
 
-      // Lay out the window components using GroupLayout
-      // -----------------------------
-      globalPanelLayout.setAutoCreateGaps(false);
-      globalPanelLayout.setAutoCreateContainerGaps(false);
+        // Lay out the window components using GroupLayout
+        // -----------------------------
+        globalPanelLayout.setAutoCreateGaps(false);
+        globalPanelLayout.setAutoCreateContainerGaps(false);
 
-      globalPanelLayout
-            .setHorizontalGroup(globalPanelLayout.createSequentialGroup().addGroup(globalPanelLayout
-                  .createParallelGroup().addComponent(panelTop).addComponent(splitPaneOuter)));
-      globalPanelLayout
-            .setVerticalGroup(globalPanelLayout.createParallelGroup().addGroup(globalPanelLayout
-                  .createSequentialGroup().addComponent(panelTop).addComponent(splitPaneOuter)));
+        globalPanelLayout
+                .setHorizontalGroup(globalPanelLayout.createSequentialGroup().addGroup(globalPanelLayout
+                        .createParallelGroup().addComponent(panelTop).addComponent(splitPaneOuter)));
+        globalPanelLayout
+                .setVerticalGroup(globalPanelLayout.createParallelGroup().addGroup(globalPanelLayout
+                        .createSequentialGroup().addComponent(panelTop).addComponent(splitPaneOuter)));
 
-      // Create a global panel to wrap the layout
-      globalPanel.setLayout(globalPanelLayout);
-      // Set border to the global panel - before it is visible
-      globalPanel
-            .setBorder(BorderFactory.createLineBorder(globalPanel.getBackground(), borderWidth));
+        // Create a global panel to wrap the layout
+        globalPanel.setLayout(globalPanelLayout);
+        // Set border to the global panel - before it is visible
+        globalPanel
+                .setBorder(BorderFactory.createLineBorder(globalPanel.getBackground(), borderWidth));
 
-      // When the split pane is visible - can divide it by percentage
-      double splitPaneInnerDividerLoc = 0.50d; // 50 %
-      // Percentage to reveal the first message line height when the scroll
-      // pane
-      // is full
-      double splitPaneOuterDividerLoc = 0.835d;
+        // When the split pane is visible - can divide it by percentage
+        double splitPaneInnerDividerLoc = 0.50d; // 50 %
+        // Percentage to reveal the first message line height when the scroll
+        // pane
+        // is full
+        double splitPaneOuterDividerLoc = 0.835d;
 
-      splitPaneInner.setDividerLocation(splitPaneInnerDividerLoc);
-      splitPaneOuter.setDividerLocation(splitPaneOuterDividerLoc);
+        splitPaneInner.setDividerLocation(splitPaneInnerDividerLoc);
+        splitPaneOuter.setDividerLocation(splitPaneOuterDividerLoc);
 
-      // Stabilize vertical divider always in the middle
-      splitPaneInner.setResizeWeight(0.5);
+        // Stabilize vertical divider always in the middle
+        splitPaneInner.setResizeWeight(0.5);
 
-      // Register WindowListener for storing X and Y coordinates to properties
-      addWindowListener(new MainWindowAdapter());
+        // Register WindowListener for storing X and Y coordinates to properties
+        addWindowListener(new MainWindowAdapter());
 
-      // Register HelpWindow menu item listener
-      helpMenuItemEN.addActionListener(ae -> {
-         String command = ae.getActionCommand();
-         if (command.equals("Help English")) {
-            if (Desktop.isDesktopSupported()) {
-               String uri = Paths
-                     .get(System.getProperty("user.dir"), "helpfiles", "IBMiProgTool_doc_EN.pdf")
-                     .toString();
-               // Replace backslashes by forward slashes in Windows
-               uri = uri.replace('\\', '/');
-               try {
-                  // Invoke the standard browser in the operating system
-                  Desktop.getDesktop().browse(new URI("file://" + uri));
-               } catch (Exception exc) {
-                  exc.printStackTrace();
-               }
+        // Register HelpWindow menu item listener
+        helpMenuItemEN.addActionListener(ae -> {
+            String command = ae.getActionCommand();
+            if (command.equals("Help English")) {
+                if (Desktop.isDesktopSupported()) {
+                    String uri = Paths
+                            .get(System.getProperty("user.dir"), "helpfiles", "IBMiProgTool_doc_EN.pdf")
+                            .toString();
+                    // Replace backslashes by forward slashes in Windows
+                    uri = uri.replace('\\', '/');
+                    try {
+                        // Invoke the standard browser in the operating system
+                        Desktop.getDesktop().browse(new URI("file://" + uri));
+                    } catch (Exception exc) {
+                        exc.printStackTrace();
+                    }
+                }
             }
-         }
-      });
-      // Register HelpWindow menu item listener
-      helpMenuItemCZ.addActionListener(ae -> {
-         String command = ae.getActionCommand();
-         if (command.equals("Nápověda česky")) {
-            if (Desktop.isDesktopSupported()) {
-               String uri = Paths
-                     .get(System.getProperty("user.dir"), "helpfiles", "IBMiProgTool_doc_CZ.pdf")
-                     .toString();
-               // Replace backslashes by forward slashes in Windows
-               uri = uri.replace('\\', '/');
-               try {
-                  // Invoke the standard browser in the operating system
-                  Desktop.getDesktop().browse(new URI("file://" + uri));
-               } catch (Exception exc) {
-                  exc.printStackTrace();
-               }
+        });
+        // Register HelpWindow menu item listener
+        helpMenuItemCZ.addActionListener(ae -> {
+            String command = ae.getActionCommand();
+            if (command.equals("Nápověda česky")) {
+                if (Desktop.isDesktopSupported()) {
+                    String uri = Paths
+                            .get(System.getProperty("user.dir"), "helpfiles", "IBMiProgTool_doc_CZ.pdf")
+                            .toString();
+                    // Replace backslashes by forward slashes in Windows
+                    uri = uri.replace('\\', '/');
+                    try {
+                        // Invoke the standard browser in the operating system
+                        Desktop.getDesktop().browse(new URI("file://" + uri));
+                    } catch (Exception exc) {
+                        exc.printStackTrace();
+                    }
+                }
             }
-         }
-      });
+        });
 
-      // Set left path string as selected in the left combo box
-      leftPathComboBox.setSelectedItem(leftPathString);
-      // Set also right path string in the right combo box
-      rightPathComboBox.setSelectedItem(rightPathString);
+        // Set left path string as selected in the left combo box
+        leftPathComboBox.setSelectedItem(leftPathString);
+        // Set also right path string in the right combo box
+        rightPathComboBox.setSelectedItem(rightPathString);
 
-      //
-      // User name text field action
-      // ---------------------------
-      userNameTextField.addActionListener(ae -> {
-         userNameTextField.setText(userNameTextField.getText().toUpperCase());
-         // Create the updated text file in directory "paramfiles"
-         try {
-            infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
-            properties.load(infile);
-            infile.close();
-            properties.setProperty("USERNAME", userNameTextField.getText());
-            outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-            properties.store(outfile, PROP_COMMENT);
-            outfile.close();
-            refreshWindow();
-         } catch (Exception exc) {
-            exc.printStackTrace();
-         }
-      });
-      //
-      // Host text field action
-      // ----------------------
-      hostTextField.addActionListener(ae -> {
-         hostTextField.setText(hostTextField.getText());
-         // Create the updated text file in directory "paramfiles"
-         try {
-            infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
-            properties.load(infile);
-            infile.close();
-            outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-            properties.setProperty("HOST", hostTextField.getText());
-            properties.store(outfile, PROP_COMMENT);
-            outfile.close();
-            refreshWindow();
-         } catch (Exception exc) {
-            exc.printStackTrace();
-         }
-      });
-      //
-      // Source Type combo box item listener
-      // ---------------------
-      sourceTypeComboBox.addItemListener(il -> {
-         // JComboBox<String> source = new
-         // JComboBox<String>((String[])il.getSource());
-         JComboBox<String[]> source = (JComboBox) il.getSource();
-         sourceType = (String) source.getSelectedItem();
-         // Create the updated text file in directory "paramfiles"
-         try {
-            infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
-            properties.load(infile);
-            infile.close();
-            properties.setProperty("SOURCE_TYPE", sourceType);
-            outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-            properties.store(outfile, PROP_COMMENT);
-            outfile.close();
-         } catch (Exception exc) {
-            exc.printStackTrace();
-         }
-      });
-      //
-      // Library prefix text field action
-      // -------------------------
-      libraryPrefixTextField.addActionListener(ae -> {
-         libraryPrefixTextField.setText(libraryPrefixTextField.getText().toUpperCase());
-         // Create the updated text file in directory "paramfiles"
-         try {
-            infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
-            properties.load(infile);
-            infile.close();
-            properties.setProperty("LIBRARY_PREFIX", libraryPrefixTextField.getText());
-            outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-            properties.store(outfile, PROP_COMMENT);
-            outfile.close();
-         } catch (Exception exc) {
-            exc.printStackTrace();
-         }
-      });
-      //
-      // Source record length text field action
-      // --------------------------------------
-      sourceRecordLengthTextField.addActionListener(ae -> {
-         String srcRecLen = sourceRecordLengthTextField.getText();
-         try {
-            Integer.parseInt(srcRecLen);
-         } catch (NumberFormatException nfe) {
-            // If the user enters non-integer text, take default value
-            srcRecLen = "80";
-         }
-         sourceRecordLengthTextField.setText(srcRecLen);
+        //
+        // User name text field action
+        // ---------------------------
+        userNameTextField.addActionListener(ae -> {
+            userNameTextField.setText(userNameTextField.getText().toUpperCase());
+            // Create the updated text file in directory "paramfiles"
+            try {
+                infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+                properties.load(infile);
+                infile.close();
+                properties.setProperty("USERNAME", userNameTextField.getText());
+                outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+                refreshWindow();
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+        });
+        //
+        // Host text field action
+        // ----------------------
+        hostTextField.addActionListener(ae -> {
+            hostTextField.setText(hostTextField.getText());
+            // Create the updated text file in directory "paramfiles"
+            try {
+                infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+                properties.load(infile);
+                infile.close();
+                outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                properties.setProperty("HOST", hostTextField.getText());
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+                refreshWindow();
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+        });
+        //
+        // Source Type combo box item listener
+        // ---------------------
+        sourceTypeComboBox.addItemListener(il -> {
+            // JComboBox<String> source = new
+            // JComboBox<String>((String[])il.getSource());
+            JComboBox<String[]> source = (JComboBox) il.getSource();
+            sourceType = (String) source.getSelectedItem();
+            // Create the updated text file in directory "paramfiles"
+            try {
+                infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+                properties.load(infile);
+                infile.close();
+                properties.setProperty("SOURCE_TYPE", sourceType);
+                outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+        });
+        //
+        // Library prefix text field action
+        // -------------------------
+        libraryPrefixTextField.addActionListener(ae -> {
+            libraryPrefixTextField.setText(libraryPrefixTextField.getText().toUpperCase());
+            // Create the updated text file in directory "paramfiles"
+            try {
+                infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+                properties.load(infile);
+                infile.close();
+                properties.setProperty("LIBRARY_PREFIX", libraryPrefixTextField.getText());
+                outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+        });
+        //
+        // Source record length text field action
+        // --------------------------------------
+        sourceRecordLengthTextField.addActionListener(ae -> {
+            String srcRecLen = sourceRecordLengthTextField.getText();
+            try {
+                Integer.parseInt(srcRecLen);
+            } catch (NumberFormatException nfe) {
+                // If the user enters non-integer text, take default value
+                srcRecLen = "80";
+            }
+            sourceRecordLengthTextField.setText(srcRecLen);
 
-         // Create the updated text file in directory "paramfiles"
-         try {
-            infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
-            properties.load(infile);
-            infile.close();
+            // Create the updated text file in directory "paramfiles"
+            try {
+                infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+                properties.load(infile);
+                infile.close();
+                outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                properties.setProperty("SOURCE_RECORD_LENGTH", srcRecLen);
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+        });
+        //
+        // Connect/Reconnect button action
+        // -------------------------------
+        connectReconnectButton.addActionListener(ae -> {
+            if (connectReconnect()) {
+                refreshWindow();
+            }
+        });
+        //
+        // PC charset combo box
+        // --------------------
+        // Select charset name from the list in combo box - listener
+        pcCharComboBox.addItemListener(il -> {
+            JComboBox source = (JComboBox) il.getSource();
+            pcCharset = (String) source.getSelectedItem();
+            if (!pcCharset.equals("*DEFAULT")) {
+                // Check if charset is valid
+                try {
+                    Charset.forName(pcCharset);
+                } catch (IllegalCharsetNameException | UnsupportedCharsetException charset) {
+                    // If pcCharset is invalid, take ISO-8859-1
+                    pcCharset = "ISO-8859-1";
+                    pcCharComboBox.setSelectedItem(pcCharset);
+                }
+            }
+            // Create the updated text file in directory "paramfiles"
+            try {
+                infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+                properties.load(infile);
+                infile.close();
+                properties.setProperty("PC_CHARSET", pcCharset);
+                outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+        });
+        //
+        // IBM i CCSID combo box item listener
+        // ---------------------
+        ibmCcsidComboBox.addItemListener(il -> {
+            JComboBox source = (JComboBox) il.getSource();
+            ibmCcsid = (String) source.getSelectedItem();
+            if (!ibmCcsid.equals("*DEFAULT")) {
+                try {
+                    ibmCcsidInt = Integer.parseInt(ibmCcsid);
+                } catch (Exception exc) {
+                    exc.printStackTrace();
+                    ibmCcsid = "37";
+                    ibmCcsidInt = 37;
+                    ibmCcsidComboBox.setSelectedItem(ibmCcsid);
+                }
+            }
+
+            // Create the updated text file in directory "paramfiles"
+            try {
+                infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+                properties.load(infile);
+                infile.close();
+                outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                properties.setProperty("IBM_CCSID", ibmCcsid);
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+        });
+        //
+        // Source record prefix check box - Yes = "Y", No = ""
+        // ---------------------------------------------------
+        sourceRecordPrefixCheckBox.addItemListener(il -> {
+            Object source = il.getSource();
+            if (source == sourceRecordPrefixCheckBox) {
+                String check;
+                if (sourceRecordPrefixCheckBox.isSelected()) {
+                    check = "Y";
+                } else {
+                    check = "";
+                }
+                // Create the updated text file in directory "paramfiles"
+                try {
+                    infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+                    properties.load(infile);
+                    infile.close();
+                    outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                    properties.setProperty("SOURCE_RECORD_PREFIX", check);
+                    properties.store(outfile, PROP_COMMENT);
+                    outfile.close();
+                } catch (Exception exc) {
+                    exc.printStackTrace();
+                }
+            }
+        });
+        //
+        // Overwrite output file(s) check box - Yes = "Y", No = ""
+        // -------------------------------------------------------
+        overwriteOutputFileCheckBox.addItemListener(il -> {
+            Object source = il.getSource();
+            if (source == overwriteOutputFileCheckBox) {
+                String check;
+                if (overwriteOutputFileCheckBox.isSelected()) {
+                    check = "Y";
+                } else {
+                    check = "";
+                }
+                // Create the updated text file in directory "paramfiles"
+                try {
+                    infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+                    properties.load(infile);
+                    infile.close();
+                    outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                    properties.setProperty("OVERWRITE_FILE", check);
+                    properties.store(outfile, PROP_COMMENT);
+                    outfile.close();
+                } catch (Exception exc) {
+                    exc.printStackTrace();
+                }
+            }
+        });
+
+        //
+        // Left popup menu on Right mouse click
+        // ====================================
+
+        //
+        // Send to remote server (IBM i)
+        //
+        copyFromLeft.addActionListener(ae -> {
+            copySourceTree = leftTree;
+            // Set clipboard path string for paste operation
+            clipboardPathStrings = leftPathStrings;
+        });
+
+        //
+        // Receive from remote server (IBM i) or PC itself
+        //
+        pasteToLeft.addActionListener(ae -> {
+            if (copySourceTree == rightTree) {
+                row = "Wait: Copying from IBM i to PC . . .";
+                msgVector.add(row);
+                reloadRightSideAndShowMessages();
+                // Paste from IBM i to PC
+                ParallelCopy_IBMi_PC parallelCopy_IMBI_PC = new ParallelCopy_IBMi_PC(remoteServer, clipboardPathStrings, leftPathStrings[0], null, this);
+                parallelCopy_IMBI_PC.execute();
+            } else if (copySourceTree == leftTree) {
+                row = "Wait: Copying from PC to PC . . .";
+                msgVector.add(row);
+                reloadLeftSideAndShowMessages(nodes);
+                // Paste from PC to PC
+                ParallelCopy_PC_PC parallelCopy_PC_PC = new ParallelCopy_PC_PC(clipboardPathStrings, leftPathStrings[0], null, this);
+                parallelCopy_PC_PC.execute();
+            }
+        });
+
+        // Insert spooled file that is copied from directory *workfiles* and,
+        // renamed,
+        // into selected directory *targetPathString*
+        insertSpooledFile.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            sourcePathString = Paths
+                    .get(System.getProperty("user.dir"), "workfiles", "SpooledFile.txt").toString();
+            targetPathString = leftPathStrings[0];
+            copyAndRenameFile("SpooledFile.txt");
+            reloadLeftSide(nodes);
+        });
+
+        // Display PC file
+        displayPcFile.addActionListener(ae -> {
+            clipboardPathStrings = leftPathStrings;
+            // Display all selected files
+            for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
+                sourcePathString = clipboardPathStrings[idx];
+                // This is a way to display a PC file directly from Java:
+                DisplayFile dpf = new DisplayFile(this);
+                dpf.displayPcFile(sourcePathString);
+            }
+        });
+
+        // Edit PC file - now disabled
+        editPcFile.addActionListener(ae -> {
+            clipboardPathStrings = leftPathStrings;
+            for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
+                sourcePathString = clipboardPathStrings[idx];
+                // Get values from properties and set variables and text fields
+                // "true" stands for "IFS file"
+                EditFile edtf = new EditFile(remoteServer, this, leftPathString, "rewritePcFile");
+                // "true" stands for "edit"
+                edtf.displayPcFile(true);
+            }
+        });
+
+        // Rename PC file
+        renamePcFile.addActionListener(ae -> {
+            RenamePcObject rnmpf = new RenamePcObject(this, pcFileSep, currentX, currentY);
+            rnmpf.renamePcObject(leftPathString);
+        });
+
+        // Create PC directory
+        createPcDirectory.addActionListener(ae -> {
+            clipboardPathStrings = leftPathStrings;
+            if (clipboardPathStrings.length > 0) {
+                leftPathString = clipboardPathStrings[0];
+                CreateAndDeleteInPC cpcd = new CreateAndDeleteInPC(this, "createPcDirectory", currentX, currentY);
+                cpcd.createAndDeleteInPC();
+                reloadLeftSide(nodes);
+            }
+        });
+
+        // Create PC file
+        createPcFile.addActionListener(ae -> {
+            CreateAndDeleteInPC cpcf = new CreateAndDeleteInPC(this, "createPcFile", currentX, currentY);
+            cpcf.createAndDeleteInPC();
+            reloadLeftSide(nodes);
+        });
+
+        // Move PC objects to trash
+        movePcObjectToTrash.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            // Move selected objects to trash
+            // ------------------------------
+            // Set clipboard path strings for paste operation
+            clipboardPathStrings = leftPathStrings;
+
+            for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
+                // Set path string for the following class
+                leftPathString = clipboardPathStrings[idx];
+
+                // Move one object to trash
+                CreateAndDeleteInPC dpco = new CreateAndDeleteInPC(this, "movePcObjectToTrash", currentX, currentY);
+                dpco.createAndDeleteInPC();
+            }
+            // Remove selected nodes
+            TreePath[] paths = leftTree.getSelectionPaths();
+            for (int indx = 0; indx < paths.length; indx++) {
+                leftNode = (DefaultMutableTreeNode) (paths[indx].getLastPathComponent());
+                leftTreeModel.removeNodeFromParent(leftNode);
+            }
+        });
+
+        //
+        // Right popup menu on Right mouse click
+        // =====================================
+
+        // Send to PC or IBM i itself
+        copyFromRight.addActionListener(ae -> {
+            copySourceTree = rightTree;
+            // Set clipboard path string for paste operation
+            clipboardPathStrings = rightPathStrings;
+        });
+
+        // Receive from PC or IBM i itself
+        // -------------------------------
+        pasteToRight.addActionListener(ae -> {
+            // This listener keeps the scroll pane at the LAST MESSAGE.
+            // It is removed at the end of the method of the background task.
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            sourcePathString = clipboardPathString;
+            targetPathString = rightPathStrings[0];
+            if (copySourceTree == rightTree) {
+                // Paste from IBM i to IBM i
+                row = "Wait: Copying from IBM i to IBM i . . .";
+                msgVector.add(row);
+                reloadRightSideAndShowMessages();
+
+                ParallelCopy_IBMi_IBMi parallelCopy_IMBI_IBMI = new ParallelCopy_IBMi_IBMi(remoteServer, clipboardPathStrings, targetPathString, null, this);
+                parallelCopy_IMBI_IBMI.execute();
+
+            } else if (copySourceTree == leftTree) {
+                // Paste from PC to IBM i
+                row = "Wait: Copying from PC to IBM i . . .";
+                msgVector.add(row);
+                reloadRightSideAndShowMessages();
+
+                ParallelCopy_PC_IBMi parallelCopy_PC_IBMI = new ParallelCopy_PC_IBMi(remoteServer, clipboardPathStrings, targetPathString, null, this);
+                parallelCopy_PC_IBMI.execute();
+            }
+        });
+
+        // Copy library
+        copyLibrary.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            ifsFile = new IFSFile(remoteServer, rightPathString);
+            CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "copyLibrary", currentX, currentY);
+            crtdlt.createAndDeleteInIBMi(currentX, currentY);
+            reloadRightSide();
+        });
+
+        // Clear library
+        clearLibrary.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+
+            // Set clipboard path strings for paste operation
+            clipboardPathStrings = rightPathStrings;
+
+            for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
+                rightPathString = clipboardPathStrings[idx];
+                ifsFile = new IFSFile(remoteServer, rightPathString);
+
+                // Clear selected libraries
+                // ------------------------
+                CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "clearLibrary", currentX, currentY);
+                crtdlt.createAndDeleteInIBMi(currentX, currentY);
+            }
+            // Reload nodes of cleared libraries
+            TreePath[] paths = rightTree.getSelectionPaths();
+            for (int indx = 0; indx < paths.length; indx++) {
+                rightNode = (DefaultMutableTreeNode) (paths[indx].getLastPathComponent());
+                reloadRightSide();
+            }
+        });
+
+        // Delete library
+        deleteLibrary.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+
+            // Set clipboard path strings for paste operation
+            clipboardPathStrings = rightPathStrings;
+
+            for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
+                rightPathString = clipboardPathStrings[idx];
+                ifsFile = new IFSFile(remoteServer, rightPathString);
+                // Delete selected libraries
+                // -------------------------
+                CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "deleteLibrary", currentX, currentY);
+                crtdlt.createAndDeleteInIBMi(currentX, currentY);
+            }
+            // Remove selected nodes
+            TreePath[] paths = rightTree.getSelectionPaths();
+            for (int indx = 0; indx < paths.length; indx++) {
+                rightNode = (DefaultMutableTreeNode) (paths[indx].getLastPathComponent());
+                rightTreeModel.removeNodeFromParent(rightNode);
+            }
+        });
+
+        // Create IFS directory in a parent directory
+        createIfsDirectory.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            ifsFile = new IFSFile(remoteServer, rightPathString);
+            CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "createIfsDirectory", currentX, currentY);
+            crtdlt.createAndDeleteInIBMi(currentX, currentY);
+            reloadRightSide();
+        });
+
+        // Create IFS directory in a parent directory
+        createIfsFile.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            ifsFile = new IFSFile(remoteServer, rightPathString);
+            CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "createIfsFile", currentX, currentY);
+            crtdlt.createAndDeleteInIBMi(currentX, currentY);
+            reloadRightSide();
+        });
+
+        // Create AS400 Source Physical File
+        createSourcePhysicalFile.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            ifsFile = new IFSFile(remoteServer, rightPathString);
+            CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "createSourcePhysicalFile", currentX, currentY);
+            crtdlt.createAndDeleteInIBMi(currentX, currentY);
+            reloadRightSide();
+        });
+
+        // Create AS400 Source Member
+        createSourceMember.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            ifsFile = new IFSFile(remoteServer, rightPathString);
+            CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "createSourceMember", currentX, currentY);
+            crtdlt.createAndDeleteInIBMi(currentX, currentY);
+            reloadRightSide();
+        });
+
+        // Create Save File
+        createSaveFile.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            ifsFile = new IFSFile(remoteServer, rightPathString);
+            CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "createSaveFile", currentX, currentY);
+            crtdlt.createAndDeleteInIBMi(currentX, currentY);
+            reloadRightSide();
+        });
+
+        // Clear Save File
+        clearSaveFile.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            ifsFile = new IFSFile(remoteServer, rightPathString);
+            CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "clearSaveFile", currentX, currentY);
+            crtdlt.createAndDeleteInIBMi(currentX, currentY);
+        });
+
+        // Delete IFS object (directory or file)
+        deleteIfsObject.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+
+            // Delete selected objects
+            // -----------------------
+            // Set clipboard path strings for paste operation
+            clipboardPathStrings = rightPathStrings;
+
+            for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
+                rightPathString = clipboardPathStrings[idx];
+                ifsFile = new IFSFile(remoteServer, rightPathString);
+
+                CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "deleteIfsObject", currentX, currentY);
+                crtdlt.createAndDeleteInIBMi(currentX, currentY);
+            }
+            // Remove selected nodes
+            TreePath[] paths = rightTree.getSelectionPaths();
+            for (int indx = 0; indx < paths.length; indx++) {
+                rightNode = (DefaultMutableTreeNode) (paths[indx].getLastPathComponent());
+                rightTreeModel.removeNodeFromParent(rightNode);
+            }
+        });
+
+        // Delete AS400 Source Member
+        deleteSourceMember.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+
+            // Set clipboard path strings for paste operation
+            clipboardPathStrings = rightPathStrings;
+
+            for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
+                rightPathString = clipboardPathStrings[idx];
+                ifsFile = new IFSFile(remoteServer, rightPathString);
+
+                // Delete selected objects
+                // -----------------------
+                CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "deleteSourceMember", currentX, currentY);
+                crtdlt.createAndDeleteInIBMi(currentX, currentY);
+            }
+
+            // Remove selected nodes
+            TreePath[] paths = rightTree.getSelectionPaths();
+            for (int indx = 0; indx < paths.length; indx++) {
+                rightNode = (DefaultMutableTreeNode) (paths[indx].getLastPathComponent());
+                rightTreeModel.removeNodeFromParent(rightNode);
+            }
+        });
+
+        // Delete AS400 Source Physical File
+        deleteSourcePhysicalFile.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+
+            // Set clipboard path strings for paste operation
+            clipboardPathStrings = rightPathStrings;
+
+            for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
+                rightPathString = clipboardPathStrings[idx];
+                ifsFile = new IFSFile(remoteServer, rightPathString);
+
+                // Delete selected objects
+                // -----------------------
+                CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "deleteSourcePhysicalFile", currentX, currentY);
+                crtdlt.createAndDeleteInIBMi(currentX, currentY);
+            }
+
+            // Remove selected nodes
+            TreePath[] paths = rightTree.getSelectionPaths();
+            for (int indx = 0; indx < paths.length; indx++) {
+                rightNode = (DefaultMutableTreeNode) (paths[indx].getLastPathComponent());
+                rightTreeModel.removeNodeFromParent(rightNode);
+            }
+        });
+
+        // Delete Save File
+        deleteSaveFile.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+
+            // Set clipboard path strings for paste operation
+            clipboardPathStrings = rightPathStrings;
+
+            for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
+                rightPathString = clipboardPathStrings[idx];
+                ifsFile = new IFSFile(remoteServer, rightPathString);
+
+                // Delete selected objects
+                // -----------------------
+                CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "deleteSaveFile", currentX, currentY);
+                crtdlt.createAndDeleteInIBMi(currentX, currentY);
+            }
+
+            // Remove selected nodes
+            TreePath[] paths = rightTree.getSelectionPaths();
+            for (int indx = 0; indx < paths.length; indx++) {
+                rightNode = (DefaultMutableTreeNode) (paths[indx].getLastPathComponent());
+                rightTreeModel.removeNodeFromParent(rightNode);
+            }
+        });
+
+        // Work with spooled files
+        workWithSpooledFiles.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            String className = this.getClass().getSimpleName();
+            // "false" stand for *ALL users (not *CURRENT user)
+            WrkSplFCall wwsp = new WrkSplFCall(remoteServer, this, rightPathString, false, currentX, currentY, className);
+            wwsp.execute();
+        });
+
+        // Display IFS file
+        displayIfsFile.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            DisplayFile dspf = new DisplayFile(this);
+            dspf.displayIfsFile(remoteServer, rightPathString);
+        });
+
+        // Edit IFS file with source types suffix (e.g. .CLLE, .RPGLE, etc.)
+        editIfsFile.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            // Edit IFS file
+            EditFile edtf = new EditFile(remoteServer, this, rightPathString, "rewriteIfsFile");
+            // "true" stands for "edit"
+            edtf.displayIfsFile(true);
+        });
+
+        // Rename IFS file
+        renameIfsFile.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            RenameIfsObject rnmifsf = new RenameIfsObject(remoteServer, this, currentX, currentY);
+            rnmifsf.renameIfsObject(rightPathString);
+        });
+
+        // Compile IFS file
+        compileIfsFile.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            if (compile == null) {
+                compile = new Compile(remoteServer, this, rightPathString, true);
+            }
+            // "true" stands for "IFS file" as a source text
+            compile.compile(rightPathString, true);
+            // compile = null;
+        });
+
+        // Display IBM i Source Member
+        displaySourceMember.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            DisplayFile dspf = new DisplayFile(this);
+            dspf.displaySourceMember(remoteServer, rightPathString);
+        });
+
+        // Edit IBM i Source Member
+        editSourceMember.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            // "false" stands for "not IFS file"
+            EditFile edtf = new EditFile(remoteServer, this, rightPathString, "rewriteSourceMember");
+            // "true" stands for "edit"
+            edtf.displaySourceMember(true);
+        });
+
+        // Compile Source Member
+        compileSourceMember.addActionListener(ae -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            if (compile == null) {
+                compile = new Compile(remoteServer, this, rightPathString, false);
+            }
+            // "false" means "IFS file" is NOT a source text
+            compile.compile(rightPathString, false);
+            // compile = null;
+        });
+
+        // Left path combo box listener
+        // ----------------------------
+        //
+        // For Windows only:
+        // =================
+        if (operatingSystem.equals(WINDOWS)) {
+            // Item listener for DISKS ComboBox reacts on item selection with
+            // the
+            // mouse
+            disksComboBox.addItemListener(il -> {
+                JComboBox<String> comboBox = (JComboBox) il.getSource();
+                leftPathString = (String) comboBox.getSelectedItem();
+
+                // Remove the old and create a new combo box for left path selection
+                panelPathLeft.remove(leftPathComboBox);
+                leftPathComboBox = new JComboBox<>();
+                leftPathComboBox.setEditable(true);
+                panelPathLeft.add(leftPathComboBox);
+
+                leftPathComboBox.addItem(leftPathString);
+                leftPathComboBox.setSelectedIndex(0);
+
+                // Register a new ActionListener to the new combo box
+                leftPathComboBox.addActionListener(leftPathActionListener);
+
+                // Get the first item (disk symbol or file system root) from the
+                // combo box and make it leftRoot
+                leftRoot = leftPathString;
+                // Make the disk symbol also firstLeftRootSymbol
+                firstLeftRootSymbol = leftPathString;
+                // Clear and set the tree map with leftRoot and row number 0
+                leftTreeMap.clear();
+                leftTreeMap.put(leftRoot, 0);
+                // Create a new tree and table on the left side of the window
+                leftRootChanged = true;
+                createNewLeftSide(leftPathString);
+            });
+        } // End Windows
+
+        // Processing continues for both Windows and Unix:
+        //
+        // Register action listener for LEFT PATH ComboBox reacts on text change
+        // in its input field (first time)
+        leftPathComboBox.addActionListener(leftPathActionListener);
+
+        // Component listener reacting to WINDOW RESIZING
+        ComponentListener resizingListener = new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent componentEvent) {
+                windowWidth = componentEvent.getComponent().getWidth();
+                windowHeight = componentEvent.getComponent().getHeight();
+                double splitPaneInnerDividerLoc = 0.50d; // 50 %
+                // int splitPaneInnerDividerLoc = (windowWidth - (2 *
+                // borderWidth +
+                // 5)) / 2;
+                splitPaneInner.setDividerLocation(splitPaneInnerDividerLoc);
+            }
+        };
+        // Register window resizing listener
+        addComponentListener(resizingListener);
+
+        // Add the global panel to the frame, NOT container
+        cont.add(globalPanel);
+        add(globalPanel);
+
+        // Set initial size and width of the window
+        setSize(windowWidth, windowHeight);
+
+        // Set window coordinates from application properties
+        setLocation(mainWindowX, mainWindowY);
+
+        // Show the window on the screen
+        setVisible(true);
+        pack(); // Do not pack
+    }
+
+    /**
+     *
+     */
+    protected boolean connectReconnect() {
+        // Set wait-cursor (rotating wheel?)
+        //      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        // Keeps the scroll pane at the LAST MESSAGE.
+        scrollMessagePane.getVerticalScrollBar()
+                .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+
+        // *****
+        // ========
+        // ======================================== Connetion to the server
+        //
+        // Introductory message - waiting for the server.
+        row = "Wait: Connecting to server  " + properties.getProperty("HOST") + " . . .";
+        msgVector.add(row);
+        // Reload LEFT side. Do not use Right side! It would enter a loop.
+        reloadLeftSideAndShowMessages(noNodes);
+
+        // Get connection to the IBM i SERVER.
+        // The third parameter (password) should NOT be specified. The user must sign on.
+        remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
+        // The following statement can replace the preceding one when debugging in order to better comfort.
+        // !!!!remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText(), "ZUP047");
+        // Connect FILE service of the IBM i server.
+        try {
+            remoteServer.disconnectAllServices();
+            remoteServer.connectService(AS400.FILE);
+        } catch (Exception exc) {
+            exc.printStackTrace();
+            row = "Error: Connection to server  " + properties.getProperty("HOST") + "  failed.  -  "
+                    + exc.toString();
+            msgVector.add(row);
+            reloadLeftSideAndShowMessages(noNodes);
+            // Change cursor to default
+            setCursor(Cursor.getDefaultCursor());
+            // Remove setting last element of messages
+            scrollMessagePane.getVerticalScrollBar()
+                    .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            return false;
+        }
+        //
+        // ================================= End of connection to the server
+        // =======
+        // *****
+
+        // Show completion message when connection to IBM i server connected.
+        row = "Comp: Server IBM i  " + properties.getProperty("HOST") + "  was conneted to user  "
+                + remoteServer.getUserId() + ".";
+        msgVector.add(row);
+        reloadLeftSideAndShowMessages(noNodes);
+
+        // Change cursor to default
+        setCursor(Cursor.getDefaultCursor());
+        // Remove setting last element of messages
+        scrollMessagePane.getVerticalScrollBar()
+                .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+        //refreshWindow();
+        return true;
+    }
+
+    /**
+     * Add child nodes to the LEFT side node along with the path to the PC
+     * directory path given in parameters.
+     *
+     * @param pathParam
+     * @param nodeParam
+     */
+    protected void addPCNodes(Path pathParam, DefaultMutableTreeNode nodeParam) {
+
+        if (nodeParam == null) {
+            return;
+        }
+
+        // Level 1
+
+        // Add child nodes to the current node of the tree
+        // First, remove all children in order to create all new child nodes
+        nodeParam.removeAllChildren();
+        if (Files.isDirectory(pathParam)) {
+            try {
+                // Get list of objects in the directory
+                Stream<Path> stream = Files.list(pathParam);
+                // Process level 2 of objects (children of node level 1 - the
+                // root)
+                stream.forEach(pathLevel2 -> {
+                    Path relativePathLevel2;
+                    // Eliminate directories whose names begin with a dot
+                    if (!pathLevel2.toString().contains(pcFileSep + ".")) {
+                        if (pathLevel2.getParent() != null) {
+                            relativePathLevel2 = pathLevel2.getParent().relativize(pathLevel2);
+                        } else {
+                            relativePathLevel2 = pathLevel2;
+                        }
+                        nodeLevel2 = new DefaultMutableTreeNode(relativePathLevel2);
+                        nodeParam.add(nodeLevel2);
+
+                        // Level 2
+                        nodeLevel2.removeAllChildren();
+                        if (Files.isDirectory(pathLevel2)) {
+                            try {
+                                // Get list of objects in the directory level 2
+                                Stream<Path> stream2 = Files.list(pathLevel2);
+                                // Process each node level 2 if it is a directory. Resulting in nodes level 3
+                                stream2.forEach(pathLevel3 -> {
+                                    Path relativePathLevel3;
+                                    // Eliminate directories whose names begin with a dot
+                                    if (!pathLevel3.toString().contains(pcFileSep + ".")) {
+                                        if (pathLevel3.getParent() != null) {
+                                            relativePathLevel3 = pathLevel3.getParent().relativize(pathLevel3);
+                                        } else {
+                                            relativePathLevel3 = pathLevel3;
+                                        }
+                                        nodeLevel3 = new DefaultMutableTreeNode(relativePathLevel3);
+                                        nodeLevel2.add(nodeLevel3);
+
+                                        //// No other levels are necessary
+                                        //// -----------------------------
+                                        if (false) {
+                                            // Level 3
+                                            nodeLevel3.removeAllChildren();
+                                            if (Files.isDirectory(pathLevel3)) {
+                                                try {
+                                                    // Get list of objects in the
+                                                    // directory level 3
+                                                    Stream<Path> stream3 = Files.list(pathLevel3);
+                                                    // Process each node level 3 if it is a directory. Resulting in nodes level 4
+                                                    stream3.forEach(pathLevel4 -> {
+                                                        Path relativePathLevel4;
+                                                        // Eliminate directories whose names begin with a dot
+                                                        if (!pathLevel4.toString().contains(pcFileSep + ".")) {
+                                                            if (pathLevel4.getParent() != null) {
+                                                                relativePathLevel4 = pathLevel4.getParent()
+                                                                        .relativize(pathLevel4);
+                                                            } else {
+                                                                relativePathLevel4 = pathLevel4;
+                                                            }
+                                                            DefaultMutableTreeNode nodeLevel4 = new DefaultMutableTreeNode(relativePathLevel4);
+                                                            nodeLevel3.add(nodeLevel4);
+                                                        } // Level 3 - Dotted file // names - "/." or "\."
+                                                    });
+                                                    stream3.close();
+                                                } catch (Exception exc) {
+                                                    exc.printStackTrace();
+                                                    row = "Info:  " + exc.toString();
+                                                    msgVector.add(row);
+                                                    // no nodes - important not to
+                                                    // recurse
+                                                    reloadLeftSideAndShowMessages(noNodes);
+                                                }
+                                            } // End Level 3
+                                        }
+                                        //// ----------------
+                                        //// End other levels
+
+                                    } // Level 2 - Dotted file names - "/." or // "\."
+                                });
+                                stream2.close();
+                            } catch (Exception exc) {
+                                exc.printStackTrace();
+                                row = "Info:  " + exc.toString();
+                                msgVector.add(row);
+                                // no nodes - important not to recurse
+                                reloadLeftSideAndShowMessages(noNodes);
+                            }
+                        } // End Level 2
+
+                    } // Level 1 - Dotted file names - "/." or "\."
+                });
+                stream.close();
+            } catch (Exception exc) {
+                exc.printStackTrace();
+                row = "Error:  " + exc.toString();
+                msgVector.add(row);
+                reloadLeftSideAndShowMessages(noNodes); // no nodes - important not to recurse
+            }
+        } // End Level 1
+    }
+
+    /**
+     * Add child nodes to the RIGHT side node along with the path to the AS400
+     * directory given in parameters; AS400 directory can be an ordinary IFS
+     * directory or a library (.LIB), source physical file (.FILE PF-SRC), save
+     * file (.FILE SAVF).
+     *
+     * @param ifsFileParam
+     * @param nodeParam
+     */
+    protected void addAS400Nodes(IFSFile ifsFileParam, DefaultMutableTreeNode nodeParam) {
+
+        // Set wait-cursor (rotating wheel?)
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        scrollMessagePane.getVerticalScrollBar()
+                .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+
+        // First, remove all children in order to create all new child nodes
+        nodeParam.removeAllChildren();
+        // Add child nodes to the current node of the tree
+        try {
+            // IFSFile list of directories/files
+            ifsFiles = ifsFileParam.listFiles();
+
+            // For each directory add a new node - IFS directory or file
+            for (IFSFile ifsFile : ifsFiles) {
+                try {
+                    // Get parent file
+                    IFSFile parent = ifsFile.getParentFile();
+
+                    // Non-library system - all IFS objects
+                    // ------------------
+                    // IFS path does not start with /QSYS.LIB and it is not QSYS.LIB (without a leading slash)
+                    if (!ifsFile.toString().toUpperCase().startsWith("/QSYS.LIB")
+                            && !ifsFile.toString().toUpperCase().equals("QSYS.LIB")) {
+
+                        // Level 1
+                        nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
+                        nodeParam.add(nodeLevel2);
+
+                        // Level 2
+                        IFSFile[] ifsFiles2;
+                        nodeLevel2.removeAllChildren();
+                        if (ifsFile.isDirectory()) {
+                            try {
+                                // Get list of sub-files/sub-directories.
+                                // Some objects may be secured (e. g /QDLS directory).
+                                ifsFiles2 = ifsFile.listFiles();
+                                for (IFSFile ifsFileLevel2 : ifsFiles2) {
+                                    nodeLevel3 = new DefaultMutableTreeNode(ifsFileLevel2.getName());
+                                    nodeLevel2.add(nodeLevel3);
+
+                                    //// No other levels are necessary
+                                    //// -----------------------------
+                                    if (false) {
+                                        // Level 3
+                                        IFSFile[] ifsFiles3;
+                                        nodeLevel3.removeAllChildren();
+                                        // Get list of sub-files/sub-directories.
+                                        if (ifsFileLevel2.isDirectory()) {
+                                            ifsFiles3 = ifsFileLevel2.listFiles();
+                                            for (IFSFile ifsFileLevel3 : ifsFiles3) {
+                                                DefaultMutableTreeNode nodeLevel4 = new DefaultMutableTreeNode(ifsFileLevel3.getName());
+                                                nodeLevel3.add(nodeLevel4);
+
+                                                // Level 4
+                                                IFSFile[] ifsFiles4;
+                                                nodeLevel4.removeAllChildren();
+
+                                                if (ifsFileLevel3.isDirectory()) {
+                                                    ifsFiles4 = ifsFileLevel3.listFiles();
+                                                    for (IFSFile ifsFileLevel4 : ifsFiles4) {
+                                                        DefaultMutableTreeNode nodeLevel5 = new DefaultMutableTreeNode(ifsFileLevel4.getName());
+                                                        nodeLevel4.add(nodeLevel5);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        //// ----------------
+                                        //// Other levels end
+                                    }
+                                }
+                            } catch (Exception exc) {
+                                System.out.println(exc.getLocalizedMessage());
+                                exc.printStackTrace();
+                                row = "Info: Object  " + ifsFile.toString() + "  -  " + exc.toString();
+                                msgVector.add(row);
+                                reloadLeftSideAndShowMessages(noNodes);
+                                continue;
+                            }
+                        }
+                    } // End of IFS objects
+
+                    // System library QSYS
+                    // -------------------
+                    // System library is processed individually in order to select libraries
+                    // starting with a prefix and add them as secondary nodes
+                    if (ifsFile.toString().toUpperCase().equals("/QSYS.LIB")) {
+                        nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
+                        nodeParam.add(nodeLevel2);
+
+                        nodeLevel2.removeAllChildren();
+                        // Get list of libraries - Level 2
+                        // Select only libraries whose name starts with
+                        // a prefix (LIBRARY_PREFIX) specified in the text field
+                        IFSFile[] ifsFiles2 = ifsFile.listFiles(libraryPrefixTextField.getText().toUpperCase() + "*.LIB");
+                        for (IFSFile ifsFileLevel2 : ifsFiles2) {
+                            nodeLevel3 = new DefaultMutableTreeNode(ifsFileLevel2.getName());
+                            nodeLevel2.add(nodeLevel3);
+                        }
+                    } // Library system
+                    // --------------
+                    // Secondary nodes of Source files (level3) are added.
+                    //
+                    // Libraries (other than QSYS) - select those starting with a PREFIX.
+                    else if (ifsFile.toString().toUpperCase().startsWith("/QSYS.LIB/")
+                            && ifsFile.toString().toUpperCase().endsWith(".LIB")) {
+                        if (ifsFile.getName().startsWith(libraryPrefixTextField.getText().toUpperCase())) {
+                            nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
+                            nodeParam.add(nodeLevel2);
+
+                            // Source files are added
+                            nodeLevel2.removeAllChildren();
+                            IFSFile[] ifsFiles2 = ifsFile.listFiles("*.FILE");
+                            for (IFSFile ifsFileLevel2 : ifsFiles2) {
+                                nodeLevel3 = new DefaultMutableTreeNode(ifsFileLevel2.getName());
+                                nodeLevel2.add(nodeLevel3);
+                            }
+                        }
+                    }
+
+                    // Source Physical Files
+                    if (ifsFile.toString().contains(".LIB") && ifsFile.toString().contains(".FILE")
+                            && ifsFile.isSourcePhysicalFile()) {
+                        nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
+                        nodeParam.add(nodeLevel2);
+
+                        nodeLevel2.removeAllChildren();
+                        IFSFile[] ifsFiles2 = ifsFile.listFiles();
+                        for (IFSFile ifsFileLevel2 : ifsFiles2) {
+                            nodeLevel3 = new DefaultMutableTreeNode(ifsFileLevel2.getName());
+                            nodeLevel2.add(nodeLevel3);
+                        }
+                    }
+
+                    // Source Members (their parents are Source Physical Files).
+                    if (ifsFile.toString().contains(".LIB") && ifsFile.toString().contains(".FILE")
+                            && parent.isSourcePhysicalFile() && ifsFile.toString().endsWith(".MBR")) {
+                        nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
+                        nodeParam.add(nodeLevel2);
+                    }
+
+                    // Save Files - files (.FILE) with subtype SAVF.
+                    if (ifsFile.toString().contains(".LIB") && ifsFile.toString().contains(".FILE")
+                            && ifsFile.getSubtype().equals("SAVF")) {
+                        nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
+                        nodeParam.add(nodeLevel2);
+                    }
+
+                    // Output queues.
+                    if (ifsFile.toString().contains(".LIB") && ifsFile.toString().contains(".OUTQ")) {
+                        nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
+                        nodeParam.add(nodeLevel2);
+                    }
+                } catch (Exception exc) {
+                    exc.printStackTrace();
+                    row = "Info: Object  " + ifsFile.toString() + "  -  " + exc.toString();
+                    msgVector.add(row);
+                    reloadLeftSideAndShowMessages(noNodes);
+                }
+            }
+        } catch (Exception exc) {
+            exc.printStackTrace();
+            row = "Info: Object  " + ifsFile.toString() + "  -  " + exc.toString();
+            msgVector.add(row);
+            reloadLeftSideAndShowMessages(noNodes);
+        }
+        // Change cursor to default
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        // Remove setting last element of messages
+        scrollMessagePane.getVerticalScrollBar()
+                .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+    }
+
+    /**
+     * Create split panes containing the PC file tree and table on the left side
+     * of the window.
+     *
+     * @param leftRoot
+     */
+    protected void createNewLeftSide(String leftRoot) {
+
+        // Create new left hand tree
+        leftPathString = leftRoot;
+        leftTopNode = new DefaultMutableTreeNode(leftPathString);
+        leftTreeMap.put(leftRoot, 0);
+
+        // Create left hand tree
+        leftTree = new JTree(leftTopNode);
+
+        // Create tree model
+        leftTreeModel = (DefaultTreeModel) leftTree.getModel();
+
+        // Mouse listener for left tree
+        leftTreeMouseListener = new LeftTreeMouseAdapter();
+        leftTree.addMouseListener(leftTreeMouseListener);
+
+        // Tree expansion listener for left tree
+        TreeExpansionListener leftTreeExpansionListener = new LeftTreeExpansionListener();
+        leftTree.addTreeExpansionListener(leftTreeExpansionListener);
+
+        leftTree.setDragEnabled(true);
+        leftTree.setDropMode(DropMode.USE_SELECTION);
+        leftTree.setTransferHandler(new LeftTreeTransferHandler(this));
+
+        leftTreeSelModel = leftTree.getSelectionModel();
+        leftTreeSelModel.setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
+        leftRowMapper = leftTreeSelModel.getRowMapper();
+
+        leftTree.setRootVisible(true);
+        leftTree.setShowsRootHandles(true);
+        leftTree.setSelectionRow(0);
+
+        // Add PC nodes to the left tree
+        leftTreeMap.put(leftPathString, 0);
+        addPCNodes(Paths.get(leftPathString), leftTopNode);
+        leftTree.expandRow(0);
+
+        // Place the left tree in scroll pane
+        scrollPaneLeft.setViewportView(leftTree);
+
+        // Change cursor to default
+        // setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        // Remove setting last element of messages
+        scrollMessagePane.getVerticalScrollBar()
+                .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+    }
+
+    /**
+     * Create split panes containing the IBM i file tree and table on the right
+     * side of the window; IBM i files are objects and differ conceptually from
+     * PC files, therefore they are processed differently.
+     */
+    protected void createNewRightSide(String currentRightRoot) {
+        // Set wait-cursor (rotating wheel?)
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        // Keeps the scroll pane at the LAST MESSAGE.
+        scrollMessagePane.getVerticalScrollBar()
+                .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+
+        // Set file system root symbol to the combo box
+        //      rightPathComboBox.addItem(currentRightRoot);
+
+        // Right tree showing IBM i file system (IFS)
+        // ----------
+        rightPathString = currentRightRoot;
+        rightTopNode = new DefaultMutableTreeNode(currentRightRoot);
+        rightTreeMap.put(currentRightRoot, 0);
+
+        // Create right hand tree
+        rightTree = new JTree(rightTopNode);
+
+        // Create tree model
+        rightTreeModel = (DefaultTreeModel) rightTree.getModel();
+
+        // Mouse listener for RIGHT TREE reacts on row number selected by mouse
+        // left or right click
+        rightTreeMouseListener = new RightTreeMouseAdapter();
+        rightTree.addMouseListener(rightTreeMouseListener);
+
+        // Tree expansion listener for left tree
+        TreeExpansionListener rightTreeExpansionListener = new RightTreeExpansionListener();
+        rightTree.addTreeExpansionListener(rightTreeExpansionListener);
+
+        rightTree.setDragEnabled(true);
+        rightTree.setDropMode(DropMode.USE_SELECTION);
+        rightTree.setTransferHandler(new RightTreeTransferHandler(this));
+
+        rightTreeSelModel = rightTree.getSelectionModel();
+        rightTreeSelModel.setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
+        rightRowMapper = rightTreeSelModel.getRowMapper();
+
+        rightTree.setRootVisible(true);
+        rightTree.setShowsRootHandles(true);
+        rightTree.setSelectionRow(0);
+
+        // Right root must start with a slash
+        if (!rightPathString.startsWith("/")) {
+            // Show error message when the path string does not start with a slash.
+            row = "Error: Right path string   " + rightPathString + "   does not start with a slash. "
+                    + "Correct the path string and try again.";
+            msgVector.add(row);
+            reloadLeftSideAndShowMessages(noNodes);
+
+            // Change cursor to default
+            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            // Remove setting last element of messages
+            scrollMessagePane.getVerticalScrollBar()
+                    .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            return;
+        }
+
+        // Create an object of IFSFile from the path string for adding nodes
+        ifsFile = new IFSFile(remoteServer, rightPathString);
+
+        // Add IFS nodes for the right tree
+        addAS400Nodes(ifsFile, rightTopNode);
+        rightTree.expandRow(0);
+
+        // Place the right tree in scroll pane
+        scrollPaneRight.setViewportView(rightTree);
+        splitPaneInner.setRightComponent(panelRight);
+
+        // Action listener for Library Prefix text field
+        libraryPrefixTextField.addActionListener(al -> {
+            // Translate text to upper case letters (object names are always in upper case)
+            libraryPrefixTextField.setText(libraryPrefixTextField.getText().toUpperCase());
+        });
+
+        // Set actual user name to the text field
+        userNameTextField.setText(remoteServer.getUserId());
+        properties.setProperty("USERNAME", remoteServer.getUserId());
+
+        // Create the updated text file in directory "paramfiles"
+        try {
             outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-            properties.setProperty("SOURCE_RECORD_LENGTH", srcRecLen);
             properties.store(outfile, PROP_COMMENT);
             outfile.close();
-         } catch (Exception exc) {
+        } catch (Exception exc) {
             exc.printStackTrace();
-         }
-      });
-      //
-      // Connect/Reconnect button action
-      // -------------------------------
-      connectReconnectButton.addActionListener(ae -> {
-         if (connectReconnect()) {
-            refreshWindow();
-         }
-      });
-      //
-      // PC charset combo box
-      // --------------------
-      // Select charset name from the list in combo box - listener
-      pcCharComboBox.addItemListener(il -> {
-         JComboBox source = (JComboBox) il.getSource();
-         pcCharset = (String) source.getSelectedItem();
-         if (!pcCharset.equals("*DEFAULT")) {
+        }
+
+        // Change cursor to default
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        // Remove setting last element of messages
+        scrollMessagePane.getVerticalScrollBar()
+                .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+    }
+
+    /**
+     * Correct left path string in properties, Empty path is replaced by a root
+     * symbol (/ or C:\) Trailing slash is removed if path is not a root symbol.
+     *
+     * @param pathString
+     * @return
+     */
+    protected String correctLeftPathString(String pathString) {
+
+        if (pathString.lastIndexOf(pcFileSep) > 0 && !pathString.equals(firstLeftRootSymbol)) {
+            // Get path prefix (parent)
+            pathString = pathString.substring(0, pathString.lastIndexOf(pcFileSep));
+        }
+        return pathString;
+    }
+
+    /**
+     * Correct right path string in properties, Empty path is replaced by slash
+     * (/), Trailing slash is removed if path is not slash.
+     *
+     * @param rightString
+     * @return
+     */
+    protected String correctRightPathString(String rightString) {
+
+        // Remove ending slash from non-root right path
+        if (!rightString.equals("/") && rightString.endsWith("/")) {
+            rightString = rightString.substring(0, rightString.lastIndexOf("/"));
+        }
+        return rightString;
+    }
+
+    /**
+     * Refresh data in the window according to input fields in the top panel, and
+     * path panels.
+     */
+    @SuppressWarnings({"UseSpecificCatch", "CallToPrintStackTrace"})
+    protected void refreshWindow() {
+
+        // Set application properties using input values from text fields
+        properties.setProperty("HOST", hostTextField.getText());
+
+        String userName = userNameTextField.getText().toUpperCase();
+        userNameTextField.setText(userName);
+        properties.setProperty("USERNAME", userName);
+
+        if (!pcCharset.equals("*DEFAULT")) {
             // Check if charset is valid
             try {
-               Charset.forName(pcCharset);
+                Charset chr = Charset.forName(pcCharset);
             } catch (IllegalCharsetNameException | UnsupportedCharsetException charset) {
-               // If pcCharset is invalid, take ISO-8859-1
-               pcCharset = "ISO-8859-1";
-               pcCharComboBox.setSelectedItem(pcCharset);
+                // If pcCharset is invalid, take ISO-8859-1
+                pcCharset = "ISO-8859-1";
+                pcCharComboBox.setSelectedItem(pcCharset);
             }
-         }
-         // Create the updated text file in directory "paramfiles"
-         try {
-            infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
-            properties.load(infile);
-            infile.close();
             properties.setProperty("PC_CHARSET", pcCharset);
-            outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-            properties.store(outfile, PROP_COMMENT);
-            outfile.close();
-         } catch (IOException ioe) {
-            ioe.printStackTrace();
-         }
-      });
-      //
-      // IBM i CCSID combo box item listener
-      // ---------------------
-      ibmCcsidComboBox.addItemListener(il -> {
-         JComboBox source = (JComboBox) il.getSource();
-         ibmCcsid = (String) source.getSelectedItem();
-         if (!ibmCcsid.equals("*DEFAULT")) {
-            try {
-               ibmCcsidInt = Integer.parseInt(ibmCcsid);
-            } catch (Exception exc) {
-               exc.printStackTrace();
-               ibmCcsid = "37";
-               ibmCcsidInt = 37;
-               ibmCcsidComboBox.setSelectedItem(ibmCcsid);
-            }
-         }
+        }
 
-         // Create the updated text file in directory "paramfiles"
-         try {
-            infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
-            properties.load(infile);
-            infile.close();
-            outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+        if (!ibmCcsid.equals("*DEFAULT")) {
+            try {
+                ibmCcsidInt = Integer.parseInt(ibmCcsid);
+            } catch (Exception exc) {
+                exc.printStackTrace();
+                ibmCcsid = "819";
+                ibmCcsidInt = 819;
+                ibmCcsidComboBox.setSelectedItem(ibmCcsid);
+            }
             properties.setProperty("IBM_CCSID", ibmCcsid);
+        }
+
+        // Source record length requires special treatment due to integer value
+        String srcRecLen = sourceRecordLengthTextField.getText();
+        try {
+            Integer.parseInt(srcRecLen);
+        } catch (NumberFormatException nfe) {
+            // If the user enters non-integer text, take default value
+            srcRecLen = "80";
+        }
+        sourceRecordLengthTextField.setText(srcRecLen);
+        properties.setProperty("SOURCE_RECORD_LENGTH", srcRecLen);
+        properties.setProperty("SOURCE_TYPE", sourceType);
+        libraryPrefixTextField.setText(libraryPrefixTextField.getText().toUpperCase());
+        properties.setProperty("LIBRARY_PREFIX", libraryPrefixTextField.getText());
+
+        // Create the updated text file in directory "paramfiles"
+        try {
+            outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
             properties.store(outfile, PROP_COMMENT);
             outfile.close();
-         } catch (Exception exc) {
+        } catch (Exception exc) {
             exc.printStackTrace();
-         }
-      });
-      //
-      // Source record prefix check box - Yes = "Y", No = ""
-      // ---------------------------------------------------
-      sourceRecordPrefixCheckBox.addItemListener(il -> {
-         Object source = il.getSource();
-         if (source == sourceRecordPrefixCheckBox) {
-            String check;
-            if (sourceRecordPrefixCheckBox.isSelected()) {
-               check = "Y";
-            } else {
-               check = "";
-            }
-            // Create the updated text file in directory "paramfiles"
-            try {
-               infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
-               properties.load(infile);
-               infile.close();
-               outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-               properties.setProperty("SOURCE_RECORD_PREFIX", check);
-               properties.store(outfile, PROP_COMMENT);
-               outfile.close();
-            } catch (Exception exc) {
-               exc.printStackTrace();
-            }
-         }
-      });
-      //
-      // Overwrite output file(s) check box - Yes = "Y", No = ""
-      // -------------------------------------------------------
-      overwriteOutputFileCheckBox.addItemListener(il -> {
-         Object source = il.getSource();
-         if (source == overwriteOutputFileCheckBox) {
-            String check;
-            if (overwriteOutputFileCheckBox.isSelected()) {
-               check = "Y";
-            } else {
-               check = "";
-            }
-            // Create the updated text file in directory "paramfiles"
-            try {
-               infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
-               properties.load(infile);
-               infile.close();
-               outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-               properties.setProperty("OVERWRITE_FILE", check);
-               properties.store(outfile, PROP_COMMENT);
-               outfile.close();
-            } catch (Exception exc) {
-               exc.printStackTrace();
-            }
-         }
-      });
+        }
 
-      //
-      // Left popup menu on Right mouse click
-      // ====================================
+        // Create right side of the window split panes (tree and table of IBM i).
+        // The left side was created before.
+        rightRoot = properties.getProperty("RIGHT_PATH");
 
-      //
-      // Send to remote server (IBM i)
-      //
-      copyFromLeft.addActionListener(ae -> {
-         copySourceTree = leftTree;
-         // Set clipboard path string for paste operation
-         clipboardPathStrings = leftPathStrings;
-      });
+        // Register Action listener for RIGHT ComboBox which reacts on text change
+        // in its input field
+        rightPathComboBox.addActionListener(new RightPathActionListener());
 
-      //
-      // Receive from remote server (IBM i) or PC itself
-      //
-      pasteToLeft.addActionListener(ae -> {
-         if (copySourceTree == rightTree) {
-            row = "Wait: Copying from IBM i to PC . . .";
-            msgVector.add(row);
-            reloadRightSideAndShowMessages();
-            // Paste from IBM i to PC
-            ParallelCopy_IBMi_PC parallelCopy_IMBI_PC = new ParallelCopy_IBMi_PC(remoteServer, clipboardPathStrings, leftPathStrings[0], null, this);
-            parallelCopy_IMBI_PC.execute();
-         } else if (copySourceTree == leftTree) {
-            row = "Wait: Copying from PC to PC . . .";
+        createNewRightSide(rightRoot);
+
+        // Unregister Action listener for RIGHT ComboBox 
+        // which reacts on text change in its input field
+        rightPathComboBox.removeActionListener(new RightPathActionListener());
+
+    }
+
+    /**
+     * Reload node structure in the left side of the window
+     *
+     * @param addChildNodes
+     */
+    protected void reloadLeftSideAndShowMessages(boolean addChildNodes) {
+        scrollMessagePane.getVerticalScrollBar()
+                .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+
+        // reloadLeftSide(addChildNodes);
+
+        buildMessageList();
+
+        scrollMessagePane.getVerticalScrollBar()
+                .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+
+        // Make the message table visible in the message scroll pane
+        scrollMessagePane.setViewportView(messageList);
+    }
+
+    /**
+     *
+     * @param addChildNodes
+     */
+    protected void reloadLeftSide(boolean addChildNodes) {
+
+        if (addChildNodes) {
+            if (leftNode != null) {
+                // Add children to the node
+                addPCNodes(Paths.get(leftPathString), leftNode);
+            }
+        }
+
+        // Note that the structure of the node (children) changed
+        leftTreeModel.nodeStructureChanged(leftNode);
+        // Reload that node only (the other nodes remain unchanged)
+        leftTreeModel.reload(leftNode);
+        leftTree.expandRow(leftRow);
+    }
+
+    /**
+     * Reload node structure in the right side of the window and show messages.
+     */
+    protected void reloadRightSideAndShowMessages() {
+        scrollMessagePane.getVerticalScrollBar()
+                .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+
+        buildMessageList();
+
+        // Reload node structure in the right side of the window
+        // reloadRightSide();
+
+        scrollMessagePane.getVerticalScrollBar()
+                .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+        // Make the message table visible in the message scroll pane
+        scrollMessagePane.setViewportView(messageList);
+
+    }
+
+    /**
+     * Reload node structure in the right side of the window.
+     */
+    protected void reloadRightSide() {
+
+        ifsFile = new IFSFile(remoteServer, rightPathString);
+
+        if (rightNode != null) {
+            // Add children to the node
+            addAS400Nodes(ifsFile, rightNode);
+        }
+
+        // Note that the structure of the node (children) changed
+        rightTreeModel.nodeStructureChanged(rightNode);
+        // Reload that node only (the other nodes remain unchanged)
+        rightTreeModel.reload(rightNode);
+    }
+
+    /**
+     * Build message list.
+     */
+    protected void buildMessageList() {
+        messageList.setSelectionBackground(Color.WHITE);
+
+        // Suppressing some Info messages conditionally.
+        // ---------------------------------------------
+        // If you want to allow Info messages change the ALLOW_INFO_MESSAGES value
+        // to *true*.
+        Vector<String> newMsgVector = new Vector<>();
+
+        // Inspect all messages in msgVector
+        for (String message : msgVector) {
+            // If the message is Info type and does not contain
+            // AccessDeniedException, allow it.
+            if (message.startsWith("Info") && ALLOW_INFO_MESSAGES
+                    && !message.contains("AccessDeniedException")) {
+                newMsgVector.add(message);
+            } else if (!message.startsWith("Info")) {
+                // Other types of messages are always allowed.
+                newMsgVector.add(message);
+            }
+            msgVector = newMsgVector;
+        }
+        // End of suppressing Info messages.
+
+        // Fill message list with elements of array list
+        messageList.setListData(msgVector);
+
+        // Make the message table visible in the message scroll pane
+        scrollMessagePane.setViewportView(messageList);
+    }
+
+    /**
+     * Copy and rename file.
+     *
+     * @param existingFileName
+     */
+    protected void copyAndRenameFile(String existingFileName) {
+        // Target path string points to the directory to which the new file is
+        // to
+        // be inserted
+        // "false" stands for not changing result to upper case
+        String newFileName = new GetTextFromDialog("RENAME FILE").getTextFromDialog("Directory", "New file name", targetPathString
+                + pcFileSep, existingFileName, false, currentX, currentY);
+        try {
+            // User canceled creating the directory
+            if (newFileName == null) {
+                return;
+            }
+            // Copy nd rename the file to a new file name
+            Path spoolPath = Paths.get(sourcePathString);
+            Path newFilePath = Paths.get(targetPathString + pcFileSep + newFileName);
+
+            // Copy command
+            Files.copy(spoolPath, newFilePath, StandardCopyOption.COPY_ATTRIBUTES);
+            row = "Comp: PC file  " + newFileName + "  was inserted to directory  " + targetPathString
+                    + ".";
             msgVector.add(row);
             reloadLeftSideAndShowMessages(nodes);
-            // Paste from PC to PC
-            ParallelCopy_PC_PC parallelCopy_PC_PC = new ParallelCopy_PC_PC(clipboardPathStrings, leftPathStrings[0], null, this);
-            parallelCopy_PC_PC.execute();
-         }
-      });
-
-      // Insert spooled file that is copied from directory *workfiles* and,
-      // renamed,
-      // into selected directory *targetPathString*
-      insertSpooledFile.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         sourcePathString = Paths
-               .get(System.getProperty("user.dir"), "workfiles", "SpooledFile.txt").toString();
-         targetPathString = leftPathStrings[0];
-         copyAndRenameFile("SpooledFile.txt");
-         reloadLeftSide(nodes);
-      });
-
-      // Display PC file
-      displayPcFile.addActionListener(ae -> {
-         clipboardPathStrings = leftPathStrings;
-         // Display all selected files
-         for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
-            sourcePathString = clipboardPathStrings[idx];
-            // This is a way to display a PC file directly from Java:
-            DisplayFile dpf = new DisplayFile(this);
-            dpf.displayPcFile(sourcePathString);
-         }
-      });
-
-      // Edit PC file - now disabled
-      editPcFile.addActionListener(ae -> {
-         clipboardPathStrings = leftPathStrings;
-         for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
-            sourcePathString = clipboardPathStrings[idx];
-            // Get values from properties and set variables and text fields
-            // "true" stands for "IFS file"
-            EditFile edtf = new EditFile(remoteServer, this, leftPathString, "rewritePcFile");
-            // "true" stands for "edit"
-            edtf.displayPcFile(true);
-         }
-      });
-
-      // Rename PC file
-      renamePcFile.addActionListener(ae -> {
-         RenamePcObject rnmpf = new RenamePcObject(this, pcFileSep, currentX, currentY);
-         rnmpf.renamePcObject(leftPathString);
-      });
-
-      // Create PC directory
-      createPcDirectory.addActionListener(ae -> {
-         clipboardPathStrings = leftPathStrings;
-         if (clipboardPathStrings.length > 0) {
-            leftPathString = clipboardPathStrings[0];
-            CreateAndDeleteInPC cpcd = new CreateAndDeleteInPC(this, "createPcDirectory", currentX, currentY);
-            cpcd.createAndDeleteInPC();
-            reloadLeftSide(nodes);
-         }
-      });
-
-      // Create PC file
-      createPcFile.addActionListener(ae -> {
-         CreateAndDeleteInPC cpcf = new CreateAndDeleteInPC(this, "createPcFile", currentX, currentY);
-         cpcf.createAndDeleteInPC();
-         reloadLeftSide(nodes);
-      });
-
-      // Move PC objects to trash
-      movePcObjectToTrash.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         // Move selected objects to trash
-         // ------------------------------
-         // Set clipboard path strings for paste operation
-         clipboardPathStrings = leftPathStrings;
-
-         for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
-            // Set path string for the following class
-            leftPathString = clipboardPathStrings[idx];
-
-            // Move one object to trash
-            CreateAndDeleteInPC dpco = new CreateAndDeleteInPC(this, "movePcObjectToTrash", currentX, currentY);
-            dpco.createAndDeleteInPC();
-         }
-         // Remove selected nodes
-         TreePath[] paths = leftTree.getSelectionPaths();
-         for (int indx = 0; indx < paths.length; indx++) {
-            leftNode = (DefaultMutableTreeNode) (paths[indx].getLastPathComponent());
-            leftTreeModel.removeNodeFromParent(leftNode);
-         }
-      });
-
-      //
-      // Right popup menu on Right mouse click
-      // =====================================
-
-      // Send to PC or IBM i itself
-      copyFromRight.addActionListener(ae -> {
-         copySourceTree = rightTree;
-         // Set clipboard path string for paste operation
-         clipboardPathStrings = rightPathStrings;
-      });
-
-      // Receive from PC or IBM i itself
-      // -------------------------------
-      pasteToRight.addActionListener(ae -> {
-         // This listener keeps the scroll pane at the LAST MESSAGE.
-         // It is removed at the end of the method of the background task.
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         sourcePathString = clipboardPathString;
-         targetPathString = rightPathStrings[0];
-         if (copySourceTree == rightTree) {
-            // Paste from IBM i to IBM i
-            row = "Wait: Copying from IBM i to IBM i . . .";
+        } catch (Exception exc) {
+            exc.printStackTrace();
+            row = "Error: PC file  " + newFileName + "  was NOT inserted to directory  "
+                    + targetPathString + ".  -  " + exc.toString();
             msgVector.add(row);
-            reloadRightSideAndShowMessages();
+            reloadLeftSideAndShowMessages(nodes);
+        }
+        scrollMessagePane.getVerticalScrollBar()
+                .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+    }
 
-            ParallelCopy_IBMi_IBMi parallelCopy_IMBI_IBMI = new ParallelCopy_IBMi_IBMi(remoteServer, clipboardPathStrings, targetPathString, null, this);
-            parallelCopy_IMBI_IBMI.execute();
+    /**
+     *
+     * @param treePath
+     * @return
+     */
+    protected String getStringFromLeftPath(TreePath treePath) {
+        // Build absolute file path string from selected TreePath object
+        String pathString = "";
+        Object[] objects = treePath.getPath();
+        for (Object object : objects) {
+            pathString += object;
+            // Path string must NOT be a slash (unix) nor A:\, B:\, ... (Windows)
+            if (!pathString.equals("/") && !pathString.matches("[a-zA-Z]:\\\\")) {
+                pathString += pcFileSep;
+            }
+        }
+        return pathString;
+    }
 
-         } else if (copySourceTree == leftTree) {
-            // Paste from PC to IBM i
-            row = "Wait: Copying from PC to IBM i . . .";
-            msgVector.add(row);
-            reloadRightSideAndShowMessages();
+    /**
+     *
+     * @param treePath
+     * @return
+     */
+    protected String getStringFromRightPath(TreePath treePath) {
+        // Build absolute file path string from selected TreePath object
+        String pathString = "";
+        Object[] objects = treePath.getPath();
+        for (Object object : objects) {
+            pathString += object;
+            // Path string must NOT be a slash
+            if (!pathString.equals("/")) {
+                pathString += "/";
+            }
+        }
+        return pathString;
+    }
 
-            ParallelCopy_PC_IBMi parallelCopy_PC_IBMI = new ParallelCopy_PC_IBMi(remoteServer, clipboardPathStrings, targetPathString, null, this);
-            parallelCopy_PC_IBMI.execute();
-         }
-      });
+    /**
+     *
+     * @param pathString
+     * @return
+     */
+    protected TreePath getTreePathFromString(String pathString, String root) {
+        TreePath treePath = null;
 
-      // Copy library
-      copyLibrary.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         ifsFile = new IFSFile(remoteServer, rightPathString);
-         CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "copyLibrary", currentX, currentY);
-         crtdlt.createAndDeleteInIBMi(currentX, currentY);
-         reloadRightSide();
-      });
+        if (pathString.equals(pcFileSep) || pathString.equals("")) {
+            Object ob = new DefaultMutableTreeNode(pathString);
+            treePath = new TreePath(ob);
+            return treePath;
+        }
+        String pathBeg = root;
+        String pathEnd = leftPathString.substring(pathBeg.length());
 
-      // Clear library
-      clearLibrary.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+        String[] strs = pathEnd.split(pcFileSep);
+        Object[] obj = new Object[strs.length];
 
-         // Set clipboard path strings for paste operation
-         clipboardPathStrings = rightPathStrings;
+        obj[0] = new DefaultMutableTreeNode(pathBeg);
+        if (pathEnd.length() > 0) {
+            for (int idx = 1; idx < strs.length; idx++) {
+                obj[idx] = new DefaultMutableTreeNode(strs[idx]);
+            }
+        }
+        treePath = new TreePath(obj);
+        return treePath;
+    }
 
-         for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
-            rightPathString = clipboardPathStrings[idx];
-            ifsFile = new IFSFile(remoteServer, rightPathString);
+    /**
+     *
+     * @author vzupka
+     *
+     */
+    class LeftTreeExpansionListener implements TreeExpansionListener, TreeWillExpandListener {
 
-            // Clear selected libraries
-            // ------------------------
-            CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "clearLibrary", currentX, currentY);
-            crtdlt.createAndDeleteInIBMi(currentX, currentY);
-         }
-         // Reload nodes of cleared libraries
-         TreePath[] paths = rightTree.getSelectionPaths();
-         for (int indx = 0; indx < paths.length; indx++) {
-            rightNode = (DefaultMutableTreeNode) (paths[indx].getLastPathComponent());
-            reloadRightSide();
-         }
-      });
+        public void treeExpanded(TreeExpansionEvent treeExpansionEvent) {
 
-      // Delete library
-      deleteLibrary.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            // Get tree path from the event
+            // leftSelectedPath = treeExpansionEvent.getPath();
+            JTree tree = (JTree) treeExpansionEvent.getSource();
 
-         // Set clipboard path strings for paste operation
-         clipboardPathStrings = rightPathStrings;
+            leftRow = tree.getMinSelectionRow();
+            leftSelectedPath = tree.getPathForRow(leftRow);
 
-         for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
-            rightPathString = clipboardPathStrings[idx];
-            ifsFile = new IFSFile(remoteServer, rightPathString);
-            // Delete selected libraries
-            // -------------------------
-            CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "deleteLibrary", currentX, currentY);
-            crtdlt.createAndDeleteInIBMi(currentX, currentY);
-         }
-         // Remove selected nodes
-         TreePath[] paths = rightTree.getSelectionPaths();
-         for (int indx = 0; indx < paths.length; indx++) {
-            rightNode = (DefaultMutableTreeNode) (paths[indx].getLastPathComponent());
-            rightTreeModel.removeNodeFromParent(rightNode);
-         }
-      });
+            // Get path string from the tree path just being expanded
+            leftPathString = getStringFromLeftPath(leftSelectedPath);
+            leftPathString = correctLeftPathString(leftPathString);
 
-      // Create IFS directory in a parent directory
-      createIfsDirectory.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         ifsFile = new IFSFile(remoteServer, rightPathString);
-         CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "createIfsDirectory", currentX, currentY);
-         crtdlt.createAndDeleteInIBMi(currentX, currentY);
-         reloadRightSide();
-      });
+            // Get the node from the tree path
+            leftNode = (DefaultMutableTreeNode) leftSelectedPath.getLastPathComponent();
 
-      // Create IFS directory in a parent directory
-      createIfsFile.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         ifsFile = new IFSFile(remoteServer, rightPathString);
-         CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "createIfsFile", currentX, currentY);
-         crtdlt.createAndDeleteInIBMi(currentX, currentY);
-         reloadRightSide();
-      });
-
-      // Create AS400 Source Physical File
-      createSourcePhysicalFile.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         ifsFile = new IFSFile(remoteServer, rightPathString);
-         CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "createSourcePhysicalFile", currentX, currentY);
-         crtdlt.createAndDeleteInIBMi(currentX, currentY);
-         reloadRightSide();
-      });
-
-      // Create AS400 Source Member
-      createSourceMember.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         ifsFile = new IFSFile(remoteServer, rightPathString);
-         CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "createSourceMember", currentX, currentY);
-         crtdlt.createAndDeleteInIBMi(currentX, currentY);
-         reloadRightSide();
-      });
-
-      // Create Save File
-      createSaveFile.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         ifsFile = new IFSFile(remoteServer, rightPathString);
-         CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "createSaveFile", currentX, currentY);
-         crtdlt.createAndDeleteInIBMi(currentX, currentY);
-         reloadRightSide();
-      });
-
-      // Clear Save File
-      clearSaveFile.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         ifsFile = new IFSFile(remoteServer, rightPathString);
-         CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "clearSaveFile", currentX, currentY);
-         crtdlt.createAndDeleteInIBMi(currentX, currentY);
-      });
-
-      // Delete IFS object (directory or file)
-      deleteIfsObject.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-
-         // Delete selected objects
-         // -----------------------
-         // Set clipboard path strings for paste operation
-         clipboardPathStrings = rightPathStrings;
-
-         for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
-            rightPathString = clipboardPathStrings[idx];
-            ifsFile = new IFSFile(remoteServer, rightPathString);
-
-            CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "deleteIfsObject", currentX, currentY);
-            crtdlt.createAndDeleteInIBMi(currentX, currentY);
-         }
-         // Remove selected nodes
-         TreePath[] paths = rightTree.getSelectionPaths();
-         for (int indx = 0; indx < paths.length; indx++) {
-            rightNode = (DefaultMutableTreeNode) (paths[indx].getLastPathComponent());
-            rightTreeModel.removeNodeFromParent(rightNode);
-         }
-      });
-
-      // Delete AS400 Source Member
-      deleteSourceMember.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-
-         // Set clipboard path strings for paste operation
-         clipboardPathStrings = rightPathStrings;
-
-         for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
-            rightPathString = clipboardPathStrings[idx];
-            ifsFile = new IFSFile(remoteServer, rightPathString);
-
-            // Delete selected objects
-            // -----------------------
-            CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "deleteSourceMember", currentX, currentY);
-            crtdlt.createAndDeleteInIBMi(currentX, currentY);
-         }
-
-         // Remove selected nodes
-         TreePath[] paths = rightTree.getSelectionPaths();
-         for (int indx = 0; indx < paths.length; indx++) {
-            rightNode = (DefaultMutableTreeNode) (paths[indx].getLastPathComponent());
-            rightTreeModel.removeNodeFromParent(rightNode);
-         }
-      });
-
-      // Delete AS400 Source Physical File
-      deleteSourcePhysicalFile.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-
-         // Set clipboard path strings for paste operation
-         clipboardPathStrings = rightPathStrings;
-
-         for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
-            rightPathString = clipboardPathStrings[idx];
-            ifsFile = new IFSFile(remoteServer, rightPathString);
-
-            // Delete selected objects
-            // -----------------------
-            CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "deleteSourcePhysicalFile", currentX, currentY);
-            crtdlt.createAndDeleteInIBMi(currentX, currentY);
-         }
-
-         // Remove selected nodes
-         TreePath[] paths = rightTree.getSelectionPaths();
-         for (int indx = 0; indx < paths.length; indx++) {
-            rightNode = (DefaultMutableTreeNode) (paths[indx].getLastPathComponent());
-            rightTreeModel.removeNodeFromParent(rightNode);
-         }
-      });
-
-      // Delete Save File
-      deleteSaveFile.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-
-         // Set clipboard path strings for paste operation
-         clipboardPathStrings = rightPathStrings;
-
-         for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
-            rightPathString = clipboardPathStrings[idx];
-            ifsFile = new IFSFile(remoteServer, rightPathString);
-
-            // Delete selected objects
-            // -----------------------
-            CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "deleteSaveFile", currentX, currentY);
-            crtdlt.createAndDeleteInIBMi(currentX, currentY);
-         }
-
-         // Remove selected nodes
-         TreePath[] paths = rightTree.getSelectionPaths();
-         for (int indx = 0; indx < paths.length; indx++) {
-            rightNode = (DefaultMutableTreeNode) (paths[indx].getLastPathComponent());
-            rightTreeModel.removeNodeFromParent(rightNode);
-         }
-      });
-
-      // Work with spooled files
-      workWithSpooledFiles.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         String className = this.getClass().getSimpleName();
-         // "false" stand for *ALL users (not *CURRENT user)
-         WrkSplFCall wwsp = new WrkSplFCall(remoteServer, this, rightPathString, false, currentX, currentY, className);
-         wwsp.execute();
-      });
-
-      // Display IFS file
-      displayIfsFile.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         DisplayFile dspf = new DisplayFile(this);
-         dspf.displayIfsFile(remoteServer, rightPathString);
-      });
-
-      // Edit IFS file with source types suffix (e.g. .CLLE, .RPGLE, etc.)
-      editIfsFile.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         // Edit IFS file
-         EditFile edtf = new EditFile(remoteServer, this, rightPathString, "rewriteIfsFile");
-         // "true" stands for "edit"
-         edtf.displayIfsFile(true);
-      });
-
-      // Rename IFS file
-      renameIfsFile.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         RenameIfsObject rnmifsf = new RenameIfsObject(remoteServer, this, currentX, currentY);
-         rnmifsf.renameIfsObject(rightPathString);
-      });
-
-      // Compile IFS file
-      compileIfsFile.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         if (compile == null) {
-            compile = new Compile(remoteServer, this, rightPathString, true);
-         }
-         // "true" stands for "IFS file" as a source text
-         compile.compile(rightPathString, true);
-         // compile = null;
-      });
-
-      // Display IBM i Source Member
-      displaySourceMember.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         DisplayFile dspf = new DisplayFile(this);
-         dspf.displaySourceMember(remoteServer, rightPathString);
-      });
-
-      // Edit IBM i Source Member
-      editSourceMember.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         // "false" stands for "not IFS file"
-         EditFile edtf = new EditFile(remoteServer, this, rightPathString, "rewriteSourceMember");
-         // "true" stands for "edit"
-         edtf.displaySourceMember(true);
-      });
-
-      // Compile Source Member
-      compileSourceMember.addActionListener(ae -> {
-         scrollMessagePane.getVerticalScrollBar()
-               .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         if (compile == null) {
-            compile = new Compile(remoteServer, this, rightPathString, false);
-         }
-         // "false" means "IFS file" is NOT a source text
-         compile.compile(rightPathString, false);
-         // compile = null;
-      });
-
-      // Left path combo box listener
-      // ----------------------------
-      //
-      // For Windows only:
-      // =================
-      if (operatingSystem.equals(WINDOWS)) {
-         // Item listener for DISKS ComboBox reacts on item selection with
-         // the
-         // mouse
-         disksComboBox.addItemListener(il -> {
-            JComboBox<String> comboBox = (JComboBox) il.getSource();
-            leftPathString = (String) comboBox.getSelectedItem();
-
-            // Remove the old and create a new combo box for left path selection
-            panelPathLeft.remove(leftPathComboBox);
-            leftPathComboBox = new JComboBox<>();
-            leftPathComboBox.setEditable(true);
-            panelPathLeft.add(leftPathComboBox);
-
-            leftPathComboBox.addItem(leftPathString);
-            leftPathComboBox.setSelectedIndex(0);
-
-            // Register a new ActionListener to the new combo box
-            leftPathComboBox.addActionListener(leftPathActionListener);
-
-            // Get the first item (disk symbol or file system root) from the
-            // combo box and make it leftRoot
+            // Change tree root
             leftRoot = leftPathString;
-            // Make the disk symbol also firstLeftRootSymbol
-            firstLeftRootSymbol = leftPathString;
-            // Clear and set the tree map with leftRoot and row number 0
+
+            // Reload children of the node
+            reloadLeftSide(nodes);
+        }
+
+        public void treeCollapsed(TreeExpansionEvent treeExpansionEvent) {
+        }
+
+        public void treeWillExpand(TreeExpansionEvent treeExpansionEvent) {
+        }
+
+        public void treeWillCollapse(TreeExpansionEvent treeExpansionEvent) {
+        }
+    }
+
+    /**
+     *
+     * @author vzupka
+     *
+     */
+    class RightTreeExpansionListener implements TreeExpansionListener, TreeWillExpandListener {
+
+        public void treeExpanded(TreeExpansionEvent treeExpansionEvent) {
+
+            // Get tree path from the event
+            JTree tree = (JTree) treeExpansionEvent.getSource();
+
+            rightRow = tree.getMinSelectionRow();
+            rightSelectedPath = tree.getPathForRow(rightRow);
+
+            // Get path string from the tree path just being expanded
+            rightPathString = getStringFromRightPath(rightSelectedPath);
+            rightPathString = correctRightPathString(rightPathString);
+
+            // Get the node from the tree path
+            rightNode = (DefaultMutableTreeNode) rightSelectedPath.getLastPathComponent();
+
+            // Change tree root
+            rightRoot = rightPathString;
+
+            // Reload children of the node
+            reloadRightSide();
+        }
+
+        public void treeCollapsed(TreeExpansionEvent treeExpansionEvent) {
+        }
+
+        public void treeWillExpand(TreeExpansionEvent treeExpansionEvent) {
+        }
+
+        public void treeWillCollapse(TreeExpansionEvent treeExpansionEvent) {
+        }
+    }
+
+    /**
+     * Mouse adapter for left tree.
+     */
+    class LeftTreeMouseAdapter extends MouseAdapter {
+
+        private void popupEvent(MouseEvent mouseEvent) {
+
+            Component component = mouseEvent.getComponent();
+            Point pt = mouseEvent.getPoint();
+            SwingUtilities.convertPointToScreen(pt, component);
+            currentX = (int) pt.getX();
+            currentY = (int) pt.getY();
+
+            // Source tree for Drag and Drop transfer
+            dragSourceTree = leftTree;
+
+            // Get row number of the selected node
+            leftRow = leftTree.getRowForLocation(mouseEvent.getX(), mouseEvent.getY());
+            // Get tree path of the selected node
+            leftSelectedPath = leftTree.getPathForLocation(mouseEvent.getX(), mouseEvent.getY());
+            if (leftSelectedPath == null) {
+                return;
+            }
+
+            // Create new left node
+            leftNode = (DefaultMutableTreeNode) leftSelectedPath.getLastPathComponent();
+
+            // Create array of all selected tree paths
+            TreePath[] leftPaths = leftTree.getSelectionPaths();
+
+            // Create array of all selected row numbers (not actually used)
+            int[] leftPathsRows = leftRowMapper.getRowsForPaths(leftPaths);
+
+            // Get string from the tree path of the selected node
+            leftPathString = getStringFromLeftPath(leftSelectedPath);
+            // Remove trailing file separator from the path string
+            leftPathString = correctLeftPathString(leftPathString);
+
+            // Change left root to selected path
+            leftRoot = leftPathString;
+
+            // Get all path strings from the tree paths array
+            leftPathStrings = new String[leftPaths.length];
+            String[] pathStrings = new String[leftPaths.length];
+
+            // Fill the array with children's path strings
             leftTreeMap.clear();
-            leftTreeMap.put(leftRoot, 0);
-            // Create a new tree and table on the left side of the window
-            leftRootChanged = true;
-            createNewLeftSide(leftPathString);
-         });
-      } // End Windows
+            for (int idx = 0; idx < leftPaths.length; idx++) {
+                // Get string from tree path
+                pathStrings[idx] = getStringFromLeftPath(leftPaths[idx]);
+                // Remove trailing file separator from the path string
+                pathStrings[idx] = correctLeftPathString(pathStrings[idx]);
+                // Get row number from the rows array (not actually used)
+                leftRow = leftPathsRows[idx];
 
-      // Processing continues for both Windows and Unix:
-      //
-      // Register action listener for LEFT PATH ComboBox reacts on text change
-      // in its input field (first time)
-      leftPathComboBox.addActionListener(leftPathActionListener);
+                leftPathStrings[idx] = pathStrings[idx];
+                // System.out.println("leftPathStrings[" + idx + "]: " + leftPathStrings[idx]);
 
-      // Component listener reacting to WINDOW RESIZING
-      ComponentListener resizingListener = new ComponentAdapter() {
-         @Override
-         public void componentResized(ComponentEvent componentEvent) {
-            windowWidth = componentEvent.getComponent().getWidth();
-            windowHeight = componentEvent.getComponent().getHeight();
-            double splitPaneInnerDividerLoc = 0.50d; // 50 %
-            // int splitPaneInnerDividerLoc = (windowWidth - (2 *
-            // borderWidth +
-            // 5)) / 2;
-            splitPaneInner.setDividerLocation(splitPaneInnerDividerLoc);
-         }
-      };
-      // Register window resizing listener
-      addComponentListener(resizingListener);
+                // Set row number to the map (path string, row number)
+                // for possible later scrolling to the path node
+                leftTreeMap.put(pathStrings[idx], leftPathsRows[idx]);
 
-      // Add the global panel to the frame, NOT container
-      cont.add(globalPanel);
-      add(globalPanel);
-
-      // Set initial size and width of the window
-      setSize(windowWidth, windowHeight);
-
-      // Set window coordinates from application properties
-      setLocation(mainWindowX, mainWindowY);
-
-      // Show the window on the screen
-      setVisible(true);
-      pack(); // Do not pack
-   }
-
-   /**
-    * 
-    */
-   protected boolean connectReconnect() {
-      // Set wait-cursor (rotating wheel?)
-      //      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-      // Keeps the scroll pane at the LAST MESSAGE.
-      scrollMessagePane.getVerticalScrollBar()
-            .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-
-      // *****
-      // ========
-      // ======================================== Connetion to the server
-      //
-      // Introductory message - waiting for the server.
-      row = "Wait: Connecting to server  " + properties.getProperty("HOST") + " . . .";
-      msgVector.add(row);
-      // Reload LEFT side. Do not use Right side! It would enter a loop.
-      reloadLeftSideAndShowMessages(noNodes);
-
-      // Get connection to the IBM i SERVER.
-      // The third parameter (password) should NOT be specified. The user must sign on.
-      remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
-      // The following statement can replace the preceding one when debugging in order to better comfort.
-      // !!!!remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText(), "ZUP047");
-      // Connect FILE service of the IBM i server.
-      try {
-         remoteServer.disconnectAllServices();
-         remoteServer.connectService(AS400.FILE);
-      } catch (Exception exc) {
-         exc.printStackTrace();
-         row = "Error: Connection to server  " + properties.getProperty("HOST") + "  failed.  -  "
-               + exc.toString();
-         msgVector.add(row);
-         reloadLeftSideAndShowMessages(noNodes);
-         // Change cursor to default
-         setCursor(Cursor.getDefaultCursor());
-         // Remove setting last element of messages
-         scrollMessagePane.getVerticalScrollBar()
-               .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         return false;
-      }
-      //
-      // ================================= End of connection to the server
-      // =======
-      // *****
-
-      // Show completion message when connection to IBM i server connected.
-      row = "Comp: Server IBM i  " + properties.getProperty("HOST") + "  was conneted to user  "
-            + remoteServer.getUserId() + ".";
-      msgVector.add(row);
-      reloadLeftSideAndShowMessages(noNodes);
-
-      // Change cursor to default
-      setCursor(Cursor.getDefaultCursor());
-      // Remove setting last element of messages
-      scrollMessagePane.getVerticalScrollBar()
-            .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-      //refreshWindow();
-      return true;
-   }
-
-   /**
-    * Add child nodes to the LEFT side node along with the path to the PC
-    * directory path given in parameters.
-    * 
-    * @param pathParam
-    * @param nodeParam
-    */
-   protected void addPCNodes(Path pathParam, DefaultMutableTreeNode nodeParam) {
-
-      if (nodeParam == null) {
-         return;
-      }
-
-      // Level 1
-
-      // Add child nodes to the current node of the tree
-      // First, remove all children in order to create all new child nodes
-      nodeParam.removeAllChildren();
-      if (Files.isDirectory(pathParam)) {
-         try {
-            // Get list of objects in the directory
-            Stream<Path> stream = Files.list(pathParam);
-            // Process level 2 of objects (children of node level 1 - the
-            // root)
-            stream.forEach(pathLevel2 -> {
-               Path relativePathLevel2;
-               // Eliminate directories whose names begin with a dot
-               if (!pathLevel2.toString().contains(pcFileSep + ".")) {
-                  if (pathLevel2.getParent() != null) {
-                     relativePathLevel2 = pathLevel2.getParent().relativize(pathLevel2);
-                  } else {
-                     relativePathLevel2 = pathLevel2;
-                  }
-                  nodeLevel2 = new DefaultMutableTreeNode(relativePathLevel2);
-                  nodeParam.add(nodeLevel2);
-
-                  // Level 2
-                  nodeLevel2.removeAllChildren();
-                  if (Files.isDirectory(pathLevel2)) {
-                     try {
-                        // Get list of objects in the directory level 2
-                        Stream<Path> stream2 = Files.list(pathLevel2);
-                        // Process each node level 2 if it is a directory. Resulting in nodes level 3
-                        stream2.forEach(pathLevel3 -> {
-                           Path relativePathLevel3;
-                           // Eliminate directories whose names begin with a dot
-                           if (!pathLevel3.toString().contains(pcFileSep + ".")) {
-                              if (pathLevel3.getParent() != null) {
-                                 relativePathLevel3 = pathLevel3.getParent().relativize(pathLevel3);
-                              } else {
-                                 relativePathLevel3 = pathLevel3;
-                              }
-                              nodeLevel3 = new DefaultMutableTreeNode(relativePathLevel3);
-                              nodeLevel2.add(nodeLevel3);
-
-                              //// No other levels are necessary
-                              //// -----------------------------
-                              if (false) {
-                                 // Level 3
-                                 nodeLevel3.removeAllChildren();
-                                 if (Files.isDirectory(pathLevel3)) {
-                                    try {
-                                       // Get list of objects in the
-                                       // directory level 3
-                                       Stream<Path> stream3 = Files.list(pathLevel3);
-                                       // Process each node level 3 if it is a directory. Resulting in nodes level 4
-                                       stream3.forEach(pathLevel4 -> {
-                                          Path relativePathLevel4;
-                                          // Eliminate directories whose names begin with a dot
-                                          if (!pathLevel4.toString().contains(pcFileSep + ".")) {
-                                             if (pathLevel4.getParent() != null) {
-                                                relativePathLevel4 = pathLevel4.getParent()
-                                                      .relativize(pathLevel4);
-                                             } else {
-                                                relativePathLevel4 = pathLevel4;
-                                             }
-                                             DefaultMutableTreeNode nodeLevel4 = new DefaultMutableTreeNode(relativePathLevel4);
-                                             nodeLevel3.add(nodeLevel4);
-                                          } // Level 3 - Dotted file // names - "/." or "\."
-                                       });
-                                       stream3.close();
-                                    } catch (Exception exc) {
-                                       exc.printStackTrace();
-                                       row = "Info:  " + exc.toString();
-                                       msgVector.add(row);
-                                       // no nodes - important not to
-                                       // recurse
-                                       reloadLeftSideAndShowMessages(noNodes);
-                                    }
-                                 } // End Level 3
-                              }
-                              //// ----------------
-                              //// End other levels
-
-                           } // Level 2 - Dotted file names - "/." or // "\."
-                        });
-                        stream2.close();
-                     } catch (Exception exc) {
-                        exc.printStackTrace();
-                        row = "Info:  " + exc.toString();
-                        msgVector.add(row);
-                        // no nodes - important not to recurse
-                        reloadLeftSideAndShowMessages(noNodes);
-                     }
-                  } // End Level 2
-
-               } // Level 1 - Dotted file names - "/." or "\."
-            });
-            stream.close();
-         } catch (Exception exc) {
-            exc.printStackTrace();
-            row = "Error:  " + exc.toString();
-            msgVector.add(row);
-            reloadLeftSideAndShowMessages(noNodes); // no nodes - important not to recurse
-         }
-      } // End Level 1
-   }
-
-   /**
-    * Add child nodes to the RIGHT side node along with the path to the AS400
-    * directory given in parameters; AS400 directory can be an ordinary IFS
-    * directory or a library (.LIB), source physical file (.FILE PF-SRC), save
-    * file (.FILE SAVF).
-    * 
-    * @param ifsFileParam
-    * @param nodeParam
-    */
-   protected void addAS400Nodes(IFSFile ifsFileParam, DefaultMutableTreeNode nodeParam) {
-
-      // Set wait-cursor (rotating wheel?)
-      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-      scrollMessagePane.getVerticalScrollBar()
-            .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-
-      // First, remove all children in order to create all new child nodes
-      nodeParam.removeAllChildren();
-      // Add child nodes to the current node of the tree
-      try {
-         // IFSFile list of directories/files
-         ifsFiles = ifsFileParam.listFiles();
-
-         // For each directory add a new node - IFS directory or file
-         for (IFSFile ifsFile : ifsFiles) {
-            try {
-               // Get parent file
-               IFSFile parent = ifsFile.getParentFile();
-
-               // Non-library system - all IFS objects
-               // ------------------
-               // IFS path does not start with /QSYS.LIB and it is not QSYS.LIB (without a leading slash)
-               if (!ifsFile.toString().toUpperCase().startsWith("/QSYS.LIB") 
-                     && !ifsFile.toString().toUpperCase().equals("QSYS.LIB")) {
-
-                  // Level 1
-                  nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
-                  nodeParam.add(nodeLevel2);
-
-                  // Level 2
-                  IFSFile[] ifsFiles2;
-                  nodeLevel2.removeAllChildren();
-                  if (ifsFile.isDirectory()) {
-                     try {
-                        // Get list of sub-files/sub-directories.
-                        // Some objects may be secured (e. g /QDLS directory).
-                        ifsFiles2 = ifsFile.listFiles();
-                        for (IFSFile ifsFileLevel2 : ifsFiles2) {
-                           nodeLevel3 = new DefaultMutableTreeNode(ifsFileLevel2.getName());
-                           nodeLevel2.add(nodeLevel3);
-
-                           //// No other levels are necessary
-                           //// -----------------------------
-                           if (false) {
-                              // Level 3
-                              IFSFile[] ifsFiles3;
-                              nodeLevel3.removeAllChildren();
-                              // Get list of sub-files/sub-directories.
-                              if (ifsFileLevel2.isDirectory()) {
-                                 ifsFiles3 = ifsFileLevel2.listFiles();
-                                 for (IFSFile ifsFileLevel3 : ifsFiles3) {
-                                    DefaultMutableTreeNode nodeLevel4 = new DefaultMutableTreeNode(ifsFileLevel3.getName());
-                                    nodeLevel3.add(nodeLevel4);
-
-                                    // Level 4
-                                    IFSFile[] ifsFiles4;
-                                    nodeLevel4.removeAllChildren();
-
-                                    if (ifsFileLevel3.isDirectory()) {
-                                       ifsFiles4 = ifsFileLevel3.listFiles();
-                                       for (IFSFile ifsFileLevel4 : ifsFiles4) {
-                                          DefaultMutableTreeNode nodeLevel5 = new DefaultMutableTreeNode(ifsFileLevel4.getName());
-                                          nodeLevel4.add(nodeLevel5);
-                                       }
-                                    }
-                                 }
-                              }
-                              //// ----------------
-                              //// Other levels end
-                           }
-                        }
-                     } catch (Exception exc) {
-                        System.out.println(exc.getLocalizedMessage());
-                        exc.printStackTrace();
-                        row = "Info: Object  " + ifsFile.toString() + "  -  " + exc.toString();
-                        msgVector.add(row);
-                        reloadLeftSideAndShowMessages(noNodes);
-                        continue;
-                     }
-                  }
-               } // End of IFS objects
-
-               // System library QSYS
-               // -------------------
-               // System library is processed individually in order to select libraries
-               // starting with a prefix and add them as secondary nodes
-               if (ifsFile.toString().toUpperCase().equals("/QSYS.LIB")) {
-                  nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
-                  nodeParam.add(nodeLevel2);
-
-                  nodeLevel2.removeAllChildren();
-                  // Get list of libraries - Level 2
-                  // Select only libraries whose name starts with
-                  // a prefix (LIBRARY_PREFIX) specified in the text field
-                  IFSFile[] ifsFiles2 = ifsFile.listFiles(libraryPrefixTextField.getText().toUpperCase() + "*.LIB");
-                  for (IFSFile ifsFileLevel2 : ifsFiles2) {
-                     nodeLevel3 = new DefaultMutableTreeNode(ifsFileLevel2.getName());
-                     nodeLevel2.add(nodeLevel3);
-                  }
-               }
-
-               // Library system
-               // --------------
-               // Secondary nodes of Source files (level3) are added.
-               //
-               // Libraries (other than QSYS) - select those starting with a PREFIX.
-               else if (ifsFile.toString().toUpperCase().startsWith("/QSYS.LIB/") 
-                     && ifsFile.toString().toUpperCase().endsWith(".LIB")) {
-                  if (ifsFile.getName().startsWith(libraryPrefixTextField.getText().toUpperCase())) {
-                     nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
-                     nodeParam.add(nodeLevel2);
-
-                     // Source files are added
-                     nodeLevel2.removeAllChildren();
-                     IFSFile[] ifsFiles2 = ifsFile.listFiles("*.FILE");
-                     for (IFSFile ifsFileLevel2 : ifsFiles2) {
-                        nodeLevel3 = new DefaultMutableTreeNode(ifsFileLevel2.getName());
-                        nodeLevel2.add(nodeLevel3);
-                     }
-                  }
-               }
-
-               // Source Physical Files
-               if (ifsFile.toString().contains(".LIB") && ifsFile.toString().contains(".FILE")
-                     && ifsFile.isSourcePhysicalFile()) {
-                  nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
-                  nodeParam.add(nodeLevel2);
-
-                  nodeLevel2.removeAllChildren();
-                  IFSFile[] ifsFiles2 = ifsFile.listFiles();
-                  for (IFSFile ifsFileLevel2 : ifsFiles2) {
-                     nodeLevel3 = new DefaultMutableTreeNode(ifsFileLevel2.getName());
-                     nodeLevel2.add(nodeLevel3);
-                  }
-               }
-
-               // Source Members (their parents are Source Physical Files).
-               if (ifsFile.toString().contains(".LIB") && ifsFile.toString().contains(".FILE")
-                     && parent.isSourcePhysicalFile() && ifsFile.toString().endsWith(".MBR")) {
-                  nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
-                  nodeParam.add(nodeLevel2);
-               }
-
-               // Save Files - files (.FILE) with subtype SAVF.
-               if (ifsFile.toString().contains(".LIB") && ifsFile.toString().contains(".FILE")
-                     && ifsFile.getSubtype().equals("SAVF")) {
-                  nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
-                  nodeParam.add(nodeLevel2);
-               }
-
-               // Output queues.
-               if (ifsFile.toString().contains(".LIB") && ifsFile.toString().contains(".OUTQ")) {
-                  nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
-                  nodeParam.add(nodeLevel2);
-               }
-            } catch (Exception exc) {
-               exc.printStackTrace();
-               row = "Info: Object  " + ifsFile.toString() + "  -  " + exc.toString();
-               msgVector.add(row);
-               reloadLeftSideAndShowMessages(noNodes);
+                // Add the new path string to the combo box
+                leftPathComboBox.addItem(pathStrings[idx]);
             }
-         }
-      } catch (Exception exc) {
-         exc.printStackTrace();
-         row = "Info: Object  " + ifsFile.toString() + "  -  " + exc.toString();
-         msgVector.add(row);
-         reloadLeftSideAndShowMessages(noNodes);
-      }
-      // Change cursor to default
-      setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-      // Remove setting last element of messages
-      scrollMessagePane.getVerticalScrollBar()
-            .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-   }
 
-   /**
-    * Create split panes containing the PC file tree and table on the left side
-    * of the window.
-    * 
-    * @param leftRoot
-    */
-   protected void createNewLeftSide(String leftRoot) {
-
-      // Create new left hand tree
-      leftPathString = leftRoot;
-      leftTopNode = new DefaultMutableTreeNode(leftPathString);
-      leftTreeMap.put(leftRoot, 0);
-
-      // Create left hand tree
-      leftTree = new JTree(leftTopNode);
-
-      // Create tree model
-      leftTreeModel = (DefaultTreeModel) leftTree.getModel();
-
-      // Mouse listener for left tree
-      leftTreeMouseListener = new LeftTreeMouseAdapter();
-      leftTree.addMouseListener(leftTreeMouseListener);
-
-      // Tree expansion listener for left tree
-      TreeExpansionListener leftTreeExpansionListener = new LeftTreeExpansionListener();
-      leftTree.addTreeExpansionListener(leftTreeExpansionListener);
-
-      leftTree.setDragEnabled(true);
-      leftTree.setDropMode(DropMode.USE_SELECTION);
-      leftTree.setTransferHandler(new LeftTreeTransferHandler(this));
-
-      leftTreeSelModel = leftTree.getSelectionModel();
-      leftTreeSelModel.setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
-      leftRowMapper = leftTreeSelModel.getRowMapper();
-
-      leftTree.setRootVisible(true);
-      leftTree.setShowsRootHandles(true);
-      leftTree.setSelectionRow(0);
-
-      // Add PC nodes to the left tree
-      leftTreeMap.put(leftPathString, 0);
-      addPCNodes(Paths.get(leftPathString), leftTopNode);
-      leftTree.expandRow(0);
-
-      // Place the left tree in scroll pane
-      scrollPaneLeft.setViewportView(leftTree);
-
-      // Change cursor to default
-      // setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-      // Remove setting last element of messages
-      scrollMessagePane.getVerticalScrollBar()
-            .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-   }
-
-   /**
-    * Create split panes containing the IBM i file tree and table on the right
-    * side of the window; IBM i files are objects and differ conceptually from
-    * PC files, therefore they are processed differently.
-    */
-   protected void createNewRightSide(String currentRightRoot) {
-      // Set wait-cursor (rotating wheel?)
-      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-      // Keeps the scroll pane at the LAST MESSAGE.
-      scrollMessagePane.getVerticalScrollBar()
-            .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-
-      // Set file system root symbol to the combo box
-      //      rightPathComboBox.addItem(currentRightRoot);
-
-      // Right tree showing IBM i file system (IFS)
-      // ----------
-      rightPathString = currentRightRoot;
-      rightTopNode = new DefaultMutableTreeNode(currentRightRoot);
-      rightTreeMap.put(currentRightRoot, 0);
-
-      // Create right hand tree
-      rightTree = new JTree(rightTopNode);
-
-      // Create tree model
-      rightTreeModel = (DefaultTreeModel) rightTree.getModel();
-
-      // Mouse listener for RIGHT TREE reacts on row number selected by mouse
-      // left or right click
-      rightTreeMouseListener = new RightTreeMouseAdapter();
-      rightTree.addMouseListener(rightTreeMouseListener);
-
-      // Tree expansion listener for left tree
-      TreeExpansionListener rightTreeExpansionListener = new RightTreeExpansionListener();
-      rightTree.addTreeExpansionListener(rightTreeExpansionListener);
-
-      rightTree.setDragEnabled(true);
-      rightTree.setDropMode(DropMode.USE_SELECTION);
-      rightTree.setTransferHandler(new RightTreeTransferHandler(this));
-
-      rightTreeSelModel = rightTree.getSelectionModel();
-      rightTreeSelModel.setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
-      rightRowMapper = rightTreeSelModel.getRowMapper();
-
-      rightTree.setRootVisible(true);
-      rightTree.setShowsRootHandles(true);
-      rightTree.setSelectionRow(0);
-
-      // Right root must start with a slash
-      if (!rightPathString.startsWith("/")) {
-         // Show error message when the path string does not start with a slash.
-         row = "Error: Right path string   " + rightPathString + "   does not start with a slash. "
-               + "Correct the path string and try again.";
-         msgVector.add(row);
-         reloadLeftSideAndShowMessages(noNodes);
-         
-         // Change cursor to default
-         setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-         // Remove setting last element of messages
-         scrollMessagePane.getVerticalScrollBar()
-               .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-         return;
-      }
-      
-      // Create an object of IFSFile from the path string for adding nodes
-      ifsFile = new IFSFile(remoteServer, rightPathString);
-      
-      // Add IFS nodes for the right tree
-      addAS400Nodes(ifsFile, rightTopNode);
-      rightTree.expandRow(0);
-
-      // Place the right tree in scroll pane
-      scrollPaneRight.setViewportView(rightTree);
-      splitPaneInner.setRightComponent(panelRight);
-
-      // Action listener for Library Prefix text field
-      libraryPrefixTextField.addActionListener(al -> {
-         // Translate text to upper case letters (object names are always in upper case)
-         libraryPrefixTextField.setText(libraryPrefixTextField.getText().toUpperCase());
-      });
-
-      // Set actual user name to the text field
-      userNameTextField.setText(remoteServer.getUserId());
-      properties.setProperty("USERNAME", remoteServer.getUserId());
-
-      // Create the updated text file in directory "paramfiles"
-      try {
-         outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-         properties.store(outfile, PROP_COMMENT);
-         outfile.close();
-      } catch (Exception exc) {
-         exc.printStackTrace();
-      }
-
-      // Change cursor to default
-      setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-      // Remove setting last element of messages
-      scrollMessagePane.getVerticalScrollBar()
-            .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-   }
-
-   /**
-    * Correct left path string in properties, Empty path is replaced by a root
-    * symbol (/ or C:\) Trailing slash is removed if path is not a root symbol.
-    * 
-    * @param pathString
-    * @return
-    */
-   protected String correctLeftPathString(String pathString) {
-
-      if (pathString.lastIndexOf(pcFileSep) > 0 && !pathString.equals(firstLeftRootSymbol)) {
-         // Get path prefix (parent)
-         pathString = pathString.substring(0, pathString.lastIndexOf(pcFileSep));
-      }
-      return pathString;
-   }
-
-   /**
-    * Correct right path string in properties, Empty path is replaced by slash
-    * (/), Trailing slash is removed if path is not slash.
-    * 
-    * @param rightString
-    * @return
-    */
-   protected String correctRightPathString(String rightString) {
-
-      // Remove ending slash from non-root right path
-      if (!rightString.equals("/") && rightString.endsWith("/")) {
-         rightString = rightString.substring(0, rightString.lastIndexOf("/"));
-      }
-      return rightString;
-   }
-
-   /**
-    * Refresh data in the window according to input fields in the top panel, and
-    * path panels.
-    */
-   @SuppressWarnings({ "UseSpecificCatch", "CallToPrintStackTrace" })
-   protected void refreshWindow() {
-
-      // Set application properties using input values from text fields
-      properties.setProperty("HOST", hostTextField.getText());
-
-      String userName = userNameTextField.getText().toUpperCase();
-      userNameTextField.setText(userName);
-      properties.setProperty("USERNAME", userName);
-
-      if (!pcCharset.equals("*DEFAULT")) {
-         // Check if charset is valid
-         try {
-            Charset chr = Charset.forName(pcCharset);
-         } catch (IllegalCharsetNameException | UnsupportedCharsetException charset) {
-            // If pcCharset is invalid, take ISO-8859-1
-            pcCharset = "ISO-8859-1";
-            pcCharComboBox.setSelectedItem(pcCharset);
-         }
-         properties.setProperty("PC_CHARSET", pcCharset);
-      }
-
-      if (!ibmCcsid.equals("*DEFAULT")) {
-         try {
-            ibmCcsidInt = Integer.parseInt(ibmCcsid);
-         } catch (Exception exc) {
-            exc.printStackTrace();
-            ibmCcsid = "819";
-            ibmCcsidInt = 819;
-            ibmCcsidComboBox.setSelectedItem(ibmCcsid);
-         }
-         properties.setProperty("IBM_CCSID", ibmCcsid);
-      }
-
-      // Source record length requires special treatment due to integer value
-      String srcRecLen = sourceRecordLengthTextField.getText();
-      try {
-         Integer.parseInt(srcRecLen);
-      } catch (NumberFormatException nfe) {
-         // If the user enters non-integer text, take default value
-         srcRecLen = "80";
-      }
-      sourceRecordLengthTextField.setText(srcRecLen);
-      properties.setProperty("SOURCE_RECORD_LENGTH", srcRecLen);
-      properties.setProperty("SOURCE_TYPE", sourceType);
-      libraryPrefixTextField.setText(libraryPrefixTextField.getText().toUpperCase());
-      properties.setProperty("LIBRARY_PREFIX", libraryPrefixTextField.getText());
-
-      // Create the updated text file in directory "paramfiles"
-      try {
-         outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-         properties.store(outfile, PROP_COMMENT);
-         outfile.close();
-      } catch (Exception exc) {
-         exc.printStackTrace();
-      }
-
-      // Create right side of the window split panes (tree and table of IBM i).
-      // The left side was created before.
-      rightRoot = properties.getProperty("RIGHT_PATH");
-
-      // Register Action listener for RIGHT ComboBox which reacts on text change
-      // in its input field
-      rightPathComboBox.addActionListener(new RightPathActionListener());
-
-      createNewRightSide(rightRoot);
-
-      // Unregister Action listener for RIGHT ComboBox 
-      // which reacts on text change in its input field
-      rightPathComboBox.removeActionListener(new RightPathActionListener());
-
-   }
-
-   /**
-    * Reload node structure in the left side of the window
-    * 
-    * @param addChildNodes
-    */
-   protected void reloadLeftSideAndShowMessages(boolean addChildNodes) {
-      scrollMessagePane.getVerticalScrollBar()
-            .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-
-      // reloadLeftSide(addChildNodes);
-
-      buildMessageList();
-
-      scrollMessagePane.getVerticalScrollBar()
-            .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-
-      // Make the message table visible in the message scroll pane
-      scrollMessagePane.setViewportView(messageList);
-   }
-
-   /**
-    * 
-    * @param addChildNodes
-    */
-   protected void reloadLeftSide(boolean addChildNodes) {
-
-      if (addChildNodes) {
-         if (leftNode != null) {
-            // Add children to the node
-            addPCNodes(Paths.get(leftPathString), leftNode);
-         }
-      }
-
-      // Note that the structure of the node (children) changed
-      leftTreeModel.nodeStructureChanged(leftNode);
-      // Reload that node only (the other nodes remain unchanged)
-      leftTreeModel.reload(leftNode);
-      leftTree.expandRow(leftRow);
-   }
-
-   /**
-    * Reload node structure in the right side of the window and show messages.
-    */
-   protected void reloadRightSideAndShowMessages() {
-      scrollMessagePane.getVerticalScrollBar()
-            .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-
-      buildMessageList();
-
-      // Reload node structure in the right side of the window
-      // reloadRightSide();
-
-      scrollMessagePane.getVerticalScrollBar()
-            .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-      // Make the message table visible in the message scroll pane
-      scrollMessagePane.setViewportView(messageList);
-
-   }
-
-   /**
-    * Reload node structure in the right side of the window.
-    */
-   protected void reloadRightSide() {
-
-      ifsFile = new IFSFile(remoteServer, rightPathString);
-
-      if (rightNode != null) {
-         // Add children to the node
-         addAS400Nodes(ifsFile, rightNode);
-      }
-
-      // Note that the structure of the node (children) changed
-      rightTreeModel.nodeStructureChanged(rightNode);
-      // Reload that node only (the other nodes remain unchanged)
-      rightTreeModel.reload(rightNode);
-   }
-
-   /**
-    * Build message list.
-    */
-   protected void buildMessageList() {
-      messageList.setSelectionBackground(Color.WHITE);
-
-      // Suppressing some Info messages conditionally.
-      // ---------------------------------------------
-      // If you want to allow Info messages change the ALLOW_INFO_MESSAGES value
-      // to *true*.
-      Vector<String> newMsgVector = new Vector<>();
-
-      // Inspect all messages in msgVector
-      for (String message : msgVector) {
-         // If the message is Info type and does not contain
-         // AccessDeniedException, allow it.
-         if (message.startsWith("Info") && ALLOW_INFO_MESSAGES
-               && !message.contains("AccessDeniedException")) {
-            newMsgVector.add(message);
-         } else if (!message.startsWith("Info")) {
-            // Other types of messages are always allowed.
-            newMsgVector.add(message);
-         }
-         msgVector = newMsgVector;
-      }
-      // End of suppressing Info messages.
-
-      // Fill message list with elements of array list
-      messageList.setListData(msgVector);
-
-      // Make the message table visible in the message scroll pane
-      scrollMessagePane.setViewportView(messageList);
-   }
-
-   /**
-    * Copy and rename file.
-    * 
-    * @param existingFileName
-    */
-   protected void copyAndRenameFile(String existingFileName) {
-      // Target path string points to the directory to which the new file is
-      // to
-      // be inserted
-      // "false" stands for not changing result to upper case
-      String newFileName = new GetTextFromDialog("RENAME FILE").getTextFromDialog("Directory", "New file name", targetPathString
-            + pcFileSep, existingFileName, false, currentX, currentY);
-      try {
-         // User canceled creating the directory
-         if (newFileName == null) {
-            return;
-         }
-         // Copy nd rename the file to a new file name
-         Path spoolPath = Paths.get(sourcePathString);
-         Path newFilePath = Paths.get(targetPathString + pcFileSep + newFileName);
-
-         // Copy command
-         Files.copy(spoolPath, newFilePath, StandardCopyOption.COPY_ATTRIBUTES);
-         row = "Comp: PC file  " + newFileName + "  was inserted to directory  " + targetPathString
-               + ".";
-         msgVector.add(row);
-         reloadLeftSideAndShowMessages(nodes);
-      } catch (Exception exc) {
-         exc.printStackTrace();
-         row = "Error: PC file  " + newFileName + "  was NOT inserted to directory  "
-               + targetPathString + ".  -  " + exc.toString();
-         msgVector.add(row);
-         reloadLeftSideAndShowMessages(nodes);
-      }
-      scrollMessagePane.getVerticalScrollBar()
-            .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-   }
-
-   /**
-    * 
-    * @param treePath
-    * @return
-    */
-   protected String getStringFromLeftPath(TreePath treePath) {
-      // Build absolute file path string from selected TreePath object
-      String pathString = "";
-      Object[] objects = treePath.getPath();
-      for (Object object : objects) {
-         pathString += object;
-         // Path string must NOT be a slash (unix) nor A:\, B:\, ... (Windows)
-         if (!pathString.equals("/") && !pathString.matches("[a-zA-Z]:\\\\")) {
-            pathString += pcFileSep;
-         }
-      }
-      return pathString;
-   }
-
-   /**
-    * 
-    * @param treePath
-    * @return
-    */
-   protected String getStringFromRightPath(TreePath treePath) {
-      // Build absolute file path string from selected TreePath object
-      String pathString = "";
-      Object[] objects = treePath.getPath();
-      for (Object object : objects) {
-         pathString += object;
-         // Path string must NOT be a slash
-         if (!pathString.equals("/")) {
-            pathString += "/";
-         }
-      }
-      return pathString;
-   }
-
-   /**
-    * 
-    * @param pathString
-    * @return
-    */
-   protected TreePath getTreePathFromString(String pathString, String root) {
-      TreePath treePath = null;
-
-      if (pathString.equals(pcFileSep) || pathString.equals("")) {
-         Object ob = new DefaultMutableTreeNode(pathString);
-         treePath = new TreePath(ob);
-         return treePath;
-      }
-      String pathBeg = root;
-      String pathEnd = leftPathString.substring(pathBeg.length());
-
-      String[] strs = pathEnd.split(pcFileSep);
-      Object[] obj = new Object[strs.length];
-
-      obj[0] = new DefaultMutableTreeNode(pathBeg);
-      if (pathEnd.length() > 0) {
-         for (int idx = 1; idx < strs.length; idx++) {
-            obj[idx] = new DefaultMutableTreeNode(strs[idx]);
-         }
-      }
-      treePath = new TreePath(obj);
-      return treePath;
-   }
-
-   /**
-    * 
-    * @author vzupka
-    *
-    */
-   class LeftTreeExpansionListener implements TreeExpansionListener, TreeWillExpandListener {
-
-      public void treeExpanded(TreeExpansionEvent treeExpansionEvent) {
-
-         // Get tree path from the event
-         // leftSelectedPath = treeExpansionEvent.getPath();
-         JTree tree = (JTree) treeExpansionEvent.getSource();
-
-         leftRow = tree.getMinSelectionRow();
-         leftSelectedPath = tree.getPathForRow(leftRow);
-
-         // Get path string from the tree path just being expanded
-         leftPathString = getStringFromLeftPath(leftSelectedPath);
-         leftPathString = correctLeftPathString(leftPathString);
-
-         // Get the node from the tree path
-         leftNode = (DefaultMutableTreeNode) leftSelectedPath.getLastPathComponent();
-
-         // Change tree root
-         leftRoot = leftPathString;
-
-         // Reload children of the node
-         reloadLeftSide(nodes);
-      }
-
-      public void treeCollapsed(TreeExpansionEvent treeExpansionEvent) {
-      }
-
-      public void treeWillExpand(TreeExpansionEvent treeExpansionEvent) {
-      }
-
-      public void treeWillCollapse(TreeExpansionEvent treeExpansionEvent) {
-      }
-   }
-
-   /**
-    * 
-    * @author vzupka
-    *
-    */
-   class RightTreeExpansionListener implements TreeExpansionListener, TreeWillExpandListener {
-
-      public void treeExpanded(TreeExpansionEvent treeExpansionEvent) {
-
-         // Get tree path from the event
-         JTree tree = (JTree) treeExpansionEvent.getSource();
-
-         rightRow = tree.getMinSelectionRow();
-         rightSelectedPath = tree.getPathForRow(rightRow);
-
-         // Get path string from the tree path just being expanded
-         rightPathString = getStringFromRightPath(rightSelectedPath);
-         rightPathString = correctRightPathString(rightPathString);
-
-         // Get the node from the tree path
-         rightNode = (DefaultMutableTreeNode) rightSelectedPath.getLastPathComponent();
-
-         // Change tree root
-         rightRoot = rightPathString;
-
-         // Reload children of the node
-         reloadRightSide();
-      }
-
-      public void treeCollapsed(TreeExpansionEvent treeExpansionEvent) {
-      }
-
-      public void treeWillExpand(TreeExpansionEvent treeExpansionEvent) {
-      }
-
-      public void treeWillCollapse(TreeExpansionEvent treeExpansionEvent) {
-      }
-   }
-
-   /**
-    * Mouse adapter for left tree.
-    */
-   class LeftTreeMouseAdapter extends MouseAdapter {
-
-      private void popupEvent(MouseEvent mouseEvent) {
-
-         Component component = mouseEvent.getComponent();
-         Point pt = mouseEvent.getPoint();
-         SwingUtilities.convertPointToScreen(pt, component);
-         currentX = (int) pt.getX();
-         currentY = (int) pt.getY();
-
-         // Source tree for Drag and Drop transfer
-         dragSourceTree = leftTree;
-
-         // Get row number of the selected node
-         leftRow = leftTree.getRowForLocation(mouseEvent.getX(), mouseEvent.getY());
-         // Get tree path of the selected node
-         leftSelectedPath = leftTree.getPathForLocation(mouseEvent.getX(), mouseEvent.getY());
-         if (leftSelectedPath == null) {
-            return;
-         }
-
-         // Create new left node
-         leftNode = (DefaultMutableTreeNode) leftSelectedPath.getLastPathComponent();
-
-         // Create array of all selected tree paths
-         TreePath[] leftPaths = leftTree.getSelectionPaths();
-
-         // Create array of all selected row numbers (not actually used)
-         int[] leftPathsRows = leftRowMapper.getRowsForPaths(leftPaths);
-
-         // Get string from the tree path of the selected node
-         leftPathString = getStringFromLeftPath(leftSelectedPath);
-         // Remove trailing file separator from the path string
-         leftPathString = correctLeftPathString(leftPathString);
-
-         // Change left root to selected path
-         leftRoot = leftPathString;
-
-         // Get all path strings from the tree paths array
-         leftPathStrings = new String[leftPaths.length];
-         String[] pathStrings = new String[leftPaths.length];
-
-         // Fill the array with children's path strings
-         leftTreeMap.clear();
-         for (int idx = 0; idx < leftPaths.length; idx++) {
-            // Get string from tree path
-            pathStrings[idx] = getStringFromLeftPath(leftPaths[idx]);
-            // Remove trailing file separator from the path string
-            pathStrings[idx] = correctLeftPathString(pathStrings[idx]);
-            // Get row number from the rows array (not actually used)
-            leftRow = leftPathsRows[idx];
-
-            leftPathStrings[idx] = pathStrings[idx];
-            // System.out.println("leftPathStrings[" + idx + "]: " + leftPathStrings[idx]);
-
-            // Set row number to the map (path string, row number)
-            // for possible later scrolling to the path node
-            leftTreeMap.put(pathStrings[idx], leftPathsRows[idx]);
-
-            // Add the new path string to the combo box
-            leftPathComboBox.addItem(pathStrings[idx]);
-         }
-
-         // Set row number to the map (path string, row number) for possible
-         // later scrolling to the path node
-         leftTreeMap.put(leftPathString, leftRow);
-
-         // Add or remove menu items in the left pop-up menu
-         if (Files.isDirectory(Paths.get(leftPathString))) {
-            // PC directory
-            leftTreePopupMenu.removeAll();
-            leftTreePopupMenu.add(createPcDirectory);
-            leftTreePopupMenu.add(createPcFile);
-            leftTreePopupMenu.add(renamePcFile);
-            leftTreePopupMenu.add(copyFromLeft);
-            leftTreePopupMenu.add(pasteToLeft);
-            leftTreePopupMenu.add(insertSpooledFile);
-            leftTreePopupMenu.add("");
-            leftTreePopupMenu.add(movePcObjectToTrash);
-         } else {
-            // Single PC file
-            leftTreePopupMenu.removeAll();
-            leftTreePopupMenu.add(displayPcFile);
-            if (!leftPathString.endsWith(".savf")) {
-               // PC files regarded as save files are not allowed to be edited.
-               // This prevents unwanted editing.
-               leftTreePopupMenu.add(editPcFile);
-            }
-            leftTreePopupMenu.add(renamePcFile);
-            leftTreePopupMenu.add(copyFromLeft);
-            leftTreePopupMenu.add(pasteToLeft);
-            leftTreePopupMenu.add("");
-            leftTreePopupMenu.add(movePcObjectToTrash);
-         }
-
-         // On right click pop up the menu
-         if ((mouseEvent.getButton() == MouseEvent.BUTTON3)) {
-            System.out.println("Right click PC: " + leftPathString);
-            leftTreePopupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
-         }
-      }
-
-      public void mousePressed(MouseEvent mouseEvent) {
-         if ((mouseEvent.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK) == MouseEvent.BUTTON1_DOWN_MASK
-               || (mouseEvent.getModifiersEx() & InputEvent.BUTTON3_DOWN_MASK) == MouseEvent.BUTTON3_DOWN_MASK) {
-            popupEvent(mouseEvent);
-            leftTree.expandPath(leftSelectedPath);
-         } else if (mouseEvent.isPopupTrigger()) {
-            popupEvent(mouseEvent);
-         }
-      }
-   }
-
-   /**
-    * Mouse adapter for ritht tree.
-    */
-   public class RightTreeMouseAdapter extends MouseAdapter {
-
-      private void popupEvent(MouseEvent mouseEvent) {
-
-         Component component = mouseEvent.getComponent();
-         Point pt = mouseEvent.getPoint();
-         SwingUtilities.convertPointToScreen(pt, component);
-         currentX = (int) pt.getX();
-         currentY = (int) pt.getY();
-
-         // Source tree for Drag and Drop transfer
-         dragSourceTree = rightTree;
-
-         // Get row number of the selected node
-         rightRow = rightTree.getRowForLocation(mouseEvent.getX(), mouseEvent.getY());
-         // Get tree path of the selected node
-         rightSelectedPath = rightTree.getPathForLocation(mouseEvent.getX(), mouseEvent.getY());
-         if (rightSelectedPath == null) {
-            return;
-         }
-         // Create new right node
-         rightNode = (DefaultMutableTreeNode) rightTree.getLastSelectedPathComponent();
-
-         // Create array of all selected tree paths
-         TreePath[] rightPaths = rightTree.getSelectionPaths();
-
-         // Create array of all selected row numbers (not actually used)
-         int[] rightPathsRows = rightRowMapper.getRowsForPaths(rightPaths);
-
-         // Get string from the tree path of the selected node
-         rightPathString = getStringFromRightPath(rightSelectedPath);
-         // Remove trailing file separator from the path string
-         rightPathString = correctRightPathString(rightPathString);
-
-         // Change right root to selected path
-         rightRoot = rightPathString;
-
-         // Get all path strings from the tree paths array
-         rightPathStrings = new String[rightPaths.length];
-         String[] pathStrings = new String[rightPaths.length];
-
-         // Fill the array with children's path strings
-         rightTreeMap.clear();
-         for (int idx = 0; idx < rightPaths.length; idx++) {
-            // Get string from tree path
-            pathStrings[idx] = getStringFromRightPath(rightPaths[idx]);
-            // Remove trailing file separator from the path string
-            pathStrings[idx] = correctRightPathString(pathStrings[idx]);
-            // Get row number from the rows array (not actually used)
-            rightRow = rightPathsRows[idx];
-
-            rightPathStrings[idx] = pathStrings[idx];
-            // System.out.println("rightPathStrings[" + idx + "]: " + rightPathStrings[idx]);
-
-            // Set row number to the map (path string, row number)
-            // for possible later scrolling to the path node
-            rightTreeMap.put(pathStrings[idx], rightPathsRows[idx]);
-
-            // Add the new path string to the combo box
-            rightPathComboBox.addItem(pathStrings[idx]);
-         }
-
-         // Set row number to the map (path string, row number) for possible
-         // later scrolling to the path node
-         rightTreeMap.put(rightPathString, rightRow);
-
-         try {
-            ifsFile = new IFSFile(remoteServer, rightPathString);
-
-            // Add or remove menu items in the right pop-up menu
-            if (ifsFile.isDirectory()) {
-               if (rightPathString.startsWith("/QSYS.LIB")) {
-
-                  // System library - only spooled files
-                  if (rightPathString.equals("/QSYS.LIB")) {
-                     rightTreePopupMenu.removeAll();
-                     rightTreePopupMenu.add(workWithSpooledFiles);
-                  } //
-                    // Non-QSYS library
-                  else if (rightPathString.endsWith(".LIB")) {
-                     rightTreePopupMenu.removeAll();
-                     rightTreePopupMenu.add(createSourcePhysicalFile);
-                     rightTreePopupMenu.add(createSaveFile);
-                     rightTreePopupMenu.add(pasteToRight);
-                     rightTreePopupMenu.add("");
-                     rightTreePopupMenu.add(copyLibrary);
-                     rightTreePopupMenu.add(clearLibrary);
-                     rightTreePopupMenu.add(deleteLibrary);
-                  } //
-                    // Source Physical File
-                  else if (rightPathString.endsWith(".FILE") && ifsFile.isSourcePhysicalFile()) {
-                     rightTreePopupMenu.removeAll();
-                     rightTreePopupMenu.add(createSourceMember);
-                     rightTreePopupMenu.add(renameIfsFile);
-                     rightTreePopupMenu.add(copyFromRight);
-                     rightTreePopupMenu.add(pasteToRight);
-                     rightTreePopupMenu.add("");
-                     rightTreePopupMenu.add(deleteSourcePhysicalFile);
-                  }
-               } else { //
-                  // General IFS directory
-                  rightTreePopupMenu.removeAll();
-                  rightTreePopupMenu.add(createIfsDirectory);
-                  rightTreePopupMenu.add(createIfsFile);
-                  rightTreePopupMenu.add(renameIfsFile);
-                  rightTreePopupMenu.add(copyFromRight);
-                  rightTreePopupMenu.add(pasteToRight);
-                  rightTreePopupMenu.add("");
-                  rightTreePopupMenu.add(deleteIfsObject);
-               }
-            } //
-              // Source Member
-            else if (rightPathString.contains(".FILE") && rightPathString.endsWith(".MBR")) {
-               rightTreePopupMenu.removeAll();
-               rightTreePopupMenu.add(displaySourceMember);
-               rightTreePopupMenu.add(editSourceMember);
-               rightTreePopupMenu.add(renameIfsFile);
-               rightTreePopupMenu.add(copyFromRight);
-               rightTreePopupMenu.add(pasteToRight);
-               rightTreePopupMenu.add(compileSourceMember);
-               rightTreePopupMenu.add("");
-
-               rightTreePopupMenu.add(deleteSourceMember);
-            } //
-              // Save file
-            else if (rightPathString.endsWith(".FILE") && ifsFile.getSubtype().equals("SAVF")) {
-               rightTreePopupMenu.removeAll();
-               rightTreePopupMenu.add(copyFromRight);
-               rightTreePopupMenu.add(pasteToRight);
-               rightTreePopupMenu.add(clearSaveFile);
-               rightTreePopupMenu.add("");
-               rightTreePopupMenu.add(deleteSaveFile);
-            } //
-              // Output queue
-            else if (rightPathString.endsWith(".OUTQ")) {
-               rightTreePopupMenu.removeAll();
-               rightTreePopupMenu.add(workWithSpooledFiles);
-            } //
-              // Single general IFS file
-            else {
-               rightTreePopupMenu.removeAll();
-               rightTreePopupMenu.add(displayIfsFile);
-               if (!rightPathString.endsWith(".savf")) {
-                  // IFS files regarded as save files are not allowed to be
-                  // edited.
-                  // This is a prevention from unwanted editing.
-                  rightTreePopupMenu.add(editIfsFile);
-               }
-               rightTreePopupMenu.add(renameIfsFile);
-               rightTreePopupMenu.add(copyFromRight);
-               rightTreePopupMenu.add(pasteToRight);
-               if (rightPathString.toUpperCase().endsWith("CBLLE")
-                     || rightPathString.toUpperCase().endsWith(".CLLE")
-                     || rightPathString.toUpperCase().endsWith(".CLP")
-                     || rightPathString.toUpperCase().endsWith(".C")
-                     || rightPathString.toUpperCase().endsWith(".CPP")
-                     || rightPathString.toUpperCase().endsWith(".CBL")
-                     || rightPathString.toUpperCase().endsWith(".RPGLE")
-                     || rightPathString.toUpperCase().endsWith(".RPG")
-                     || rightPathString.toUpperCase().endsWith(".SQLC")
-                     || rightPathString.toUpperCase().endsWith(".SQLCPP")
-                     || rightPathString.toUpperCase().endsWith(".SQLCBL")
-                     || rightPathString.toUpperCase().endsWith(".SQLCBLLE")
-                     || rightPathString.toUpperCase().endsWith(".SQLRPG")
-                     || rightPathString.toUpperCase().endsWith(".SQLRPGLE")) {
-                  rightTreePopupMenu.add(compileIfsFile);
-               }
-               rightTreePopupMenu.add("");
-               rightTreePopupMenu.add(deleteIfsObject);
+            // Set row number to the map (path string, row number) for possible
+            // later scrolling to the path node
+            leftTreeMap.put(leftPathString, leftRow);
+
+            // Add or remove menu items in the left pop-up menu
+            if (Files.isDirectory(Paths.get(leftPathString))) {
+                // PC directory
+                leftTreePopupMenu.removeAll();
+                leftTreePopupMenu.add(createPcDirectory);
+                leftTreePopupMenu.add(createPcFile);
+                leftTreePopupMenu.add(renamePcFile);
+                leftTreePopupMenu.add(copyFromLeft);
+                leftTreePopupMenu.add(pasteToLeft);
+                leftTreePopupMenu.add(insertSpooledFile);
+                leftTreePopupMenu.add("");
+                leftTreePopupMenu.add(movePcObjectToTrash);
+            } else {
+                // Single PC file
+                leftTreePopupMenu.removeAll();
+                leftTreePopupMenu.add(displayPcFile);
+                if (!leftPathString.endsWith(".savf")) {
+                    // PC files regarded as save files are not allowed to be edited.
+                    // This prevents unwanted editing.
+                    leftTreePopupMenu.add(editPcFile);
+                }
+                leftTreePopupMenu.add(renamePcFile);
+                leftTreePopupMenu.add(copyFromLeft);
+                leftTreePopupMenu.add(pasteToLeft);
+                leftTreePopupMenu.add("");
+                leftTreePopupMenu.add(movePcObjectToTrash);
             }
 
             // On right click pop up the menu
-            if ((mouseEvent.getModifiersEx() & InputEvent.BUTTON3_DOWN_MASK) == MouseEvent.BUTTON3_DOWN_MASK) {
-               System.out.println("Right click IBMi: " + rightPathString);
-               rightTreePopupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
+            if ((mouseEvent.getButton() == MouseEvent.BUTTON3)) {
+                System.out.println("Right click PC: " + leftPathString);
+                leftTreePopupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
             }
-         } catch (Exception exc) {
-            exc.printStackTrace();
-         }
-      }
+        }
 
-      @Override
-      public void mousePressed(MouseEvent mouseEvent) {
-         if ((mouseEvent.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK) == MouseEvent.BUTTON1_DOWN_MASK
-               || (mouseEvent.getModifiersEx() & InputEvent.BUTTON3_DOWN_MASK) == MouseEvent.BUTTON3_DOWN_MASK
-               ) {
-            popupEvent(mouseEvent);
-            rightTree.expandPath(rightSelectedPath);
-         } else if (mouseEvent.isPopupTrigger()) {
-            popupEvent(mouseEvent);
-         }
-      }
-   }
+        public void mousePressed(MouseEvent mouseEvent) {
+            if ((mouseEvent.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK) == MouseEvent.BUTTON1_DOWN_MASK
+                    || (mouseEvent.getModifiersEx() & InputEvent.BUTTON3_DOWN_MASK) == MouseEvent.BUTTON3_DOWN_MASK) {
+                popupEvent(mouseEvent);
+                leftTree.expandPath(leftSelectedPath);
+            } else if (mouseEvent.isPopupTrigger()) {
+                popupEvent(mouseEvent);
+            }
+        }
+    }
 
-   /**
-    * Action listener for LEFT PATH ComboBox reacts on text change in its input
-    * field.
-    */
-   class LeftPathActionListener implements ActionListener {
+    /**
+     * Mouse adapter for ritht tree.
+     */
+    public class RightTreeMouseAdapter extends MouseAdapter {
 
-      @Override
-      public void actionPerformed(ActionEvent ae) {
-         JComboBox<String> source = (JComboBox) ae.getSource();
-         // Get path string from the item typed in combo box text field
-         leftPathString = (String) source.getSelectedItem();
+        private void popupEvent(MouseEvent mouseEvent) {
 
-         if (leftPathString.isEmpty()) {
-            leftPathString = firstLeftRootSymbol;
-         }
+            Component component = mouseEvent.getComponent();
+            Point pt = mouseEvent.getPoint();
+            SwingUtilities.convertPointToScreen(pt, component);
+            currentX = (int) pt.getX();
+            currentY = (int) pt.getY();
 
-         source.setSelectedItem(leftPathString);
+            // Source tree for Drag and Drop transfer
+            dragSourceTree = rightTree;
 
-         leftTreeMap.put(leftPathString, leftRow);
+            // Get row number of the selected node
+            rightRow = rightTree.getRowForLocation(mouseEvent.getX(), mouseEvent.getY());
+            // Get tree path of the selected node
+            rightSelectedPath = rightTree.getPathForLocation(mouseEvent.getX(), mouseEvent.getY());
+            if (rightSelectedPath == null) {
+                return;
+            }
+            // Create new right node
+            rightNode = (DefaultMutableTreeNode) rightTree.getLastSelectedPathComponent();
 
-         // Update "LEFT_PATH" property in Parameters.txt file
-         properties.setProperty("LEFT_PATH", leftPathString);
-         // Create the updated text file in directory "paramfiles"
-         try {
-            outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-            properties.store(outfile, PROP_COMMENT);
-            outfile.close();
-         } catch (Exception exc) {
-            exc.printStackTrace();
-         }
+            // Create array of all selected tree paths
+            TreePath[] rightPaths = rightTree.getSelectionPaths();
 
-         // Create new left side from the selected leftPathString = leftRoot
-         createNewLeftSide(leftPathString);
-      }
-   }
+            // Create array of all selected row numbers (not actually used)
+            int[] rightPathsRows = rightRowMapper.getRowsForPaths(rightPaths);
 
-   /**
-    * Action listener for RIGHT PATH ComboBox reacts on text change in its input
-    * field.
-    */
-   class RightPathActionListener implements ActionListener {
+            // Get string from the tree path of the selected node
+            rightPathString = getStringFromRightPath(rightSelectedPath);
+            // Remove trailing file separator from the path string
+            rightPathString = correctRightPathString(rightPathString);
 
-      @Override
-      public void actionPerformed(ActionEvent ae) {
-         JComboBox<String> source = (JComboBox) ae.getSource();
-         // Get path string from the item typed in combo box text field
-         rightPathString = ((String) source.getSelectedItem());
+            // Change right root to selected path
+            rightRoot = rightPathString;
 
-         // System.out.println("rightPathString Right path listener:" + rightPathString);
+            // Get all path strings from the tree paths array
+            rightPathStrings = new String[rightPaths.length];
+            String[] pathStrings = new String[rightPaths.length];
 
-         if (rightPathString.isEmpty()) {
-            rightPathString = "/";
-         }
+            // Fill the array with children's path strings
+            rightTreeMap.clear();
+            for (int idx = 0; idx < rightPaths.length; idx++) {
+                // Get string from tree path
+                pathStrings[idx] = getStringFromRightPath(rightPaths[idx]);
+                // Remove trailing file separator from the path string
+                pathStrings[idx] = correctRightPathString(pathStrings[idx]);
+                // Get row number from the rows array (not actually used)
+                rightRow = rightPathsRows[idx];
 
-         if (rightPathString.toUpperCase().startsWith("/QSYS.LIB")) {
-            rightPathString = rightPathString.toUpperCase();
-         }
-         rightPathString = correctRightPathString(rightPathString);
-         source.setSelectedItem(rightPathString);
+                rightPathStrings[idx] = pathStrings[idx];
+                // System.out.println("rightPathStrings[" + idx + "]: " + rightPathStrings[idx]);
 
-         rightTreeMap.put(rightPathString, rightRow);
+                // Set row number to the map (path string, row number)
+                // for possible later scrolling to the path node
+                rightTreeMap.put(pathStrings[idx], rightPathsRows[idx]);
 
-         // Update "RIGHT_PATH" property in Parameters.txt file
-         properties.setProperty("RIGHT_PATH", rightPathString);
-         // Create the updated text file in directory "paramfiles"
-         try {
-            outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-            properties.store(outfile, PROP_COMMENT);
-            outfile.close();
-         } catch (Exception exc) {
-            exc.printStackTrace();
-         }
-         
-         // Create new object for the right path IFS file (important)
-         ifsFile = new IFSFile(remoteServer, rightPathString);
+                // Add the new path string to the combo box
+                rightPathComboBox.addItem(pathStrings[idx]);
+            }
 
-         // Create new right side from the selected rightPathString
-         createNewRightSide(rightPathString);
-      }
-   }
+            // Set row number to the map (path string, row number) for possible
+            // later scrolling to the path node
+            rightTreeMap.put(rightPathString, rightRow);
 
-   /**
-    * Adjustment listener for MESSAGE scroll pane.
-    */
-   class MessageScrollPaneAdjustmentListenerMax implements AdjustmentListener {
+            try {
+                ifsFile = new IFSFile(remoteServer, rightPathString);
 
-      @Override
-      public void adjustmentValueChanged(AdjustmentEvent ae) {
-         // Set scroll pane to the bottom - the last element
-         ae.getAdjustable().setValue(ae.getAdjustable().getMaximum());
-      }
-   }
+                // Add or remove menu items in the right pop-up menu
+                if (ifsFile.isDirectory()) {
+                    if (rightPathString.startsWith("/QSYS.LIB")) {
 
-   /**
-    * Drag and drop from right to left (or left to left) - transfer handler
-    */
-   public class LeftTreeTransferHandler extends TransferHandler {
+                        // System library - only spooled files
+                        if (rightPathString.equals("/QSYS.LIB")) {
+                            rightTreePopupMenu.removeAll();
+                            rightTreePopupMenu.add(workWithSpooledFiles);
+                        } //
+                        // Non-QSYS library
+                        else if (rightPathString.endsWith(".LIB")) {
+                            rightTreePopupMenu.removeAll();
+                            rightTreePopupMenu.add(createSourcePhysicalFile);
+                            rightTreePopupMenu.add(createSaveFile);
+                            rightTreePopupMenu.add(pasteToRight);
+                            rightTreePopupMenu.add("");
+                            rightTreePopupMenu.add(copyLibrary);
+                            rightTreePopupMenu.add(clearLibrary);
+                            rightTreePopupMenu.add(deleteLibrary);
+                        } //
+                        // Source Physical File
+                        else if (rightPathString.endsWith(".FILE") && ifsFile.isSourcePhysicalFile()) {
+                            rightTreePopupMenu.removeAll();
+                            rightTreePopupMenu.add(createSourceMember);
+                            rightTreePopupMenu.add(renameIfsFile);
+                            rightTreePopupMenu.add(copyFromRight);
+                            rightTreePopupMenu.add(pasteToRight);
+                            rightTreePopupMenu.add("");
+                            rightTreePopupMenu.add(deleteSourcePhysicalFile);
+                        }
+                    } else { //
+                        // General IFS directory
+                        rightTreePopupMenu.removeAll();
+                        rightTreePopupMenu.add(createIfsDirectory);
+                        rightTreePopupMenu.add(createIfsFile);
+                        rightTreePopupMenu.add(renameIfsFile);
+                        rightTreePopupMenu.add(copyFromRight);
+                        rightTreePopupMenu.add(pasteToRight);
+                        rightTreePopupMenu.add("");
+                        rightTreePopupMenu.add(deleteIfsObject);
+                    }
+                } //
+                // Source Member
+                else if (rightPathString.contains(".FILE") && rightPathString.endsWith(".MBR")) {
+                    rightTreePopupMenu.removeAll();
+                    rightTreePopupMenu.add(displaySourceMember);
+                    rightTreePopupMenu.add(editSourceMember);
+                    rightTreePopupMenu.add(renameIfsFile);
+                    rightTreePopupMenu.add(copyFromRight);
+                    rightTreePopupMenu.add(pasteToRight);
+                    rightTreePopupMenu.add(compileSourceMember);
+                    rightTreePopupMenu.add("");
 
-      MainWindow mainWindow;
+                    rightTreePopupMenu.add(deleteSourceMember);
+                } //
+                // Save file
+                else if (rightPathString.endsWith(".FILE") && ifsFile.getSubtype().equals("SAVF")) {
+                    rightTreePopupMenu.removeAll();
+                    rightTreePopupMenu.add(copyFromRight);
+                    rightTreePopupMenu.add(pasteToRight);
+                    rightTreePopupMenu.add(clearSaveFile);
+                    rightTreePopupMenu.add("");
+                    rightTreePopupMenu.add(deleteSaveFile);
+                } //
+                // Output queue
+                else if (rightPathString.endsWith(".OUTQ")) {
+                    rightTreePopupMenu.removeAll();
+                    rightTreePopupMenu.add(workWithSpooledFiles);
+                } //
+                // Single general IFS file
+                else {
+                    rightTreePopupMenu.removeAll();
+                    rightTreePopupMenu.add(displayIfsFile);
+                    if (!rightPathString.endsWith(".savf")) {
+                        // IFS files regarded as save files are not allowed to be
+                        // edited.
+                        // This is a prevention from unwanted editing.
+                        rightTreePopupMenu.add(editIfsFile);
+                    }
+                    rightTreePopupMenu.add(renameIfsFile);
+                    rightTreePopupMenu.add(copyFromRight);
+                    rightTreePopupMenu.add(pasteToRight);
+                    if (rightPathString.toUpperCase().endsWith("CBLLE")
+                            || rightPathString.toUpperCase().endsWith(".CLLE")
+                            || rightPathString.toUpperCase().endsWith(".CLP")
+                            || rightPathString.toUpperCase().endsWith(".C")
+                            || rightPathString.toUpperCase().endsWith(".CPP")
+                            || rightPathString.toUpperCase().endsWith(".CBL")
+                            || rightPathString.toUpperCase().endsWith(".RPGLE")
+                            || rightPathString.toUpperCase().endsWith(".RPG")
+                            || rightPathString.toUpperCase().endsWith(".SQLC")
+                            || rightPathString.toUpperCase().endsWith(".SQLCPP")
+                            || rightPathString.toUpperCase().endsWith(".SQLCBL")
+                            || rightPathString.toUpperCase().endsWith(".SQLCBLLE")
+                            || rightPathString.toUpperCase().endsWith(".SQLRPG")
+                            || rightPathString.toUpperCase().endsWith(".SQLRPGLE")) {
+                        rightTreePopupMenu.add(compileIfsFile);
+                    }
+                    rightTreePopupMenu.add("");
+                    rightTreePopupMenu.add(deleteIfsObject);
+                }
 
-      LeftTreeTransferHandler(MainWindow mainWindow) {
-         this.mainWindow = mainWindow;
-      }
+                // On right click pop up the menu
+                if ((mouseEvent.getModifiersEx() & InputEvent.BUTTON3_DOWN_MASK) == MouseEvent.BUTTON3_DOWN_MASK) {
+                    System.out.println("Right click IBMi: " + rightPathString);
+                    rightTreePopupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
+                }
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+        }
 
-      @Override
-      public int getSourceActions(JComponent component) {
-         return TransferHandler.COPY;
-      }
+        @Override
+        public void mousePressed(MouseEvent mouseEvent) {
+            if ((mouseEvent.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK) == MouseEvent.BUTTON1_DOWN_MASK
+                    || (mouseEvent.getModifiersEx() & InputEvent.BUTTON3_DOWN_MASK) == MouseEvent.BUTTON3_DOWN_MASK) {
+                popupEvent(mouseEvent);
+                rightTree.expandPath(rightSelectedPath);
+            } else if (mouseEvent.isPopupTrigger()) {
+                popupEvent(mouseEvent);
+            }
+        }
+    }
 
-      @Override
-      protected Transferable createTransferable(JComponent component) {
-         return new StringSelection("");
-      }
+    /**
+     * Action listener for LEFT PATH ComboBox reacts on text change in its input
+     * field.
+     */
+    class LeftPathActionListener implements ActionListener {
 
-      @Override
-      public boolean canImport(TransferHandler.TransferSupport info) {
-         if (!info.isDrop()) {
-            return false;
-         } else {
+        @Override
+        public void actionPerformed(ActionEvent ae) {
+            JComboBox<String> source = (JComboBox) ae.getSource();
+            // Get path string from the item typed in combo box text field
+            leftPathString = (String) source.getSelectedItem();
+
+            if (leftPathString.isEmpty()) {
+                leftPathString = firstLeftRootSymbol;
+            }
+
+            source.setSelectedItem(leftPathString);
+
+            leftTreeMap.put(leftPathString, leftRow);
+
+            // Update "LEFT_PATH" property in Parameters.txt file
+            properties.setProperty("LEFT_PATH", leftPathString);
+            // Create the updated text file in directory "paramfiles"
+            try {
+                outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+
+            // Create new left side from the selected leftPathString = leftRoot
+            createNewLeftSide(leftPathString);
+        }
+    }
+
+    /**
+     * Action listener for RIGHT PATH ComboBox reacts on text change in its input
+     * field.
+     */
+    class RightPathActionListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent ae) {
+            JComboBox<String> source = (JComboBox) ae.getSource();
+            // Get path string from the item typed in combo box text field
+            rightPathString = ((String) source.getSelectedItem());
+
+            // System.out.println("rightPathString Right path listener:" + rightPathString);
+
+            if (rightPathString.isEmpty()) {
+                rightPathString = "/";
+            }
+
+            if (rightPathString.toUpperCase().startsWith("/QSYS.LIB")) {
+                rightPathString = rightPathString.toUpperCase();
+            }
+            rightPathString = correctRightPathString(rightPathString);
+            source.setSelectedItem(rightPathString);
+
+            rightTreeMap.put(rightPathString, rightRow);
+
+            // Update "RIGHT_PATH" property in Parameters.txt file
+            properties.setProperty("RIGHT_PATH", rightPathString);
+            // Create the updated text file in directory "paramfiles"
+            try {
+                outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+
+            // Create new object for the right path IFS file (important)
+            ifsFile = new IFSFile(remoteServer, rightPathString);
+
+            // Create new right side from the selected rightPathString
+            createNewRightSide(rightPathString);
+        }
+    }
+
+    /**
+     * Adjustment listener for MESSAGE scroll pane.
+     */
+    class MessageScrollPaneAdjustmentListenerMax implements AdjustmentListener {
+
+        @Override
+        public void adjustmentValueChanged(AdjustmentEvent ae) {
+            // Set scroll pane to the bottom - the last element
+            ae.getAdjustable().setValue(ae.getAdjustable().getMaximum());
+        }
+    }
+
+    /**
+     * Drag and drop from right to left (or left to left) - transfer handler
+     */
+    public class LeftTreeTransferHandler extends TransferHandler {
+
+        MainWindow mainWindow;
+
+        LeftTreeTransferHandler(MainWindow mainWindow) {
+            this.mainWindow = mainWindow;
+        }
+
+        @Override
+        public int getSourceActions(JComponent component) {
+            return TransferHandler.COPY;
+        }
+
+        @Override
+        protected Transferable createTransferable(JComponent component) {
+            return new StringSelection("");
+        }
+
+        @Override
+        public boolean canImport(TransferHandler.TransferSupport info) {
+            if (!info.isDrop()) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        @Override
+        public boolean importData(TransferHandler.TransferSupport info) {
+            if (!info.isDrop()) {
+                return false;
+            }
+
+            leftInfo = info;
+
+            JTree.DropLocation dl = (JTree.DropLocation) info.getDropLocation();
+            // Target path
+            targetTreePath = dl.getPath();
+
+            targetPathString = getStringFromLeftPath(targetTreePath);
+
+            // Remove trailing file separator from the path string
+            targetPathString = correctLeftPathString(targetPathString);
+
+            // ------------------------
+            if (dragSourceTree == leftTree) {
+
+                // Copy from PC to PC itself
+                // =========================
+
+                row = "Wait: Copying from PC to PC . . .";
+                msgVector.add(row);
+                reloadRightSideAndShowMessages();
+
+                // Set clipboard path strings for paste operation
+                clipboardPathStrings = leftPathStrings;
+
+                // Perform copying from left to left
+                // ---------------------------------
+                ParallelCopy_PC_PC parallelCopy_PC_PC = new ParallelCopy_PC_PC(clipboardPathStrings, targetPathString, leftInfo, mainWindow);
+                parallelCopy_PC_PC.execute();
+            }
+
+            // -------------------------
+            if (dragSourceTree == rightTree) {
+
+                // Copy from IBM i to PC
+                // =====================
+
+                row = "Wait: Copying from IBM i to PC . . .";
+                msgVector.add(row);
+                reloadRightSideAndShowMessages();
+
+                // Set clipboard path strings for paste operation
+                clipboardPathStrings = rightPathStrings;
+                // Perform copying from right to left
+                // ----------------------------------
+                ParallelCopy_IBMi_PC parallelCopy_IBMi_PC = new ParallelCopy_IBMi_PC(remoteServer, clipboardPathStrings, targetPathString, leftInfo, mainWindow);
+                parallelCopy_IBMi_PC.execute();
+            }
             return true;
-         }
-      }
+        }
+    }
 
-      @Override
-      public boolean importData(TransferHandler.TransferSupport info) {
-         if (!info.isDrop()) {
-            return false;
-         }
+    /**
+     *
+     * @param info
+     */
+    protected void expandLeftTreeNode(TransferHandler.TransferSupport info) {
 
-         leftInfo = info;
+        // Target node has more children
+        // -----------
+        targetNode = (DefaultMutableTreeNode) leftTree.getLastSelectedPathComponent();
+        // Add target node for inserted children
+        if (targetNode != null) {
+            // Add newly received children to the node
+            addPCNodes(Paths.get(targetPathString), targetNode);
+        }
+        // Get coordinates of target node
+        TransferHandler.DropLocation dropLocation = info.getDropLocation();
+        double dropX = dropLocation.getDropPoint().getX();
+        double dropY = dropLocation.getDropPoint().getY();
 
-         JTree.DropLocation dl = (JTree.DropLocation) info.getDropLocation();
-         // Target path
-         targetTreePath = dl.getPath();
+        // Get index from coordinates of the drop node
+        leftRow = leftTree.getRowForLocation((int) dropX, (int) dropY);
+        // Expand that node on that index
+        leftTree.expandRow(leftRow);
+        // Note that the children were added
+        leftTreeModel.nodeStructureChanged(targetNode);
+    }
 
-         targetPathString = getStringFromLeftPath(targetTreePath);
+    /**
+     * Drag and drop from left to right - transfer handler.
+     */
+    class RightTreeTransferHandler extends TransferHandler {
 
-         // Remove trailing file separator from the path string
-         targetPathString = correctLeftPathString(targetPathString);
+        MainWindow mainWindow;
 
-         // ------------------------
-         if (dragSourceTree == leftTree) {
+        RightTreeTransferHandler(MainWindow mainWindow) {
+            this.mainWindow = mainWindow;
+        }
 
-            // Copy from PC to PC itself
-            // =========================
+        @Override
+        public int getSourceActions(JComponent component) {
+            return TransferHandler.COPY;
+        }
 
-            row = "Wait: Copying from PC to PC . . .";
-            msgVector.add(row);
-            reloadRightSideAndShowMessages();
+        @Override
+        protected Transferable createTransferable(JComponent component) {
+            return new StringSelection("");
+        }
 
-            // Set clipboard path strings for paste operation
-            clipboardPathStrings = leftPathStrings;
+        @Override
+        public boolean canImport(TransferHandler.TransferSupport info) {
+            if (!info.isDrop()) {
+                return false;
+            } else {
+                return true;
+            }
+        }
 
-            // Perform copying from left to left
-            // ---------------------------------
-            ParallelCopy_PC_PC parallelCopy_PC_PC = new ParallelCopy_PC_PC(clipboardPathStrings, targetPathString, leftInfo, mainWindow);
-            parallelCopy_PC_PC.execute();
-         }
+        @Override
+        public boolean importData(TransferHandler.TransferSupport info) {
+            if (!info.isDrop()) {
+                return false;
+            }
 
-         // -------------------------
-         if (dragSourceTree == rightTree) {
+            rightInfo = info;
 
-            // Copy from IBM i to PC
-            // =====================
+            JTree.DropLocation dl = (JTree.DropLocation) info.getDropLocation();
+            // Target path
+            rightSelectedPath = dl.getPath();
+            // Target node
+            rightNode = (DefaultMutableTreeNode) rightTree.getLastSelectedPathComponent();
 
-            row = "Wait: Copying from IBM i to PC . . .";
-            msgVector.add(row);
-            reloadRightSideAndShowMessages();
+            rightPathString = getStringFromRightPath(rightSelectedPath);
 
-            // Set clipboard path strings for paste operation
-            clipboardPathStrings = rightPathStrings;
-            // Perform copying from right to left
-            // ----------------------------------
-            ParallelCopy_IBMi_PC parallelCopy_IBMi_PC = new ParallelCopy_IBMi_PC(remoteServer, clipboardPathStrings, targetPathString, leftInfo, mainWindow);
-            parallelCopy_IBMi_PC.execute();
-         }
-         return true;
-      }
-   }
+            // Remove trailing file separator from the path string
+            targetPathString = correctRightPathString(rightPathString);
 
-   /**
-    * 
-    * @param info
-    */
-   protected void expandLeftTreeNode(TransferHandler.TransferSupport info) {
+            // ------------------------
+            if (dragSourceTree == leftTree) {
 
-      // Target node has more children
-      // -----------
-      targetNode = (DefaultMutableTreeNode) leftTree.getLastSelectedPathComponent();
-      // Add target node for inserted children
-      if (targetNode != null) {
-         // Add newly received children to the node
-         addPCNodes(Paths.get(targetPathString), targetNode);
-      }
-      // Get coordinates of target node
-      TransferHandler.DropLocation dropLocation = info.getDropLocation();
-      double dropX = dropLocation.getDropPoint().getX();
-      double dropY = dropLocation.getDropPoint().getY();
+                // Copy from PC
+                // ============
 
-      // Get index from coordinates of the drop node
-      leftRow = leftTree.getRowForLocation((int) dropX, (int) dropY);
-      // Expand that node on that index
-      leftTree.expandRow(leftRow);
-      // Note that the children were added
-      leftTreeModel.nodeStructureChanged(targetNode);
-   }
+                row = "Wait: Copying from PC to IBM i . . .";
+                msgVector.add(row);
+                reloadRightSideAndShowMessages();
 
-   /**
-    * Drag and drop from left to right - transfer handler.
-    */
-   class RightTreeTransferHandler extends TransferHandler {
+                // Set clipboard path strings for paste operation
+                clipboardPathStrings = leftPathStrings;
 
-      MainWindow mainWindow;
+                // Perform copying from left to right
+                // ----------------------------------
+                ParallelCopy_PC_IBMi parallelCopy_PC_IBMI = new ParallelCopy_PC_IBMi(remoteServer, clipboardPathStrings, targetPathString, rightInfo, mainWindow);
+                parallelCopy_PC_IBMI.execute();
+            }
 
-      RightTreeTransferHandler(MainWindow mainWindow) {
-         this.mainWindow = mainWindow;
-      }
+            // -------------------------
+            if (dragSourceTree == rightTree) {
 
-      @Override
-      public int getSourceActions(JComponent component) {
-         return TransferHandler.COPY;
-      }
+                // Copy from IBM i itself
+                // ======================
 
-      @Override
-      protected Transferable createTransferable(JComponent component) {
-         return new StringSelection("");
-      }
+                row = "Wait: Copying from IBM i to IBM i . . .";
+                msgVector.add(row);
+                reloadRightSideAndShowMessages();
 
-      @Override
-      public boolean canImport(TransferHandler.TransferSupport info) {
-         if (!info.isDrop()) {
-            return false;
-         } else {
+                // Set clipboard path strings for paste operation
+                clipboardPathStrings = rightPathStrings;
+
+                // Perform copying from right to right
+                // -----------------------------------
+                ParallelCopy_IBMi_IBMi parallelCopy_IMBI_IBMI = new ParallelCopy_IBMi_IBMi(remoteServer, clipboardPathStrings, targetPathString, rightInfo, mainWindow);
+                parallelCopy_IMBI_IBMI.execute();
+            }
             return true;
-         }
-      }
+        }
+    }
 
-      @Override
-      public boolean importData(TransferHandler.TransferSupport info) {
-         if (!info.isDrop()) {
-            return false;
-         }
+    /**
+     * Expand right tree node after change.
+     *
+     * @param info
+     */
+    protected void expandRightTreeNode(TransferHandler.TransferSupport info) {
 
-         rightInfo = info;
+        IFSFile targetPath = new IFSFile(remoteServer, targetPathString);
 
-         JTree.DropLocation dl = (JTree.DropLocation) info.getDropLocation();
-         // Target path
-         rightSelectedPath = dl.getPath();
-         // Target node
-         rightNode = (DefaultMutableTreeNode) rightTree.getLastSelectedPathComponent();
+        // Target node
+        // -----------
+        targetNode = (DefaultMutableTreeNode) rightTree.getLastSelectedPathComponent();
+        // Add target node for inserted children
+        if (targetNode != null) {
+            // Add newly received children to the node
+            addAS400Nodes(targetPath, targetNode);
+        }
 
-         rightPathString = getStringFromRightPath(rightSelectedPath);
+        // Get coordinates of target node
+        TransferHandler.DropLocation dropLocation = info.getDropLocation();
+        double dropX = dropLocation.getDropPoint().getX();
+        double dropY = dropLocation.getDropPoint().getY();
 
-         // Remove trailing file separator from the path string
-         targetPathString = correctRightPathString(rightPathString);
+        // Get index from coordinates of the drop node
+        rightRow = rightTree.getRowForLocation((int) dropX, (int) dropY);
+        // Expand that node on that index
+        rightTree.expandRow(rightRow);
 
-         // ------------------------
-         if (dragSourceTree == leftTree) {
+        // Note that the children were added
+        rightTreeModel.nodeStructureChanged(targetNode);
+    }
 
-            // Copy from PC
-            // ============
+    /**
+     * Window adapter setting current coordinates of the window to properties.
+     */
+    class MainWindowAdapter extends WindowAdapter {
 
-            row = "Wait: Copying from PC to IBM i . . .";
-            msgVector.add(row);
-            reloadRightSideAndShowMessages();
+        @Override
+        public void windowClosing(WindowEvent we) {
+            // Get actual main window coordinates
+            int mainWindowX = we.getWindow().getX();
+            int mainWindowY = we.getWindow().getY();
+            try {
+                // Read properties file
+                infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+                properties.load(infile);
 
-            // Set clipboard path strings for paste operation
-            clipboardPathStrings = leftPathStrings;
+                // Set main window coordinates to properties
+                properties.setProperty("MAIN_WINDOW_X", String.valueOf(mainWindowX));
+                properties.setProperty("MAIN_WINDOW_Y", String.valueOf(mainWindowY));
 
-            // Perform copying from left to right
-            // ----------------------------------
-            ParallelCopy_PC_IBMi parallelCopy_PC_IBMI = new ParallelCopy_PC_IBMi(remoteServer, clipboardPathStrings, targetPathString, rightInfo, mainWindow);
-            parallelCopy_PC_IBMI.execute();
-         }
+                // Set new properties to the file in directory "paramfiles"
+                outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+            System.exit(0);
+        }
+    }
 
-         // -------------------------
-         if (dragSourceTree == rightTree) {
-
-            // Copy from IBM i itself
-            // ======================
-
-            row = "Wait: Copying from IBM i to IBM i . . .";
-            msgVector.add(row);
-            reloadRightSideAndShowMessages();
-
-            // Set clipboard path strings for paste operation
-            clipboardPathStrings = rightPathStrings;
-
-            // Perform copying from right to right
-            // -----------------------------------
-            ParallelCopy_IBMi_IBMi parallelCopy_IMBI_IBMI = new ParallelCopy_IBMi_IBMi(remoteServer, clipboardPathStrings, targetPathString, rightInfo, mainWindow);
-            parallelCopy_IMBI_IBMI.execute();
-         }
-         return true;
-      }
-   }
-
-   /**
-    * Expand right tree node after change.
-    * 
-    * @param info
-    */
-   protected void expandRightTreeNode(TransferHandler.TransferSupport info) {
-
-      IFSFile targetPath = new IFSFile(remoteServer, targetPathString);
-
-      // Target node
-      // -----------
-      targetNode = (DefaultMutableTreeNode) rightTree.getLastSelectedPathComponent();
-      // Add target node for inserted children
-      if (targetNode != null) {
-         // Add newly received children to the node
-         addAS400Nodes(targetPath, targetNode);
-      }
-
-      // Get coordinates of target node
-      TransferHandler.DropLocation dropLocation = info.getDropLocation();
-      double dropX = dropLocation.getDropPoint().getX();
-      double dropY = dropLocation.getDropPoint().getY();
-
-      // Get index from coordinates of the drop node
-      rightRow = rightTree.getRowForLocation((int) dropX, (int) dropY);
-      // Expand that node on that index
-      rightTree.expandRow(rightRow);
-
-      // Note that the children were added
-      rightTreeModel.nodeStructureChanged(targetNode);
-   }
-
-   /**
-    * Window adapter setting current coordinates of the window to properties.
-    */
-   class MainWindowAdapter extends WindowAdapter {
-
-      @Override
-      public void windowClosing(WindowEvent we) {
-         // Get actual main window coordinates
-         int mainWindowX = we.getWindow().getX();
-         int mainWindowY = we.getWindow().getY();
-         try {
-            // Read properties file
-            infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
-            properties.load(infile);
-
-            // Set main window coordinates to properties
-            properties.setProperty("MAIN_WINDOW_X", String.valueOf(mainWindowX));
-            properties.setProperty("MAIN_WINDOW_Y", String.valueOf(mainWindowY));
-
-            // Set new properties to the file in directory "paramfiles"
-            outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-            properties.store(outfile, PROP_COMMENT);
-            outfile.close();
-         } catch (Exception exc) {
+    /**
+     * Main method of the MainWindow class
+     *
+     * @param args
+     */
+    @SuppressWarnings("UseSpecificCatch")
+    public static void main(String[] args) {
+        try {
+            // Set operating system look and feel
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            // UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+            // Create object from the class
+            MainWindow mainWindow = new MainWindow();
+            mainWindow.createWindow();
+        } catch (Exception exc) {
             exc.printStackTrace();
-         }
-         System.exit(0);
-      }
-   }
-
-   /**
-    * Main method of the MainWindow class
-    * 
-    * @param args
-    */
-   @SuppressWarnings("UseSpecificCatch")
-   public static void main(String[] args) {
-      try {
-         // Set operating system look and feel
-         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-         // UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-         // Create object from the class
-         MainWindow mainWindow = new MainWindow();
-         mainWindow.createWindow();
-      } catch (Exception exc) {
-         exc.printStackTrace();
-      }
-   }
+        }
+    }
 }

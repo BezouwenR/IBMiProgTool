@@ -55,6 +55,8 @@ public class ChangeLibraryList extends JFrame {
     String encoding = System.getProperty("file.encoding", "UTF-8");
 
     String libraries = "";
+    
+    
     // Path to UserLibraryList.lib file
     Path libraryListPath = Paths.get(System.getProperty("user.dir"), "workfiles", "UserLibraryList.lib");
     // Path to CurrentLibrary.lib file
