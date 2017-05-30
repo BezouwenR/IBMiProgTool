@@ -20,7 +20,7 @@ Application programs are written in Java and require version Java SE 8. They coo
 
 The application has been created and tested in systems macOS and Windows 10. Remote connection to the system IBM i, version 7.3 has been used.
 
-Start the application by clicking on the IBMiProgTool.jar file.
+Start the application by double click on the IBMiProgTool.jar file.
 
 - - - - - - - - - - 
 
