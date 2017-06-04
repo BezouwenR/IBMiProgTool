@@ -6,7 +6,7 @@ Created by Vladimír Župka, 2017
 vzupka@gmail.com
 
 
-This is a NetBeans project. The project is not installed, it is ready to use as a Java application in the directory of the project. The application requires Java SE 8 installed in PC.
+This project is not installed, it is ready to use as a Java application in the directory of the project. The application requires Java SE 8 installed in PC.
 
 User documentation can be found in the subdirectory "helpfiles" and it is also accessible under the menu Help in the running application.
 
@@ -24,7 +24,7 @@ Start the application by double click on the IBMiProgTool.jar file.
 
 - - - - - - - - - - 
 
-Toto je NetBeans projekt. Projekt se neinstaluje, je okamžitě k použití jako Java aplikace v adresáři projektu. Aplikace vyžaduje Javu SE 8 instalovanou v PC.
+Tento projekt se neinstaluje, je okamžitě k použití jako Java aplikace v adresáři projektu. Aplikace vyžaduje Javu SE 8 instalovanou v PC.
 
 Uživatelskou dokumentaci lze nalézt v podadresáři "helpfiles" a je také přístupná pod nabídkou Help v běžící aplikaci.
 
