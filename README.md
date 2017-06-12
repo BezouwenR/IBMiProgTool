@@ -6,7 +6,7 @@ Created by Vladimír Župka, 2017
 vzupka@gmail.com
 
 
-This project is not installed, it is ready to use as a Java application in the directory of the project. The application requires Java SE 8 installed in PC.
+This project is not to be installed, it is ready to use as a Java application in the directory of the project. The application requires Java SE 8 installed in PC.
 
 User documentation can be found in the subdirectory "helpfiles" and it is also accessible under the menu Help in the running application.
 
