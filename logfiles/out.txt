@@ -1,8 +1,0 @@
-Right click IBMi: /home/VZRPG_FREE/QRPGLESRC/STAPSOPR.RPGLE
-Right click IBMi: /home/VZRPG_FREE/QRPGLESRC/PRVNI.RPGLE
-Right click IBMi: /home/VZRPG_FREE/QRPGLESRC/DRUHY.RPGLE
-TADY
-TADY
-TADY
-left click 
-right click 
