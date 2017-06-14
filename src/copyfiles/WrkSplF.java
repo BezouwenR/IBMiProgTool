@@ -485,11 +485,12 @@ public class WrkSplF extends JFrame {
         // Refresh button listener
         // -----------------------
         refreshButton.addActionListener(ae -> {
+            userPar = userComboBox.getItemAt(0); // Get current user name from the combo box field
             // Select spooled files again
             selectSpooledFiles(namePar, numberPar, pagesPar, jobPar, userPar, jobNumberPar, datePar, timePar);
             scrollPane.getVerticalScrollBar().addAdjustmentListener(scrollPaneAdjustmentListenerMax);
             // Refresh spool table in the window with the current user name
-            refreshSpoolTable(properties.getProperty("USERNAME"));
+            refreshSpoolTable(userPar);
             scrollPane.getVerticalScrollBar().removeAdjustmentListener(scrollPaneAdjustmentListenerMax);
             repaint();
         });
