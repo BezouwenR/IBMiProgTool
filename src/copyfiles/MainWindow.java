@@ -730,7 +730,7 @@ public class MainWindow extends JFrame {
         // This listener keeps the scroll pane at the LAST MESSAGE.
         messageScrollPaneAdjustmentListenerMax = new MessageScrollPaneAdjustmentListenerMax();
 
-        // List of messages for placint into message scroll pane
+        // List of messages for placing into message scroll pane
         messageList = new JList<String>();
         // Decision what color the message will get
         messageList.setCellRenderer(new DefaultListCellRenderer() {

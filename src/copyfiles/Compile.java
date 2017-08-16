@@ -92,6 +92,8 @@ public class Compile extends JFrame {
 
     JButton editButton = new JButton("Edit");
 
+    JButton clearButton = new JButton("Clear messages");
+
     AS400 remoteServer;
 
     String host;
@@ -185,7 +187,7 @@ public class Compile extends JFrame {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        
+
         globalPanel = new JPanel();
         titlePanel = new JPanel();
         commandSelectionPanel = new JPanel();
@@ -399,6 +401,7 @@ public class Compile extends JFrame {
         buttonPanel.add(jobLogButton);
         buttonPanel.add(spooledFileButton);
         buttonPanel.add(editButton);
+        buttonPanel.add(clearButton);
 
         // Scroll pane for message list
         scrollMessagePane.setBorder(BorderFactory.createEmptyBorder());
@@ -439,22 +442,7 @@ public class Compile extends JFrame {
         // Create scroll pane adjustment listener
         messageScrollPaneAdjustmentListenerMax = new MessageScrollPaneAdjustmentListenerMax();
 
-        globalPanelLayout = new GroupLayout(globalPanel);
-        globalPanelLayout.setAutoCreateGaps(true);
-        globalPanelLayout.setAutoCreateContainerGaps(true);
-
-        // Set and create the global panel layout
-        globalPanel.setLayout(globalPanelLayout);
-        globalPanelLayout.setHorizontalGroup(globalPanelLayout.createSequentialGroup()
-                .addGroup(globalPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addComponent(titlePanel).addComponent(commandSelectionPanel)
-                        .addComponent(parameterPanel).addComponent(commandPanel).addComponent(buttonPanel)
-                        .addComponent(scrollMessagePane)));
-        globalPanelLayout.setVerticalGroup(globalPanelLayout.createSequentialGroup()
-                .addGroup(globalPanelLayout.createSequentialGroup().addComponent(titlePanel)
-                        .addComponent(commandSelectionPanel).addComponent(parameterPanel)
-                        .addComponent(commandPanel).addComponent(buttonPanel)
-                        .addComponent(scrollMessagePane)));
+        createPanelLayout();
 
         // Listeners for command selection panel
         // -------------------------------------
@@ -552,8 +540,7 @@ public class Compile extends JFrame {
             //         if (wwsp == null) {
             String className = this.getClass().getSimpleName();
             // "true" stands for *CURRENT user
-            wwsp = new WrkSplFCall(remoteServer, mainWindow, this.pathString, true, compileWindowX,
-                    compileWindowY, className);
+            wwsp = new WrkSplFCall(remoteServer, mainWindow, this.pathString, true, compileWindowX, compileWindowY, className);
             //         }
             wwsp.execute();
         });
@@ -576,6 +563,14 @@ public class Compile extends JFrame {
                         "rewriteIfsFile");
                 edtf.displayIfsFile(true);
             }
+        });
+
+        // Clear messages button listener
+        clearButton.addActionListener(en -> {
+            msgVector.clear();
+            messageList.removeAll();
+            scrollMessagePane = new JScrollPane(messageList);
+            createPanelLayout();            
         });
 
         cont = getContentPane();
@@ -1079,6 +1074,29 @@ public class Compile extends JFrame {
         scrollMessagePane.setViewportView(messageList);
     }
 
+    /**
+     * 
+     */
+    protected void createPanelLayout() {
+                
+        globalPanelLayout = new GroupLayout(globalPanel);
+        globalPanelLayout.setAutoCreateGaps(true);
+        globalPanelLayout.setAutoCreateContainerGaps(true);
+
+        // Set and create the global panel layout
+        globalPanel.setLayout(globalPanelLayout);
+        globalPanelLayout.setHorizontalGroup(globalPanelLayout.createSequentialGroup()
+                .addGroup(globalPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        .addComponent(titlePanel).addComponent(commandSelectionPanel)
+                        .addComponent(parameterPanel).addComponent(commandPanel).addComponent(buttonPanel)
+                        .addComponent(scrollMessagePane)));
+        globalPanelLayout.setVerticalGroup(globalPanelLayout.createSequentialGroup()
+                .addGroup(globalPanelLayout.createSequentialGroup().addComponent(titlePanel)
+                        .addComponent(commandSelectionPanel).addComponent(parameterPanel)
+                        .addComponent(commandPanel).addComponent(buttonPanel)
+                        .addComponent(scrollMessagePane)));
+
+    }
     /**
      *
      */
