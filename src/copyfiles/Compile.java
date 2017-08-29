@@ -171,9 +171,12 @@ public class Compile extends JFrame {
     /**
      * Constructor
      *
+     * @param remoteServer
      * @param mainWindow
+     * @param pathString
+     * @param ifs
      */
-    Compile(AS400 remoteServer, MainWindow mainWindow, String pathString, boolean ifs) {
+    public Compile(AS400 remoteServer, MainWindow mainWindow, String pathString, boolean ifs) {
         this.mainWindow = mainWindow;
         this.remoteServer = remoteServer;
         this.pathString = pathString;
@@ -552,15 +555,13 @@ public class Compile extends JFrame {
             // Editing begins with display of the file (or member) which is edited by the user.
             // Then the new data is written back to the file (or member).
             // by the user pressing a button.
-            if (pathString.startsWith("/QSYS.LIB")) {
+            if (this.pathString.startsWith("/QSYS.LIB")) {
                 // Source member
-                EditFile edtf = new EditFile(remoteServer, mainWindow, this.pathString,
-                        "rewriteSourceMember");
+                EditFile edtf = new EditFile(remoteServer, mainWindow, this.pathString, "rewriteSourceMember");
                 edtf.displaySourceMember(true);
             } else {
                 // IFS file
-                EditFile edtf = new EditFile(remoteServer, mainWindow, this.pathString,
-                        "rewriteIfsFile");
+                EditFile edtf = new EditFile(remoteServer, mainWindow, this.pathString, "rewriteIfsFile");
                 edtf.displayIfsFile(true);
             }
         });
