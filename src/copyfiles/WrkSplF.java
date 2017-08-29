@@ -32,11 +32,13 @@ import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.Properties;
 import java.util.Set;
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -46,6 +48,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
@@ -501,8 +504,14 @@ public class WrkSplF extends JFrame {
             scrollPane.getVerticalScrollBar().removeAdjustmentListener(scrollPaneAdjustmentListenerMax);
         });
 
-        // Display spooled files button (one or more rows can be selected)
-        // ----------------------------
+
+        // Enable ESCAPE key to escape from editing
+        // ----------------------------------------
+        globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "escape");
+        globalPanel.getActionMap().put("escape", new Escape());
+
+        // Display spooled files menu item (one or more rows can be selected)
+        // -------------------------------
         displaySpooledFiles.addActionListener((ActionEvent ae) -> {
             try {
                 BufferedReader infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
@@ -521,7 +530,7 @@ public class WrkSplF extends JFrame {
                 exc.printStackTrace();
             }
 
-            // Display all spooled files if interval(s) are selected.
+            // Display selected spooled files.
             for (int idx = 0; idx < selIndexArrList.size(); idx++) {
                 rowIndex = selIndexArrList.get(idx);
                 // Read input stream and convert spooled file into text
@@ -1485,6 +1494,18 @@ public class WrkSplF extends JFrame {
         @Override
         public boolean isCellEditable(int row, int col) {
             return false; // column 0 - RRN - cannot be changed
+        }
+    }
+
+
+    /**
+     * Inner class for Escape function key
+     */
+    class Escape extends AbstractAction {
+
+        @Override
+        public void actionPerformed(ActionEvent de) {
+            dispose();
         }
     }
 
