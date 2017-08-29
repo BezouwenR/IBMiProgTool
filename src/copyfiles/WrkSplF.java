@@ -154,6 +154,8 @@ public class WrkSplF extends JFrame {
     MouseListener spoolTableMouseListener;
     ScrollPaneAdjustmentListenerMax scrollPaneAdjustmentListenerMax;
 
+    ListSelectionModel spoolTableSlectionlModel;
+
     JTextArea spoolTextArea;
 
     SpooledFile splf;
@@ -386,8 +388,13 @@ public class WrkSplF extends JFrame {
 
         globalPanelLayout.setAutoCreateGaps(false);
         globalPanelLayout.setAutoCreateContainerGaps(false);
-        globalPanelLayout.setHorizontalGroup(globalPanelLayout.createSequentialGroup().addGroup(globalPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(panelTop).addComponent(scrollPane)));
-        globalPanelLayout.setVerticalGroup(globalPanelLayout.createSequentialGroup().addComponent(panelTop).addComponent(scrollPane));
+        globalPanelLayout.setHorizontalGroup(globalPanelLayout.createSequentialGroup()
+                .addGroup(globalPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        .addComponent(panelTop)
+                        .addComponent(scrollPane)));
+        globalPanelLayout.setVerticalGroup(globalPanelLayout.createSequentialGroup()
+                .addComponent(panelTop)
+                .addComponent(scrollPane));
 
         globalPanel.setLayout(globalPanelLayout);
         globalPanel.setBorder(BorderFactory.createLineBorder(globalPanel.getBackground(), 10));
@@ -485,14 +492,13 @@ public class WrkSplF extends JFrame {
         // Refresh button listener
         // -----------------------
         refreshButton.addActionListener(ae -> {
+            scrollPane.getVerticalScrollBar().addAdjustmentListener(scrollPaneAdjustmentListenerMax);
             userPar = userComboBox.getItemAt(0); // Get current user name from the combo box field
             // Select spooled files again
             selectSpooledFiles(namePar, numberPar, pagesPar, jobPar, userPar, jobNumberPar, datePar, timePar);
-            scrollPane.getVerticalScrollBar().addAdjustmentListener(scrollPaneAdjustmentListenerMax);
             // Refresh spool table in the window with the current user name
             refreshSpoolTable(userPar);
             scrollPane.getVerticalScrollBar().removeAdjustmentListener(scrollPaneAdjustmentListenerMax);
-            repaint();
         });
 
         // Display spooled files button (one or more rows can be selected)
@@ -566,8 +572,7 @@ public class WrkSplF extends JFrame {
         spoolTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
         // Row selection model (selection of single row)
-        ListSelectionModel spoolTableSlectionlModel = spoolTable.getSelectionModel();
-        // spoolTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        spoolTableSlectionlModel = spoolTable.getSelectionModel();
         spoolTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
         // Row selection model registration
@@ -645,6 +650,10 @@ public class WrkSplF extends JFrame {
      * @param userPar
      */
     protected void refreshSpoolTable(String userPar) {
+
+        // Register mouse listener to the table again
+        spoolTable.addMouseListener(spoolTableMouseListener);
+
         // Get actual values from input fields
         // except for the User which is passed as a call parameter
         namePar = nameTextField.getText().toUpperCase();
@@ -1488,13 +1497,11 @@ public class WrkSplF extends JFrame {
         public void mouseClicked(MouseEvent mouseEvent) {
             // No operation on left click
             if (mouseEvent.getButton() == MouseEvent.BUTTON1) {
-                System.out.println("left click ");
                 leftButtonClicked = true;
             }
             // Display context menu on right click
             if (mouseEvent.getButton() == MouseEvent.BUTTON3) {
                 if (leftButtonClicked) {
-                    System.out.println("right click ");
                     spoolPopupMenu.removeAll();
                     spoolPopupMenu.add(displaySpooledFiles);
                     spoolPopupMenu.add(copySpooledFile);
@@ -1515,7 +1522,6 @@ public class WrkSplF extends JFrame {
 
         @Override
         public void adjustmentValueChanged(AdjustmentEvent ae) {
-            System.out.println("TADY");
             // Set scroll pane to the bottom - the last element
             ae.getAdjustable().setValue(ae.getAdjustable().getMaximum());
         }

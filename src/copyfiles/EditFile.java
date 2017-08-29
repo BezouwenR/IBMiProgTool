@@ -447,25 +447,12 @@ public final class EditFile extends JFrame {
             // Dispose of the window
             dispose();
         });
-/*
-        // Compile button listener
-        compileButton.addActionListener(ae -> {
-            if (filePathString.startsWith("/QSYS.LIB")) {
-                if (mainWindow.compile == null) {
-                    mainWindow.compile = new Compile(remoteServer, mainWindow, filePathString, false);
-                }
-                // "false" means NOT IFS file (it is a source member)
-                mainWindow.compile.compile(filePathString, false);
-                
-            } else {
-                if (mainWindow.compile == null) {
-                    mainWindow.compile = new Compile(remoteServer, mainWindow, filePathString, true);
-                }
-                // "true" means IFS file
-                mainWindow.compile.compile(filePathString, true);
-            }
-        });
-*/
+        
+        // Enable ESCAPE key to escape from editing
+        // ----------------------------------------
+        globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "escape");
+        globalPanel.getActionMap().put("escape", new Escape());
+
         // Register Compile button listener
         compileListener = new CompileListener();
         compileButton.addActionListener(compileListener);
@@ -2218,6 +2205,18 @@ public final class EditFile extends JFrame {
                 // "true" means IFS file
                 mainWindow.compile.compile(filePathString, true);
             }
+        }
+    }
+
+    
+    /**
+     * Inner class for Escape function key
+     */
+    class Escape extends AbstractAction {
+
+        @Override
+        public void actionPerformed(ActionEvent de) {
+            dispose();
         }
     }
 

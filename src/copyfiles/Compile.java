@@ -28,18 +28,21 @@ import java.util.List;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.Vector;
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 
 /**
  * Compile source files or IFS files
@@ -523,8 +526,14 @@ public class Compile extends JFrame {
             this.setVisible(false);
         });
 
+
+        // Enable ESCAPE key to escape from display
+        // ----------------------------------------
+        globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "escape");
+        globalPanel.getActionMap().put("escape", new Escape());
+
         // This listener does the same as the Cancel button
-        this.addWindowListener(new WindowClosing());
+        addWindowListener(new WindowClosing());
 
         // Perform command button listener
         performButton.addActionListener(en -> {
@@ -571,7 +580,7 @@ public class Compile extends JFrame {
             msgVector.clear();
             messageList.removeAll();
             scrollMessagePane = new JScrollPane(messageList);
-            createPanelLayout();            
+            createPanelLayout();
         });
 
         cont = getContentPane();
@@ -1076,10 +1085,10 @@ public class Compile extends JFrame {
     }
 
     /**
-     * 
+     *
      */
     protected void createPanelLayout() {
-                
+
         globalPanelLayout = new GroupLayout(globalPanel);
         globalPanelLayout.setAutoCreateGaps(true);
         globalPanelLayout.setAutoCreateContainerGaps(true);
@@ -1098,6 +1107,7 @@ public class Compile extends JFrame {
                         .addComponent(scrollMessagePane)));
 
     }
+
     /**
      *
      */
@@ -1166,6 +1176,18 @@ public class Compile extends JFrame {
         public void adjustmentValueChanged(AdjustmentEvent ae) {
             // Set scroll pane to the bottom - the last element
             ae.getAdjustable().setValue(ae.getAdjustable().getMaximum());
+        }
+    }
+
+
+    /**
+     * Inner class for Escape function key
+     */
+    class Escape extends AbstractAction {
+
+        @Override
+        public void actionPerformed(ActionEvent de) {
+            dispose();
         }
     }
 
