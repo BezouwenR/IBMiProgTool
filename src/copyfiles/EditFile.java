@@ -14,6 +14,7 @@ import com.ibm.as400.access.RecordFormat;
 import com.ibm.as400.access.SequentialFile;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -46,10 +47,13 @@ import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.ParallelGroup;
 import javax.swing.GroupLayout.SequentialGroup;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -84,54 +88,54 @@ import javax.swing.undo.UndoManager;
  * @author Vladimír Župka, 2016
  */
 public final class EditFile extends JFrame {
-    
+
     JTextArea textArea;
     JTextComponent editor;
-    
+
     final Color VERY_LIGHT_BLUE = Color.getHSBColor(0.60f, 0.020f, 0.99f);
     final Color VERY_LIGHT_GREEN = Color.getHSBColor(0.52f, 0.020f, 0.99f);
     final Color VERY_LIGHT_PINK = Color.getHSBColor(0.025f, 0.008f, 0.99f);
-    
-    
+
+
     final Color WARNING_COLOR = new Color(255, 200, 200);
     final Color DIM_BLUE = Color.getHSBColor(0.60f, 0.2f, 0.5f); // blue little saturated dim (gray)
     final Color DIM_RED = Color.getHSBColor(0.00f, 0.2f, 0.98f); // red little saturated bright
     final Color VERY_LIGHT_GRAY = Color.getHSBColor(0.50f, 0.01f, 0.90f);
-    
+
     HighlightPainter currentPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.ORANGE);
     HighlightPainter highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
     Highlighter blockHighlighter;
-    
+
     final Color BLUE_DARKER = Color.getHSBColor(0.60f, 0.20f, 0.95f);
     HighlightPainter blockBlueDarker = new DefaultHighlighter.DefaultHighlightPainter(BLUE_DARKER);
     final Color BLUE_LIGHTER = Color.getHSBColor(0.60f, 0.15f, 0.998f);
     HighlightPainter blockBlueLighter = new DefaultHighlighter.DefaultHighlightPainter(BLUE_LIGHTER);
-    
+
     final Color GREEN_DARKER = Color.getHSBColor(0.35f, 0.15f, 0.90f);
     HighlightPainter blockGreenDarker = new DefaultHighlighter.DefaultHighlightPainter(GREEN_DARKER);
     final Color GREEN_LIGHTER = Color.getHSBColor(0.35f, 0.10f, 0.98f);
     HighlightPainter blockGreenLighter = new DefaultHighlighter.DefaultHighlightPainter(GREEN_LIGHTER);
-    
+
     final Color RED_DARKER = Color.getHSBColor(0.95f, 0.12f, 0.92f);
     HighlightPainter blockRedDarker = new DefaultHighlighter.DefaultHighlightPainter(RED_DARKER);
     final Color RED_LIGHTER = Color.getHSBColor(0.95f, 0.09f, 0.98f);
     HighlightPainter blockRedLighter = new DefaultHighlighter.DefaultHighlightPainter(RED_LIGHTER);
-    
+
     final Color YELLOW_DARKER = Color.getHSBColor(0.20f, 0.15f, 0.90f);
     HighlightPainter blockYellowDarker = new DefaultHighlighter.DefaultHighlightPainter(YELLOW_DARKER);
     final Color YELLOW_LIGHTER = Color.getHSBColor(0.20f, 0.15f, 0.96f);
     HighlightPainter blockYellowLighter = new DefaultHighlighter.DefaultHighlightPainter(YELLOW_LIGHTER);
-    
+
     final Color BROWN_DARKER = Color.getHSBColor(0.13f, 0.15f, 0.86f);
     HighlightPainter blockBrownDarker = new DefaultHighlighter.DefaultHighlightPainter(BROWN_DARKER);
     final Color BROWN_LIGHTER = Color.getHSBColor(0.13f, 0.15f, 0.92f);
     HighlightPainter blockBrownLighter = new DefaultHighlighter.DefaultHighlightPainter(BROWN_LIGHTER);
-    
+
     final Color GRAY_DARKER = Color.getHSBColor(0.25f, 0.015f, 0.82f);
     HighlightPainter blockGrayDarker = new DefaultHighlighter.DefaultHighlightPainter(GRAY_DARKER);
     final Color GRAY_LIGHTER = Color.getHSBColor(0.25f, 0.015f, 0.88f);
     HighlightPainter blockGrayLighter = new DefaultHighlighter.DefaultHighlightPainter(GRAY_LIGHTER);
-    
+
     final Color CURLY_BRACKETS_DARKER = Color.getHSBColor(0.25f, 0.020f, 0.75f);
     HighlightPainter curlyBracketsDarker = new DefaultHighlighter.DefaultHighlightPainter(CURLY_BRACKETS_DARKER);
     final Color CURLY_BRACKETS_LIGHTER = Color.getHSBColor(0.25f, 0.020f, 0.86f);
@@ -139,7 +143,7 @@ public final class EditFile extends JFrame {
 
     // Block painter
     HighlightPainter blockPainter;
-    
+
     String progLanguage; // Programming language to highlight (RPG **FREE, ..., Any language)
 
     /**
@@ -152,38 +156,46 @@ public final class EditFile extends JFrame {
     // --- action implementations -----------------------------------
     private UndoAction undoAction = new UndoAction();
     private RedoAction redoAction = new RedoAction();
-    
+
     CompileListener compileListener;
-    
+
     JButton saveButton = new JButton("Save");
-    JButton saveReturnButton = new JButton("Save & return");
+
     JButton compileButton = new JButton("Compile");
-    Compile compile;
+    Compile compile; // Compile class object variable
+
     JButton undoButton = new JButton("Undo");
     JButton redoButton = new JButton("Redo");
-    
+
     JLabel characterSetLabel = new JLabel();
-    
+
     JLabel fontSizeLabel = new JLabel("Font size:");
     JTextField fontSizeField = new JTextField();
-    
+
     JButton caretButton = new JButton();
-    
+
     JLabel findLabel = new JLabel("Find what:    ");
     JTextField findField = new JTextField();
     JLayer fieldLayer;
-    
+
     JButton prevButton = new JButton("<"); // character "arrow up"   
     JButton nextButton = new JButton(">"); // character "arrow down"
 
     JButton highlightBlocksButton = new JButton("Highlight blocks");
-    
+    JLabel highlightBlocksLabel = new JLabel("Highlight blocks:");
+
+    JComboBox<String> languageComboBox = new JComboBox<>();
+
     JLabel replaceLabel = new JLabel("Replace with:");
     JTextField replaceField = new JTextField();
     JButton replaceButton = new JButton("Replace");
     JButton replaceFindButton = new JButton("Replace/Find");
     JButton replaceAllButton = new JButton("Replace all");
-    
+
+    JLabel shiftLabel = new JLabel("Shift selected:");
+    JButton leftButton = new JButton("Left");
+    JButton rightButton = new JButton("Right");
+
     PlaceholderLayerUI layerUI = new PlaceholderLayerUI();
     HighlightHandler highlightHandler = new HighlightHandler();
     int currentPos; // current position in the text area
@@ -196,7 +208,7 @@ public final class EditFile extends JFrame {
     int screenHeight;
     int windowX;
     int windowY;
-    
+
     Path parPath = Paths.get(System.getProperty("user.dir"), "paramfiles", "Parameters.txt");
     BufferedReader infile;
     final String PROP_COMMENT = "Copy files between IBM i and PC, edit and compile.";
@@ -213,21 +225,21 @@ public final class EditFile extends JFrame {
     String fontSizeString;
     int fontSize;
     String caretShape;
-    
+
     String msgText;
     String qsyslib;
     String libraryName;
     String fileName;
     String memberName;
-    
+
     String textLine;
     List<String> list;
-    
+
     String row;
     boolean nodes = true;
     boolean noNodes = false;
-    
-    JPanel globalPanel;
+
+    JPanel globalPanel = new JPanel();
     GroupLayout globalPanelLayout;
     JScrollPane scrollPane;
 
@@ -242,6 +254,11 @@ public final class EditFile extends JFrame {
     // Highlighting blocks of paired statements (if, dow, etc.)
     ArrayList<String> stmtsBeg = new ArrayList<>();
     ArrayList<String> stmtsEnd = new ArrayList<>();
+
+    int caretPosition;
+    String selectedText;
+    int selectionStart;
+    String shiftedText;
 
     /**
      * Constructor
@@ -274,7 +291,7 @@ public final class EditFile extends JFrame {
             caretShape = properties.getProperty("CARET");
             fontSizeString = properties.getProperty("FONT_SIZE");
             progLanguage = properties.getProperty("HIGHLIGHT_BLOCKS");
-            
+
             try {
                 fontSize = Integer.parseInt(fontSizeString);
             } catch (Exception exc) {
@@ -285,7 +302,7 @@ public final class EditFile extends JFrame {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        
+
         textArea = new JTextArea();
         textArea.setEditable(true);
         textArea.setFont(new Font("Monospaced", Font.PLAIN, fontSize));
@@ -304,7 +321,7 @@ public final class EditFile extends JFrame {
         // Light sky blue
         scrollPane.setBackground(VERY_LIGHT_BLUE);
         textArea.setBackground(VERY_LIGHT_BLUE);
-        
+
         caretButton.setText(caretShape);
         if (caretShape.equals(LONG_CARET)) {
             // Set custom caret shape - long vertical gray line with a short red pointer
@@ -312,123 +329,222 @@ public final class EditFile extends JFrame {
         } else {
             textArea.setCaret(new BasicTextUI.BasicCaret());
         }
-        
+
         Toolkit kit = Toolkit.getDefaultToolkit();
         Dimension screenSize = kit.getScreenSize();
         screenWidth = screenSize.width;
         screenHeight = screenSize.height;
         windowWidth = 850;
         windowHeight = screenHeight;
-        
+
         windowX = screenWidth / 2 - windowWidth / 2;
         windowY = 10;
 
         // Now the scroll pane may be sized because window height is defined
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.setPreferredSize(new Dimension(windowWidth, windowHeight - 205));
-        
+
+
+        saveButton.setPreferredSize(new Dimension(50, 20));
+        saveButton.setMinimumSize(new Dimension(50, 20));
+        saveButton.setMaximumSize(new Dimension(50, 20));
+
+        undoButton.setPreferredSize(new Dimension(50, 20));
+        undoButton.setMinimumSize(new Dimension(50, 20));
+        undoButton.setMaximumSize(new Dimension(50, 20));
+
+        redoButton.setPreferredSize(new Dimension(50, 20));
+        redoButton.setMinimumSize(new Dimension(50, 20));
+        redoButton.setMaximumSize(new Dimension(50, 20));
+
+        compileButton.setPreferredSize(new Dimension(80, 20));
+        compileButton.setMinimumSize(new Dimension(80, 20));
+        compileButton.setMaximumSize(new Dimension(80, 20));
+        compileButton.setForeground(Color.BLUE);
+
         prevButton.setPreferredSize(new Dimension(50, 20));
         prevButton.setMinimumSize(new Dimension(50, 20));
         prevButton.setMaximumSize(new Dimension(50, 20));
         prevButton.setActionCommand("prev");
-        
+
         nextButton.setPreferredSize(new Dimension(50, 20));
         nextButton.setMinimumSize(new Dimension(50, 20));
         nextButton.setMaximumSize(new Dimension(50, 20));
         nextButton.setActionCommand("next");
-        
+
+        caretButton.setPreferredSize(new Dimension(80, 20));
+        caretButton.setMinimumSize(new Dimension(80, 20));
+        caretButton.setMaximumSize(new Dimension(80, 20));
+
+        highlightBlocksButton.setPreferredSize(new Dimension(130, 20));
+        highlightBlocksButton.setMinimumSize(new Dimension(130, 20));
+        highlightBlocksButton.setMaximumSize(new Dimension(130, 20));
+
+
+        languageComboBox.setPreferredSize(new Dimension(130, 30));
+        languageComboBox.setMaximumSize(new Dimension(130, 30));
+        languageComboBox.setMinimumSize(new Dimension(130, 30));
+
+        languageComboBox.addItem("*NONE");
+        languageComboBox.addItem("*ALL");
+        languageComboBox.addItem("RPG **FREE");
+        languageComboBox.addItem("RPG /FREE");
+        languageComboBox.addItem("RPG IV fixed");
+        languageComboBox.addItem("RPG III");
+        languageComboBox.addItem("COBOL");
+        languageComboBox.addItem("CL");
+        languageComboBox.addItem("C");
+        languageComboBox.addItem("C++");
+
+        languageComboBox.setSelectedItem(progLanguage);
+
+        replaceButton.setPreferredSize(new Dimension(70, 20));
+        replaceButton.setMinimumSize(new Dimension(70, 20));
+        replaceButton.setMaximumSize(new Dimension(70, 20));
+
+        replaceFindButton.setPreferredSize(new Dimension(100, 20));
+        replaceFindButton.setMinimumSize(new Dimension(100, 20));
+        replaceFindButton.setMaximumSize(new Dimension(100, 20));
+
+        replaceAllButton.setPreferredSize(new Dimension(90, 20));
+        replaceAllButton.setMinimumSize(new Dimension(90, 20));
+        replaceAllButton.setMaximumSize(new Dimension(90, 20));
+
+        leftButton.setPreferredSize(new Dimension(50, 20));
+        leftButton.setMinimumSize(new Dimension(50, 20));
+        leftButton.setMaximumSize(new Dimension(50, 20));
+
+        rightButton.setPreferredSize(new Dimension(50, 20));
+        rightButton.setMinimumSize(new Dimension(50, 20));
+        rightButton.setMaximumSize(new Dimension(50, 20));
+
         fontSizeField.setText(fontSizeString);
         fontSizeField.setPreferredSize(new Dimension(25, 20));
         fontSizeField.setMaximumSize(new Dimension(25, 20));
-        
-        findField.setPreferredSize(new Dimension(300, 20));
-        findField.setMaximumSize(new Dimension(300, 20));
+
+        findField.setPreferredSize(new Dimension(200, 20));
+        findField.setMaximumSize(new Dimension(200, 20));
         // Set document listener for the search field
         findField.getDocument().addDocumentListener(highlightHandler);
-        
-        replaceField.setPreferredSize(new Dimension(300, 20));
-        replaceField.setMaximumSize(new Dimension(300, 20));
+
+        replaceField.setPreferredSize(new Dimension(200, 20));
+        replaceField.setMaximumSize(new Dimension(200, 20));
 
         // Set a layer of counts that overlay the search field:
         // - the sequence number of just highlighted text found
         // - how many matches were found
         fieldLayer = new JLayer<>(findField, layerUI);
-        
-        globalPanel = new JPanel();
+
+        JPanel rowPanel1 = new JPanel();
+        JPanel rowPanel2 = new JPanel();
+
+        JPanel colPanel1 = new JPanel();
+        JPanel colPanel2 = new JPanel();
+
+        GroupLayout colPanel1Layout = new GroupLayout(colPanel1);
+        SequentialGroup col1sg = colPanel1Layout.createSequentialGroup()
+                .addComponent(findLabel)
+                .addComponent(replaceLabel);
+        ParallelGroup col1pg = colPanel1Layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                .addComponent(findLabel)
+                .addComponent(replaceLabel);
+        colPanel1Layout.setHorizontalGroup(colPanel1Layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                .addGroup(col1pg));
+        colPanel1Layout.setVerticalGroup(colPanel1Layout.createSequentialGroup()
+                .addGroup(col1sg));
+        colPanel1.setLayout(colPanel1Layout);
+
+        colPanel2.setLayout(new BoxLayout(colPanel2, BoxLayout.Y_AXIS));
+
+        JPanel colPanel21 = new JPanel();
+        JPanel colPanel22 = new JPanel();
+
+        colPanel21.setLayout(new BoxLayout(colPanel21, BoxLayout.X_AXIS));
+        colPanel21.add(fieldLayer);
+        colPanel21.add(fontSizeLabel);
+        colPanel21.add(fontSizeField);
+        colPanel21.add(caretButton);
+        colPanel21.add(Box.createHorizontalStrut(5));
+        colPanel21.add(highlightBlocksLabel);
+        colPanel21.add(languageComboBox);
+        colPanel21.add(Box.createHorizontalGlue());
+
+        colPanel22.setLayout(new BoxLayout(colPanel22, BoxLayout.X_AXIS));
+        colPanel22.add(replaceField);
+        colPanel22.add(replaceButton);
+        colPanel22.add(replaceFindButton);
+        colPanel22.add(replaceAllButton);
+        colPanel22.add(Box.createHorizontalGlue());
+
+        colPanel2.add(colPanel21);
+        colPanel2.add(colPanel22);
+
+        GroupLayout rowPanel1Layout = new GroupLayout(rowPanel1);
+        SequentialGroup sg1 = rowPanel1Layout.createSequentialGroup()
+                .addComponent(saveButton)
+                .addGap(5)
+                .addComponent(compileButton)
+                .addGap(5)
+                .addComponent(undoButton)
+                .addComponent(redoButton)
+                .addGap(5)
+                .addComponent(shiftLabel)
+                .addComponent(leftButton)
+                .addComponent(rightButton)
+                .addGap(20)
+                .addComponent(characterSetLabel);
+        ParallelGroup pg1 = rowPanel1Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addComponent(saveButton)
+                .addGap(5)
+                .addComponent(compileButton)
+                .addGap(5)
+                .addComponent(undoButton)
+                .addComponent(redoButton)
+                .addGap(5)
+                .addComponent(shiftLabel)
+                .addComponent(leftButton)
+                .addComponent(rightButton)
+                .addGap(20)
+                .addComponent(characterSetLabel);
+
+        rowPanel1Layout.setHorizontalGroup(rowPanel1Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addGroup(sg1));
+        rowPanel1Layout.setVerticalGroup(rowPanel1Layout.createSequentialGroup()
+                .addGroup(pg1));
+        rowPanel1.setLayout(rowPanel1Layout);
+
+        GroupLayout rowPanel2Layout = new GroupLayout(rowPanel2);
+        SequentialGroup sg2 = rowPanel2Layout.createSequentialGroup()
+                .addComponent(colPanel1)
+                .addComponent(colPanel2);
+        ParallelGroup pg2 = rowPanel2Layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                .addComponent(colPanel1)
+                .addComponent(colPanel2);
+
+        rowPanel2Layout.setHorizontalGroup(rowPanel2Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addGroup(sg2)
+        );
+        rowPanel2Layout.setVerticalGroup(rowPanel2Layout.createSequentialGroup()
+                .addGroup(pg2)
+        );
+        rowPanel2.setLayout(rowPanel2Layout);
+
         // Lay out components in globalPanel
         globalPanelLayout = new GroupLayout(globalPanel);
-        globalPanelLayout.setAutoCreateGaps(true);
+        globalPanelLayout.setAutoCreateGaps(false);
         globalPanelLayout.setAutoCreateContainerGaps(true);
-        
-        SequentialGroup sg1 = globalPanelLayout.createSequentialGroup()
-                .addComponent(saveButton)
-                .addComponent(saveReturnButton)
-                .addComponent(compileButton)
-                .addComponent(undoButton)
-                .addComponent(redoButton);
-        
-        sg1.addComponent(characterSetLabel);
-        
-        SequentialGroup sg2 = globalPanelLayout.createSequentialGroup()
-                .addComponent(findLabel)
-                .addComponent(fieldLayer)
-                .addComponent(prevButton)
-                .addComponent(nextButton)
-                .addComponent(fontSizeLabel)
-                .addComponent(fontSizeField)
-                .addComponent(caretButton)
-                //            .addComponent(highlightBlocksBox)
-                .addComponent(highlightBlocksButton);
-        
-        SequentialGroup sg3 = globalPanelLayout.createSequentialGroup()
-                .addComponent(replaceLabel)
-                .addComponent(replaceField)
-                .addComponent(replaceButton)
-                .addComponent(replaceFindButton)
-                .addComponent(replaceAllButton);
-        
+
         globalPanelLayout.setHorizontalGroup(globalPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addGroup(sg1)
-                .addGroup(sg2)
-                .addGroup(sg3)
+                .addComponent(rowPanel1)
+                .addComponent(rowPanel2)
                 .addGroup(globalPanelLayout.createSequentialGroup().addComponent(scrollPane)));
-        
-        ParallelGroup pg1 = globalPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                .addComponent(saveButton)
-                .addComponent(saveReturnButton)
-                .addComponent(compileButton)
-                .addComponent(undoButton)
-                .addComponent(redoButton);
-        
-        pg1.addComponent(characterSetLabel);
-        
-        ParallelGroup pg2 = globalPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                .addComponent(findLabel)
-                .addComponent(fieldLayer)
-                .addComponent(prevButton)
-                .addComponent(nextButton)
-                .addComponent(fontSizeLabel)
-                .addComponent(fontSizeField)
-                .addComponent(caretButton)
-                //            .addComponent(highlightBlocksBox)
-                .addComponent(highlightBlocksButton);
-        
-        ParallelGroup pg3 = globalPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                .addComponent(replaceLabel)
-                .addComponent(replaceField)
-                .addComponent(replaceButton)
-                .addComponent(replaceFindButton)
-                .addComponent(replaceAllButton);
-        
+
         globalPanelLayout.setVerticalGroup(globalPanelLayout.createSequentialGroup()
-                .addGroup(pg1)
-                .addGroup(pg2)
-                .addGroup(pg3)
+                .addComponent(rowPanel1)
+                .addComponent(rowPanel2)
                 .addGroup(globalPanelLayout.createParallelGroup().addComponent(scrollPane)));
-        
+
         globalPanel.setLayout(globalPanelLayout);
-        
-        globalPanel.setBackground(VERY_LIGHT_GRAY);
 
         // Save button listener
         saveButton.addActionListener(ae -> {
@@ -438,16 +554,6 @@ public final class EditFile extends JFrame {
             rewriteFile();
         });
 
-        // Save & Return button listener
-        saveReturnButton.addActionListener(ae -> {
-            // Replace TAB characters with TAB_SIZE spaces in the text area
-            replaceTabsWithSpaces();
-            // Rewrite file or member, dispose of the window
-            rewriteFile();
-            // Dispose of the window
-            dispose();
-        });
-        
         // Enable ESCAPE key to escape from editing
         // ----------------------------------------
         globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "escape");
@@ -456,7 +562,7 @@ public final class EditFile extends JFrame {
         // Register Compile button listener
         compileListener = new CompileListener();
         compileButton.addActionListener(compileListener);
-        
+
         // Set action listener for buttons and check boxes
         Arrays.asList(nextButton, prevButton, replaceButton, replaceFindButton).stream().map((abstractButton) -> {
             abstractButton.setFocusable(false);
@@ -476,6 +582,26 @@ public final class EditFile extends JFrame {
                 properties.load(infile);
                 infile.close();
                 progLanguage = properties.getProperty("HIGHLIGHT_BLOCKS");
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+            // Prepare text area with highlighting blocks and show
+            prepareEditingAndShow();
+            textArea.requestFocusInWindow();
+            textArea.setCaretPosition(currentCaretPos);
+        });
+
+        // Select programming language from the list in combo box - listener
+        languageComboBox.addItemListener(il -> {
+            int currentCaretPos = textArea.getCaretPosition();
+            JComboBox<String> source = (JComboBox) il.getSource();
+            progLanguage = (String) source.getSelectedItem();
+            try {
+                BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                // Save programming language into properties
+                properties.setProperty("HIGHLIGHT_BLOCKS", progLanguage);
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
             } catch (Exception exc) {
                 exc.printStackTrace();
             }
@@ -513,7 +639,7 @@ public final class EditFile extends JFrame {
             } catch (Exception exc) {
                 exc.printStackTrace();
             }
-            
+
         });
 
         // Caret button listener
@@ -576,6 +702,18 @@ public final class EditFile extends JFrame {
             }
         });
 
+        // Left shift button listener
+        leftButton.addActionListener(ae -> {
+            textArea.requestFocusInWindow();
+            shiftLeft();
+        });
+
+        // Right shift button listener
+        rightButton.addActionListener(ae -> {
+            textArea.requestFocusInWindow();
+            shiftRight();
+        });
+
         // Enable processing of function key Ctrl + S = Save member
         globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit()
                 .getMenuShortcutKeyMask()), "save");
@@ -594,17 +732,27 @@ public final class EditFile extends JFrame {
         // Enable processing of function Enter key - refresh "Find what"
         findField.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("ENTER"), "enter");
         findField.getActionMap().put("enter", new EnterKey());
-        
+
         textArea.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("TAB"), "tab");
         textArea.getActionMap().put("tab", new TabListener());
-        
+
+        // Enable processing of function key Ctrl + Arrow Left = Shift lines left
+        textArea.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Toolkit.getDefaultToolkit()
+                .getMenuShortcutKeyMask()), "shiftLeft");
+        textArea.getActionMap().put("shiftLeft", new ArrowLeft());
+
+        // Enable processing of function key Ctrl + Arrow Left = Shift lines left
+        textArea.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Toolkit.getDefaultToolkit()
+                .getMenuShortcutKeyMask()), "shiftRight");
+        textArea.getActionMap().put("shiftRight", new ArrowRight());
+
         Container cont = getContentPane();
         cont.add(globalPanel);
 
         // Display the window.
         setSize(windowWidth, windowHeight);
         setLocation(windowX, windowY);
-        
+
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();
 
@@ -619,6 +767,7 @@ public final class EditFile extends JFrame {
      */
     protected void displayIfsFile(boolean edit) {
         this.setTitle("Edit IFS file " + filePathString);
+        caretPosition = textArea.getCaretPosition();
 
         // Contents of the file are always decoded according to its attributed CCSID.
         // Characters may be displayed incorrectly if the "IBMi CCSID" parameter
@@ -626,16 +775,16 @@ public final class EditFile extends JFrame {
         // Correct the parameter "IBMi CCSID".
         try {
             IFSFile ifsFile = new IFSFile(remoteServer, filePathString);
-            
+
             attributeCCSID = ifsFile.getCCSID();
             //System.out.println("IFS CCSID: " + CCSID);
 
             characterSetLabel.setText("CCSID " + attributeCCSID + " was used for display.");
-            
+
             byte[] inputBuffer = new byte[100000];
             byte[] workBuffer = new byte[100000];
             textArea.setText("");
-            
+
             try (IFSFileInputStream inputStream = new IFSFileInputStream(remoteServer, filePathString)) {
                 int bytesRead = inputStream.read(inputBuffer);
                 while (bytesRead != -1) {
@@ -663,7 +812,7 @@ public final class EditFile extends JFrame {
 
                 // Prepare editing and make editor visible
                 prepareEditingAndShow();
-                
+
                 row = "Info: IFS file  " + filePathString + "  has CCSID  " + attributeCCSID + ".";
                 mainWindow.msgVector.add(row);
                 mainWindow.reloadLeftSideAndShowMessages(nodes);
@@ -698,14 +847,15 @@ public final class EditFile extends JFrame {
      * @param edit
      */
     protected void displayPcFile(boolean edit) {
-        
+
         this.setTitle("Edit PC file " + filePathString);
 
         // Disable Compile button - compilation is impossible in PC
         compileButton.removeActionListener(compileListener);
-        
+
         // Set editability     
         textArea.setEditable(edit);
+        caretPosition = textArea.getCaretPosition();
         try {
             Path filePath = Paths.get(filePathString);
             if (Files.exists(filePath)) {
@@ -727,13 +877,13 @@ public final class EditFile extends JFrame {
                 String text = list.stream().reduce("", (a, b) -> a + b + NEW_LINE);
                 textArea.setText(text);
             }
-            
+
             scrollPane.setBackground(VERY_LIGHT_PINK);
             textArea.setBackground(VERY_LIGHT_PINK);
 
             // Prepare editing and make editor visible
             prepareEditingAndShow();
-            
+
             row = "Info: PC file  " + filePathString + "  is displayed using character set  "
                     + pcCharset + "  from the application parameter.";
             mainWindow.msgVector.add(row);
@@ -760,15 +910,16 @@ public final class EditFile extends JFrame {
      */
     @SuppressWarnings("UseSpecificCatch")
     protected void displaySourceMember(boolean edit) {
-        
+
         this.setTitle("Edit member " + filePathString);
-        
+        caretPosition = textArea.getCaretPosition();
+
         IFSFile ifsFile = new IFSFile(remoteServer, filePathString);
         // Create an AS400FileRecordDescription object that represents the file
         AS400FileRecordDescription inRecDesc = new AS400FileRecordDescription(remoteServer, filePathString);
 
         // Set editability     
-        textArea.setEditable(edit);        
+        textArea.setEditable(edit);
         textArea.setText("");
         try {
             int ccsidAttribute = ifsFile.getCCSID();
@@ -827,7 +978,7 @@ public final class EditFile extends JFrame {
 
             // Prepare editing and make editor visible
             prepareEditingAndShow();
-            
+
             row = "Info: Source member  " + filePathString + "  has CCSID  " + ccsidAttribute + ".";
             mainWindow.msgVector.add(row);
             mainWindow.reloadLeftSideAndShowMessages(nodes);
@@ -869,7 +1020,7 @@ public final class EditFile extends JFrame {
         if (!progLanguage.equals("*NONE")) {
             highlightBlocks(progLanguage);
         }
-        
+
         try {
             BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
             // Save programming language into properties
@@ -891,7 +1042,7 @@ public final class EditFile extends JFrame {
     private void highlightBlocks(String progLanguage) {
         stmtsBeg.clear();
         stmtsEnd.clear();
-        
+
         switch (progLanguage) {
             case "*ALL": {
                 // Beginnings of block statements
@@ -1244,7 +1395,7 @@ public final class EditFile extends JFrame {
         stmtsEnd.forEach(stmtEnd -> {
             highlightBlockStmt(stmtEnd, false); // false is tested as !beg
         });
-        
+
     }
 
     /**
@@ -1441,20 +1592,20 @@ public final class EditFile extends JFrame {
         try {
             endOfLine = text.indexOf(NEW_LINE, startOfLine);
             while (startOfLine > -1 && startOfLine < text.length()) {
-                
+
                 if (endOfLine - startOfLine > 0) {
-                    
+
                     int startOfBlockStmt = text.indexOf(blockStmt, startOfLine);
                     int endOfBlockStmt = startOfBlockStmt + blockStmt.length();
-                    
+
                     if (startOfBlockStmt >= startOfLine && startOfBlockStmt <= endOfLine - blockStmt.length()) {
                         switch (progLanguage) {
-                            
+
                             case "*ALL": {
                                 blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
                                 break;
                             }
-                            
+
                             case "RPG **FREE": {
                                 // Before block statement: All spaces or empty
                                 // After block statement: A space or semicolon or new line
@@ -1594,7 +1745,7 @@ public final class EditFile extends JFrame {
      */
     private Pattern getPattern() {
         String pattern = findField.getText();
-        
+
         if (Objects.isNull(pattern) || pattern.isEmpty()) {
             return null;
         }
@@ -1616,7 +1767,7 @@ public final class EditFile extends JFrame {
             pattern = pattern.replace("(", "\\(");
             pattern = pattern.replace(")", "\\)");
             pattern = pattern.replace("`", "\\`");
-            
+
             return Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
         } catch (PatternSyntaxException ex) {
             findField.setBackground(WARNING_COLOR);
@@ -1633,7 +1784,7 @@ public final class EditFile extends JFrame {
     private void changeHighlight() {
         Highlighter highlighter = textArea.getHighlighter();
         highlighter.removeAllHighlights();
-        
+
         findField.setBackground(Color.WHITE);
         Document doc = textArea.getDocument();
         try {
@@ -1723,22 +1874,22 @@ public final class EditFile extends JFrame {
      * "ReplaceAll" button has different action listener.
      */
     class HighlightHandler implements DocumentListener, ActionListener {
-        
+
         @Override
         public void changedUpdate(DocumentEvent de) {
             /* not needed */
         }
-        
+
         @Override
         public void insertUpdate(DocumentEvent de) {
             changeHighlight();
         }
-        
+
         @Override
         public void removeUpdate(DocumentEvent de) {
             changeHighlight();
         }
-        
+
         @Override
         public void actionPerformed(ActionEvent de) {
             Object obj = de.getSource();
@@ -1770,7 +1921,7 @@ public final class EditFile extends JFrame {
      * matches were found.
      */
     class PlaceholderLayerUI extends LayerUI<JTextComponent> {
-        
+
         public final JLabel hint = new JLabel() {
             @Override
             public void updateUI() {
@@ -1781,7 +1932,7 @@ public final class EditFile extends JFrame {
                 setBackground(DIM_RED); // red little saturated bright
             }
         };
-        
+
         @Override
         public void paint(Graphics g, JComponent c) {
             super.paint(g, c);
@@ -1802,7 +1953,7 @@ public final class EditFile extends JFrame {
             }
         }
     }
-    
+
     class UndoHandler implements UndoableEditListener {
 
         /**
@@ -1815,14 +1966,14 @@ public final class EditFile extends JFrame {
             redoAction.update();
         }
     }
-    
+
     class UndoAction extends AbstractAction {
-        
+
         public UndoAction() {
             super("Undo");
             setEnabled(false);
         }
-        
+
         public void actionPerformed(ActionEvent e) {
             try {
                 undo.undo();
@@ -1832,7 +1983,7 @@ public final class EditFile extends JFrame {
             update();
             redoAction.update();
         }
-        
+
         protected void update() {
             if (undo.canUndo()) {
                 setEnabled(true);
@@ -1843,14 +1994,14 @@ public final class EditFile extends JFrame {
             }
         }
     }
-    
+
     class RedoAction extends AbstractAction {
-        
+
         public RedoAction() {
             super("Redo");
             setEnabled(false);
         }
-        
+
         public void actionPerformed(ActionEvent ae) {
             try {
                 undo.redo();
@@ -1860,7 +2011,7 @@ public final class EditFile extends JFrame {
             update();
             undoAction.update();
         }
-        
+
         protected void update() {
             if (undo.canRedo()) {
                 setEnabled(true);
@@ -1883,14 +2034,14 @@ public final class EditFile extends JFrame {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        
+
         pcCharset = properties.getProperty("PC_CHARSET");
         if (pcCharset.equals("*DEFAULT")) {
             pcCharset = "ISO-8859-1";
         }
-        
+
         overWriteFile = properties.getProperty("OVERWRITE_FILE");
-        
+
         if (overWriteFile.equals("Y")) {
             if (methodName.equals("rewriteIfsFile")) {
                 rewriteIfsFile();
@@ -1920,7 +2071,7 @@ public final class EditFile extends JFrame {
     protected String rewriteIfsFile() {
         try {
             IFSFileOutputStream outStream = new IFSFileOutputStream(remoteServer, filePathString);
-            
+
             String textAreaString = textArea.getText();
             byte[] byteArray;
             AS400Text textConverter = new AS400Text(textAreaString.length(), attributeCCSID, remoteServer);
@@ -1929,12 +2080,12 @@ public final class EditFile extends JFrame {
             outStream.write(byteArray);
             // Close file
             outStream.close();
-            
+
             row = "Comp: IFS file  " + filePathString + "  was saved.";
             mainWindow.msgVector.add(row);
             mainWindow.reloadRightSideAndShowMessages();
             return "";
-            
+
         } catch (Exception exc) {
             exc.printStackTrace();
             row = "Error: " + exc.toString();
@@ -1950,9 +2101,9 @@ public final class EditFile extends JFrame {
      * @return
      */
     protected String rewritePcFile() {
-        
+
         Path filePath = Paths.get(filePathString);
-        
+
         try {
             // Open output text file
             BufferedWriter outputFile = Files.newBufferedWriter(filePath, Charset
@@ -1961,12 +2112,12 @@ public final class EditFile extends JFrame {
             outputFile.write(textArea.getText());
             // Close file
             outputFile.close();
-            
+
             row = "Comp: PC file  " + filePathString + "  was saved with charset  " + pcCharset + ".";
             mainWindow.msgVector.add(row);
             mainWindow.reloadRightSideAndShowMessages();
             return "";
-            
+
         } catch (Exception exc) {
             exc.printStackTrace();
             row = "Error: " + exc.toString();
@@ -1993,9 +2144,9 @@ public final class EditFile extends JFrame {
 
         // Enable calling CL commands
         CommandCall cmdCall = new CommandCall(remoteServer);
-        
+
         msgText = "";
-        
+
         try {
 
             // If overwrite is not allowed - return
@@ -2029,7 +2180,7 @@ public final class EditFile extends JFrame {
 
                 // Set the record format (the only one)
                 outSeqFile.setRecordFormat(format[0]);
-                
+
                 try {
                     outSeqFile.open();
                 } catch (com.ibm.as400.access.AS400Exception as400exc) {
@@ -2048,10 +2199,10 @@ public final class EditFile extends JFrame {
                 int lenSEQ = format[0].getFieldDescription("SRCSEQ").getLength();
                 int lenDAT = format[0].getFieldDescription("SRCDAT").getLength();
                 int lenDTA = format[0].getFieldDescription("SRCDTA").getLength();
-                
+
                 BigDecimal seqNumber = new BigDecimal("0000.00");
                 BigDecimal increment = new BigDecimal("0001.00");
-                
+
                 String dataLine;
                 // Process all lines
                 for (int idx = 0; idx < lines.length; idx++) {
@@ -2065,7 +2216,7 @@ public final class EditFile extends JFrame {
                         //System.out.println("2'" + lines[idx] + "'");
                         dataLine = lines[idx].replace("\r", "");
                     }
-                    
+
                     seqNumber = seqNumber.add(increment);
                     // Insert sequential number into the source record (zoned decimal, 2 d.p.)
                     outRecord.setField("SRCSEQ", seqNumber);
@@ -2109,11 +2260,11 @@ public final class EditFile extends JFrame {
                     // Insert data into the source record
                     //                    outRecord.setField("SRCDTA", dataLine.substring(lenSEQ + lenDAT, lenSEQ + lenDAT + dataLength));
                     outRecord.setField("SRCDTA", dataLine.substring(0, dataLength));
-                    
+
                     try {
                         // Write source record
                         outSeqFile.write(outRecord);
-                        
+
                     } catch (Exception exc) {
                         exc.printStackTrace();
                         row = "Error: 1 Data cannot be written to the source member  " + libraryName + "/"
@@ -2126,7 +2277,7 @@ public final class EditFile extends JFrame {
                 }
                 // Close file
                 outSeqFile.close();
-                
+
                 row = "Comp: Source member  " + libraryName + "/" + fileName + "(" + memberName
                         + ")  was saved.";
                 mainWindow.msgVector.add(row);
@@ -2153,7 +2304,7 @@ public final class EditFile extends JFrame {
      * Inner class for Ctrl + S (Save) function key
      */
     class SaveAction extends AbstractAction {
-        
+
         @Override
         public void actionPerformed(ActionEvent ae) {
             // Save edited data from text area back to the member
@@ -2168,7 +2319,7 @@ public final class EditFile extends JFrame {
      * @param as400PathString
      */
     protected void extractNamesFromIfsPath(String as400PathString) {
-        
+
         qsyslib = "/QSYS.LIB/";
         if (as400PathString.startsWith(qsyslib) && as400PathString.length() > qsyslib.length()) {
             libraryName = as400PathString.substring(as400PathString.indexOf("/QSYS.LIB/")
@@ -2184,11 +2335,12 @@ public final class EditFile extends JFrame {
             }
         }
     }
+
     /**
      * Inner class for Compile button
      */
-    class CompileListener extends AbstractAction {        
-        
+    class CompileListener extends AbstractAction {
+
         @Override
         public void actionPerformed(ActionEvent ae) {
             if (filePathString.startsWith("/QSYS.LIB")) {
@@ -2197,7 +2349,7 @@ public final class EditFile extends JFrame {
                 }
                 // "false" means NOT IFS file (it is a source member)
                 mainWindow.compile.compile(filePathString, false);
-                
+
             } else {
                 if (mainWindow.compile == null) {
                     mainWindow.compile = new Compile(remoteServer, mainWindow, filePathString, true);
@@ -2208,7 +2360,7 @@ public final class EditFile extends JFrame {
         }
     }
 
-    
+
     /**
      * Inner class for Escape function key
      */
@@ -2224,7 +2376,7 @@ public final class EditFile extends JFrame {
      * Inner class for Ctrl + Arrow Up function key
      */
     class ArrowUp extends AbstractAction {
-        
+
         @Override
         public void actionPerformed(ActionEvent ae) {
             currentPos--;
@@ -2236,7 +2388,7 @@ public final class EditFile extends JFrame {
      * Inner class for Ctrl + Arrow Down function key
      */
     class ArrowDown extends AbstractAction {
-        
+
         @Override
         public void actionPerformed(ActionEvent ae) {
             currentPos++;
@@ -2245,10 +2397,110 @@ public final class EditFile extends JFrame {
     }
 
     /**
+     * Inner class for Ctrl + Arrow Left function key
+     */
+    class ArrowLeft extends AbstractAction {
+
+        @Override
+        public void actionPerformed(ActionEvent ae) {
+            shiftLeft();
+        }
+    }
+
+    /**
+     *
+     */
+    protected void shiftLeft() {
+        selectedText = textArea.getSelectedText();
+        selectionStart = textArea.getSelectionStart();
+        int numberOfLines = 0;
+        if (selectedText != null) {
+            String[] strArr = selectedText.split("\n");
+            int minPos = 10000;
+            if (strArr.length > 0) {
+                for (int idx = 0; idx < strArr.length; idx++) {
+                    if (!strArr[idx].isEmpty()) {
+                        int position = 0;
+                        //minPos = strArr[idx].length();
+                        for (position = 0; position < strArr[idx].length(); position++) {
+                            if (!strArr[idx].isEmpty()) {
+                                if (strArr[idx].charAt(position) != ' ') {
+                                    if (position < minPos) {
+                                        minPos = position;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                int numberOfEmptyLines = 0;
+                shiftedText = "";
+                if (minPos > 0) {
+                    for (numberOfLines = 0; numberOfLines < strArr.length; numberOfLines++) {
+                        if (!strArr[numberOfLines].isEmpty()) {
+                            strArr[numberOfLines] = strArr[numberOfLines].substring(1);
+                            shiftedText += strArr[numberOfLines] + "\n";
+                        } else {
+                            numberOfEmptyLines += 2;
+                            shiftedText += " \n"; // 2 characters added
+                        }
+                    }
+                    if (!selectedText.endsWith("\n")) {
+                        shiftedText = shiftedText.substring(0, shiftedText.length() - 1);
+                    }
+                    textArea.replaceSelection(shiftedText);
+                }
+                // Select shifted text
+                textArea.select(selectionStart, selectionStart + shiftedText.length());
+            }
+        }
+    }
+
+
+
+    /**
+     * Inner class for Ctrl + Arrow Left function key
+     */
+    class ArrowRight extends AbstractAction {
+
+        @Override
+        public void actionPerformed(ActionEvent ae) {
+            shiftRight();
+        }
+    }
+
+    /**
+     *
+     */
+    protected void shiftRight() {
+        selectedText = textArea.getSelectedText();
+        selectionStart = textArea.getSelectionStart();
+        int lineNbr = 0;
+        char[] charArr = new char[1];
+        Arrays.fill(charArr, ' ');
+
+        if (selectedText != null) {
+            String[] strArr = selectedText.split("\n");
+            String[] lines = new String[strArr.length];
+            shiftedText = "";
+            for (lineNbr = 0; lineNbr < strArr.length; lineNbr++) {
+                lines[lineNbr] = String.valueOf(charArr) + strArr[lineNbr].substring(0, strArr[lineNbr].length());
+                shiftedText += lines[lineNbr] + "\n";
+            }
+            if (!selectedText.endsWith("\n")) {
+                shiftedText = shiftedText.substring(0, shiftedText.length() - 1);
+            }
+            textArea.replaceSelection(shiftedText);
+            // Select shifted text
+            textArea.select(selectionStart, selectionStart + shiftedText.length());
+        }
+    }
+
+    /**
      * Inner class for Enter key
      */
     class EnterKey extends AbstractAction {
-        
+
         @Override
         public void actionPerformed(ActionEvent ae) {
             changeHighlight();
@@ -2260,7 +2512,7 @@ public final class EditFile extends JFrame {
      * position
      */
     class TabListener extends AbstractAction {
-        
+
         @Override
         public void actionPerformed(ActionEvent ae) {
             textArea.insert(fixedLengthSpaces(TAB_SIZE), textArea.getCaretPosition());
@@ -2272,21 +2524,21 @@ public final class EditFile extends JFrame {
      * pointer
      */
     public class CustomCaret extends DefaultCaret {
-        
+
         int oldDot;
-        
+
         protected void damage(Rectangle r) {
             // give values to x,y,width,height (inherited from java.awt.Rectangle)
             x = r.x;
             y = 0; // upper edge of the vertical line is at the upper edge of the text area
             height = textArea.getHeight();
             width = 2;
-            
+
             repaint(); // calls getComponent().repaint(x, y, width, height)
         }
-        
+
         public void paint(Graphics g) {
-            
+
             JTextComponent component = getComponent();
             int dot = getDot();
             Rectangle verticalLine = null;
