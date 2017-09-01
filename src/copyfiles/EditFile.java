@@ -345,45 +345,45 @@ public final class EditFile extends JFrame {
         scrollPane.setPreferredSize(new Dimension(windowWidth, windowHeight - 205));
 
 
-        saveButton.setPreferredSize(new Dimension(50, 20));
-        saveButton.setMinimumSize(new Dimension(50, 20));
-        saveButton.setMaximumSize(new Dimension(50, 20));
+        saveButton.setPreferredSize(new Dimension(60, 20));
+        saveButton.setMinimumSize(new Dimension(60, 20));
+        saveButton.setMaximumSize(new Dimension(60, 20));
 
-        undoButton.setPreferredSize(new Dimension(50, 20));
-        undoButton.setMinimumSize(new Dimension(50, 20));
-        undoButton.setMaximumSize(new Dimension(50, 20));
+        undoButton.setPreferredSize(new Dimension(60, 20));
+        undoButton.setMinimumSize(new Dimension(60, 20));
+        undoButton.setMaximumSize(new Dimension(60, 20));
 
-        redoButton.setPreferredSize(new Dimension(50, 20));
-        redoButton.setMinimumSize(new Dimension(50, 20));
-        redoButton.setMaximumSize(new Dimension(50, 20));
+        redoButton.setPreferredSize(new Dimension(60, 20));
+        redoButton.setMinimumSize(new Dimension(60, 20));
+        redoButton.setMaximumSize(new Dimension(60, 20));
 
         compileButton.setPreferredSize(new Dimension(80, 20));
         compileButton.setMinimumSize(new Dimension(80, 20));
         compileButton.setMaximumSize(new Dimension(80, 20));
         compileButton.setForeground(Color.BLUE);
 
-        prevButton.setPreferredSize(new Dimension(50, 20));
-        prevButton.setMinimumSize(new Dimension(50, 20));
-        prevButton.setMaximumSize(new Dimension(50, 20));
+        prevButton.setPreferredSize(new Dimension(60, 20));
+        prevButton.setMinimumSize(new Dimension(60, 20));
+        prevButton.setMaximumSize(new Dimension(60, 20));
         prevButton.setActionCommand("prev");
 
-        nextButton.setPreferredSize(new Dimension(50, 20));
-        nextButton.setMinimumSize(new Dimension(50, 20));
-        nextButton.setMaximumSize(new Dimension(50, 20));
+        nextButton.setPreferredSize(new Dimension(60, 20));
+        nextButton.setMinimumSize(new Dimension(60, 20));
+        nextButton.setMaximumSize(new Dimension(60, 20));
         nextButton.setActionCommand("next");
 
-        caretButton.setPreferredSize(new Dimension(80, 20));
-        caretButton.setMinimumSize(new Dimension(80, 20));
-        caretButton.setMaximumSize(new Dimension(80, 20));
+        caretButton.setPreferredSize(new Dimension(90, 20));
+        caretButton.setMinimumSize(new Dimension(90, 20));
+        caretButton.setMaximumSize(new Dimension(90, 20));
 
         highlightBlocksButton.setPreferredSize(new Dimension(130, 20));
         highlightBlocksButton.setMinimumSize(new Dimension(130, 20));
         highlightBlocksButton.setMaximumSize(new Dimension(130, 20));
 
 
-        languageComboBox.setPreferredSize(new Dimension(130, 30));
-        languageComboBox.setMaximumSize(new Dimension(130, 30));
-        languageComboBox.setMinimumSize(new Dimension(130, 30));
+        languageComboBox.setPreferredSize(new Dimension(130, 20));
+        languageComboBox.setMaximumSize(new Dimension(130, 20));
+        languageComboBox.setMinimumSize(new Dimension(130, 20));
 
         languageComboBox.addItem("*NONE");
         languageComboBox.addItem("*ALL");
@@ -410,13 +410,13 @@ public final class EditFile extends JFrame {
         replaceAllButton.setMinimumSize(new Dimension(90, 20));
         replaceAllButton.setMaximumSize(new Dimension(90, 20));
 
-        leftButton.setPreferredSize(new Dimension(50, 20));
-        leftButton.setMinimumSize(new Dimension(50, 20));
-        leftButton.setMaximumSize(new Dimension(50, 20));
+        leftButton.setPreferredSize(new Dimension(60, 20));
+        leftButton.setMinimumSize(new Dimension(60, 20));
+        leftButton.setMaximumSize(new Dimension(60, 20));
 
-        rightButton.setPreferredSize(new Dimension(50, 20));
-        rightButton.setMinimumSize(new Dimension(50, 20));
-        rightButton.setMaximumSize(new Dimension(50, 20));
+        rightButton.setPreferredSize(new Dimension(60, 20));
+        rightButton.setMinimumSize(new Dimension(60, 20));
+        rightButton.setMaximumSize(new Dimension(60, 20));
 
         fontSizeField.setText(fontSizeString);
         fontSizeField.setPreferredSize(new Dimension(25, 20));
@@ -461,6 +461,9 @@ public final class EditFile extends JFrame {
 
         colPanel21.setLayout(new BoxLayout(colPanel21, BoxLayout.X_AXIS));
         colPanel21.add(fieldLayer);
+        colPanel21.add(prevButton);
+        colPanel21.add(nextButton);
+        colPanel21.add(Box.createHorizontalStrut(5));
         colPanel21.add(fontSizeLabel);
         colPanel21.add(fontSizeField);
         colPanel21.add(caretButton);
