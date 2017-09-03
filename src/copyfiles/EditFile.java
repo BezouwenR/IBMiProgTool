@@ -709,12 +709,18 @@ public final class EditFile extends JFrame {
         leftButton.addActionListener(ae -> {
             textArea.requestFocusInWindow();
             shiftLeft();
+            if (!progLanguage.equals("*NONE")) {
+                highlightBlocks(progLanguage);
+            }
         });
 
         // Right shift button listener
         rightButton.addActionListener(ae -> {
             textArea.requestFocusInWindow();
             shiftRight();
+            if (!progLanguage.equals("*NONE")) {
+                highlightBlocks(progLanguage);
+            }
         });
 
         // Enable processing of function key Ctrl + S = Save member
