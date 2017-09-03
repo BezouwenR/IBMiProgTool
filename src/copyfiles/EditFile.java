@@ -2413,6 +2413,9 @@ public final class EditFile extends JFrame {
         @Override
         public void actionPerformed(ActionEvent ae) {
             shiftLeft();
+            if (!progLanguage.equals("*NONE")) {
+                highlightBlocks(progLanguage);
+            }
         }
     }
 
@@ -2459,6 +2462,9 @@ public final class EditFile extends JFrame {
                     }
                     textArea.replaceSelection(shiftedText);
                 }
+                if (!progLanguage.equals("*NONE")) {
+                    highlightBlocks(progLanguage);
+                }
                 // Select shifted text
                 textArea.select(selectionStart, selectionStart + shiftedText.length());
             }
@@ -2475,6 +2481,7 @@ public final class EditFile extends JFrame {
         @Override
         public void actionPerformed(ActionEvent ae) {
             shiftRight();
+            textArea.requestFocusInWindow();
         }
     }
 
@@ -2500,6 +2507,9 @@ public final class EditFile extends JFrame {
                 shiftedText = shiftedText.substring(0, shiftedText.length() - 1);
             }
             textArea.replaceSelection(shiftedText);
+            if (!progLanguage.equals("*NONE")) {
+                highlightBlocks(progLanguage);
+            }
             // Select shifted text
             textArea.select(selectionStart, selectionStart + shiftedText.length());
         }
