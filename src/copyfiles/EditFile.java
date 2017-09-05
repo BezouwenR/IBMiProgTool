@@ -14,7 +14,6 @@ import com.ibm.as400.access.RecordFormat;
 import com.ibm.as400.access.SequentialFile;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -1937,26 +1936,26 @@ public final class EditFile extends JFrame {
                 super.updateUI();
                 //setForeground(UIManager.getColor("TextField.inactiveForeground"));
                 // The following foreground color is almost the same as "TextField.inactiveForeground"
-                setForeground(DIM_BLUE); // blue little saturated dim (gray)
-                setBackground(DIM_RED); // red little saturated bright
+                setForeground(DIM_BLUE); // blue little saturated dim - gray
+                setBackground(DIM_RED); // red little saturated - bright
             }
         };
 
         @Override
-        public void paint(Graphics g, JComponent c) {
-            super.paint(g, c);
-            if (c instanceof JLayer) {
-                JLayer jlayer = (JLayer) c;
-                JTextComponent tc = (JTextComponent) jlayer.getView();
-                if (!tc.getText().isEmpty()) {
+        public void paint(Graphics g, JComponent component) {
+            super.paint(g, component);
+            if (component instanceof JLayer) {
+                JLayer jlayer = (JLayer) component;
+                JTextComponent textComponent = (JTextComponent) jlayer.getView();
+                if (!textComponent.getText().isEmpty()) {
                     Graphics2D g2 = (Graphics2D) g.create();
                     g2.setPaint(hint.getForeground());
-                    Insets i = tc.getInsets();
-                    Dimension d = hint.getPreferredSize();
-                    int x = tc.getWidth() - i.right - d.width - 2;
-                    int y = (tc.getHeight() - d.height) / 2;
+                    Insets insets = textComponent.getInsets();
+                    Dimension dimension = hint.getPreferredSize();
+                    int x = textComponent.getWidth() - insets.right - dimension.width - 2;
+                    int y = (textComponent.getHeight() - dimension.height) / 2;
                     g2.translate(x, y);
-                    SwingUtilities.paintComponent(g2, hint, tc, 0, 0, d.width, d.height);
+                    SwingUtilities.paintComponent(g2, hint, textComponent, 0, 0, dimension.width, dimension.height);
                     g2.dispose();
                 }
             }

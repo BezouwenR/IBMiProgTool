@@ -1,6 +1,6 @@
 #Copy files between IBM i and PC, edit and compile.
-#Sun Sep 03 14:29:58 CEST 2017
-OVERWRITE_FILE=
+#Mon Sep 04 08:35:53 CEST 2017
+OVERWRITE_FILE=Y
 CARET=Short caret
 PC_CHARSET=*DEFAULT
 LIBRARY_PREFIX=
