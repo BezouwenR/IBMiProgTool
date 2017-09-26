@@ -602,10 +602,8 @@ public class Copy_IBMi_IBMi {
                   //
                } else {
                   //
-                  // Conversion from source IFS file's CCSID to target IFS
-                  // file's CCSID
+                  // Conversion from source IFS file's CCSID to target IFS file's CCSID
                   // ----------
-                  //
 
                   // Open output IFS file
                   ifsOutStream = new IFSFileOutputStream(remoteServer, targetPathString, outputFileCcsid);
@@ -1418,7 +1416,6 @@ public class Copy_IBMi_IBMi {
     * 
     * @param sourcePathString
     * @param targetPathString
-    * @param fromDirectory
     * @return
     */
    protected String copyToSourceMember(String sourcePathString, String targetPathString) {

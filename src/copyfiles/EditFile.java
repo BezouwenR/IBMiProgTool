@@ -4,7 +4,6 @@ import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400File;
 import com.ibm.as400.access.AS400FileRecordDescription;
 import com.ibm.as400.access.AS400Text;
-import com.ibm.as400.access.CommandCall;
 
 import com.ibm.as400.access.IFSFile;
 import com.ibm.as400.access.IFSFileInputStream;
@@ -20,11 +19,15 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.math.BigDecimal;
@@ -71,6 +74,7 @@ import javax.swing.event.UndoableEditListener;
 import javax.swing.plaf.LayerUI;
 import javax.swing.plaf.basic.BasicTextUI;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.Caret;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Document;
@@ -89,7 +93,6 @@ import javax.swing.undo.UndoManager;
 public final class EditFile extends JFrame {
 
     JTextArea textArea;
-    JTextComponent editor;
 
     final Color VERY_LIGHT_BLUE = Color.getHSBColor(0.60f, 0.020f, 0.99f);
     final Color VERY_LIGHT_GREEN = Color.getHSBColor(0.52f, 0.020f, 0.99f);
@@ -173,7 +176,7 @@ public final class EditFile extends JFrame {
 
     JButton caretButton = new JButton();
 
-    JLabel findLabel = new JLabel("Find what:    ");
+    JLabel findLabel = new JLabel("Find what:");
     JTextField findField = new JTextField();
     JLayer fieldLayer;
 
@@ -195,6 +198,8 @@ public final class EditFile extends JFrame {
     JButton leftButton = new JButton("Left");
     JButton rightButton = new JButton("Right");
 
+    JButton selectionModeButton = new JButton();
+
     PlaceholderLayerUI layerUI = new PlaceholderLayerUI();
     HighlightHandler highlightHandler = new HighlightHandler();
     int currentPos; // current position in the text area
@@ -209,10 +214,13 @@ public final class EditFile extends JFrame {
     int windowY;
 
     Path parPath = Paths.get(System.getProperty("user.dir"), "paramfiles", "Parameters.txt");
+
     BufferedReader infile;
     final String PROP_COMMENT = "Copy files between IBM i and PC, edit and compile.";
     final String SHORT_CARET = "Short caret";
     final String LONG_CARET = "Long caret";
+    final String VERTICAL_SELECTION = "Vertical selection";
+    final String HORIZONTAL_SELECTION = "Horizontal selection";
     final int TAB_SIZE = 4;
     final String NEW_LINE = "\n";
     String encoding = System.getProperty("file.encoding", "UTF-8");
@@ -224,6 +232,20 @@ public final class EditFile extends JFrame {
     String fontSizeString;
     int fontSize;
     String caretShape;
+    String selectionMode;
+    SpecialCaret specialCaret;
+    LongCaret longCaret;
+    BasicTextUI.BasicCaret basicCaret;
+    Caret currentCaret;
+    Highlighter.Highlight[] selections;
+    Highlighter selectionHighlighter;
+    int startSel;
+    int endSel;
+    String selectedText;
+    String[] selectedArray;
+    int caretPosition;
+    int selectionStart;
+    String shiftedText;
 
     String msgText;
     String qsyslib;
@@ -238,8 +260,6 @@ public final class EditFile extends JFrame {
     boolean nodes = true;
     boolean noNodes = false;
 
-    JPanel globalPanel = new JPanel();
-    GroupLayout globalPanelLayout;
     JScrollPane scrollPane;
 
     // Constructor parameters
@@ -253,11 +273,6 @@ public final class EditFile extends JFrame {
     // Highlighting blocks of paired statements (if, dow, etc.)
     ArrayList<String> stmtsBeg = new ArrayList<>();
     ArrayList<String> stmtsEnd = new ArrayList<>();
-
-    int caretPosition;
-    String selectedText;
-    int selectionStart;
-    String shiftedText;
 
     /**
      * Constructor
@@ -288,6 +303,7 @@ public final class EditFile extends JFrame {
             overWriteFile = properties.getProperty("OVERWRITE_FILE");
             pcCharset = properties.getProperty("PC_CHARSET");
             caretShape = properties.getProperty("CARET");
+            selectionMode = properties.getProperty("SELECTION_MODE");
             fontSizeString = properties.getProperty("FONT_SIZE");
             progLanguage = properties.getProperty("HIGHLIGHT_BLOCKS");
 
@@ -308,11 +324,9 @@ public final class EditFile extends JFrame {
         textArea.setTabSize(TAB_SIZE);
         // Set caret position (and scroll bar) to top
         textArea.setCaretPosition(0);
+        selectionHighlighter = textArea.getHighlighter();
 
-        // create the embedded JTextComponent
-        editor = textArea;
-        editor.setDragEnabled(true);
-
+        textArea.setDragEnabled(true);
         // Create a scroll pane
         scrollPane = new JScrollPane(textArea);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -321,19 +335,47 @@ public final class EditFile extends JFrame {
         scrollPane.setBackground(VERY_LIGHT_BLUE);
         textArea.setBackground(VERY_LIGHT_BLUE);
 
+        // Choose initial caret shape
+        // --------------------------
+        // Special caret for vertical (rectangular) selection mode
+        specialCaret = new SpecialCaret();
+        longCaret = new LongCaret();
+        basicCaret = new BasicTextUI.BasicCaret();
+        currentCaret = null;
+        // Caret button with short or long caret
         caretButton.setText(caretShape);
         if (caretShape.equals(LONG_CARET)) {
-            // Set custom caret shape - long vertical gray line with a short red pointer
-            textArea.setCaret(new CustomCaret());
+            if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+                currentCaret = longCaret;
+                // Set custom caret shape - long vertical gray line with a short red pointer
+                textArea.setCaret(longCaret);
+            } else {
+                // Vertical selection
+                currentCaret = specialCaret;
+                textArea.setCaret(specialCaret);
+            }
+
         } else {
-            textArea.setCaret(new BasicTextUI.BasicCaret());
+            // Short caret
+            if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+                currentCaret = basicCaret;
+                textArea.setCaret(basicCaret);
+            } else {
+                // Vertical selection
+                currentCaret = specialCaret;
+                textArea.setCaret(specialCaret);
+            }
         }
+
+        // Set selection mode as the button text
+        selectionModeButton.setText(selectionMode);
 
         Toolkit kit = Toolkit.getDefaultToolkit();
         Dimension screenSize = kit.getScreenSize();
+
         screenWidth = screenSize.width;
         screenHeight = screenSize.height;
-        windowWidth = 850;
+        windowWidth = 800;
         windowHeight = screenHeight;
 
         windowX = screenWidth / 2 - windowWidth / 2;
@@ -418,8 +460,8 @@ public final class EditFile extends JFrame {
         rightButton.setMaximumSize(new Dimension(60, 20));
 
         fontSizeField.setText(fontSizeString);
-        fontSizeField.setPreferredSize(new Dimension(25, 20));
-        fontSizeField.setMaximumSize(new Dimension(25, 20));
+        fontSizeField.setPreferredSize(new Dimension(30, 20));
+        fontSizeField.setMaximumSize(new Dimension(30, 20));
 
         findField.setPreferredSize(new Dimension(200, 20));
         findField.setMaximumSize(new Dimension(200, 20));
@@ -429,25 +471,46 @@ public final class EditFile extends JFrame {
         replaceField.setPreferredSize(new Dimension(200, 20));
         replaceField.setMaximumSize(new Dimension(200, 20));
 
+        selectionModeButton.setPreferredSize(new Dimension(150, 20));
+        selectionModeButton.setMinimumSize(new Dimension(150, 20));
+        selectionModeButton.setMaximumSize(new Dimension(150, 20));
+
         // Set a layer of counts that overlay the search field:
         // - the sequence number of just highlighted text found
         // - how many matches were found
         fieldLayer = new JLayer<>(findField, layerUI);
 
         JPanel rowPanel1 = new JPanel();
-        JPanel rowPanel2 = new JPanel();
+
+        rowPanel1.setLayout(new BoxLayout(rowPanel1, BoxLayout.X_AXIS));
+        rowPanel1.add(saveButton);
+        rowPanel1.add(Box.createHorizontalStrut(5));
+        rowPanel1.add(compileButton);
+        rowPanel1.add(Box.createHorizontalStrut(5));
+        rowPanel1.add(undoButton);
+        rowPanel1.add(redoButton);
+        rowPanel1.add(Box.createHorizontalStrut(5));
+        rowPanel1.add(shiftLabel);
+        rowPanel1.add(leftButton);
+        rowPanel1.add(rightButton);
+        rowPanel1.add(Box.createHorizontalStrut(20));
+        rowPanel1.add(characterSetLabel);
 
         JPanel colPanel1 = new JPanel();
         JPanel colPanel2 = new JPanel();
 
         GroupLayout colPanel1Layout = new GroupLayout(colPanel1);
         SequentialGroup col1sg = colPanel1Layout.createSequentialGroup()
+                .addGap(5)
                 .addComponent(findLabel)
+                .addGap(10)
                 .addComponent(replaceLabel);
-        ParallelGroup col1pg = colPanel1Layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+        ParallelGroup col1pg = colPanel1Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addGap(5)
                 .addComponent(findLabel)
+                .addGap(10)
                 .addComponent(replaceLabel);
-        colPanel1Layout.setHorizontalGroup(colPanel1Layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+        colPanel1Layout.setHorizontalGroup(colPanel1Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
                 .addGroup(col1pg));
         colPanel1Layout.setVerticalGroup(colPanel1Layout.createSequentialGroup()
                 .addGroup(col1sg));
@@ -476,12 +539,16 @@ public final class EditFile extends JFrame {
         colPanel22.add(replaceButton);
         colPanel22.add(replaceFindButton);
         colPanel22.add(replaceAllButton);
+        colPanel22.add(selectionModeButton);
         colPanel22.add(Box.createHorizontalGlue());
 
         colPanel2.add(colPanel21);
         colPanel2.add(colPanel22);
 
+        /*
         GroupLayout rowPanel1Layout = new GroupLayout(rowPanel1);
+        rowPanel1Layout.setAutoCreateGaps(false);
+        rowPanel1Layout.setAutoCreateContainerGaps(false);
         SequentialGroup sg1 = rowPanel1Layout.createSequentialGroup()
                 .addComponent(saveButton)
                 .addGap(5)
@@ -494,7 +561,8 @@ public final class EditFile extends JFrame {
                 .addComponent(leftButton)
                 .addComponent(rightButton)
                 .addGap(20)
-                .addComponent(characterSetLabel);
+                .addComponent(characterSetLabel)
+                ;
         ParallelGroup pg1 = rowPanel1Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
                 .addComponent(saveButton)
                 .addGap(5)
@@ -507,13 +575,17 @@ public final class EditFile extends JFrame {
                 .addComponent(leftButton)
                 .addComponent(rightButton)
                 .addGap(20)
-                .addComponent(characterSetLabel);
-
+                .addComponent(characterSetLabel)
+                ;
         rowPanel1Layout.setHorizontalGroup(rowPanel1Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
                 .addGroup(sg1));
         rowPanel1Layout.setVerticalGroup(rowPanel1Layout.createSequentialGroup()
                 .addGroup(pg1));
         rowPanel1.setLayout(rowPanel1Layout);
+
+         */
+
+        JPanel rowPanel2 = new JPanel();
 
         GroupLayout rowPanel2Layout = new GroupLayout(rowPanel2);
         SequentialGroup sg2 = rowPanel2Layout.createSequentialGroup()
@@ -531,22 +603,47 @@ public final class EditFile extends JFrame {
         );
         rowPanel2.setLayout(rowPanel2Layout);
 
-        // Lay out components in globalPanel
+        JPanel topPanel = new JPanel();
+        //topPanel.setAlignmentX(.01f);
+        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
+        topPanel.add(rowPanel1);
+        topPanel.add(rowPanel2);
+        topPanel.add(Box.createVerticalGlue());
+
+        topPanel.setPreferredSize(new Dimension(windowWidth, 80));
+        topPanel.setMaximumSize(new Dimension(windowWidth, 80));
+        topPanel.setMinimumSize(new Dimension(windowWidth, 80));
+
+
+        JPanel globalPanel = new JPanel();
+        globalPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+        GroupLayout globalPanelLayout;
         globalPanelLayout = new GroupLayout(globalPanel);
         globalPanelLayout.setAutoCreateGaps(false);
-        globalPanelLayout.setAutoCreateContainerGaps(true);
+        globalPanelLayout.setAutoCreateContainerGaps(false);
 
         globalPanelLayout.setHorizontalGroup(globalPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addComponent(rowPanel1)
-                .addComponent(rowPanel2)
+                .addComponent(topPanel)
                 .addGroup(globalPanelLayout.createSequentialGroup().addComponent(scrollPane)));
 
         globalPanelLayout.setVerticalGroup(globalPanelLayout.createSequentialGroup()
-                .addComponent(rowPanel1)
-                .addComponent(rowPanel2)
+                .addComponent(topPanel)
                 .addGroup(globalPanelLayout.createParallelGroup().addComponent(scrollPane)));
 
         globalPanel.setLayout(globalPanelLayout);
+
+
+        /*
+        // Lay out components in globalPanel
+        JPanel globalPanel = new JPanel();
+
+        globalPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+        globalPanel.setLayout(new BoxLayout(globalPanel, BoxLayout.Y_AXIS));
+        globalPanel.add(topPanel);
+        globalPanel.add(scrollPane);
+         */
 
         // Save button listener
         saveButton.addActionListener(ae -> {
@@ -651,17 +748,78 @@ public final class EditFile extends JFrame {
                 properties.load(infile);
                 infile.close();
                 caretShape = properties.getProperty("CARET");
-                if (caretButton.getText().equals("Long caret")) {
-                    caretButton.setText("Short caret");
-                    textArea.setCaret(new BasicTextUI.BasicCaret());
+                if (caretButton.getText().equals(LONG_CARET)) {
+                    // Long caret button
+                    caretShape = SHORT_CARET;
+                    caretButton.setText(caretShape);
+                    if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+                        currentCaret = basicCaret;
+                        // Set custom caret shape - long vertical gray line with a short red pointer
+                        textArea.setCaret(basicCaret);
+                    } else {
+                        // Vertical selection
+                        currentCaret = specialCaret;
+                        textArea.setCaret(specialCaret);
+                    }
+
                 } else {
-                    caretButton.setText("Long caret");
-                    // Set custom caret shape - long vertical gray line with a short red pointer
-                    textArea.setCaret(new CustomCaret());
+                    // Short caret button
+                    caretShape = LONG_CARET;
+                    caretButton.setText(caretShape);
+                    if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+                        currentCaret = longCaret;
+                        textArea.setCaret(longCaret);
+                    } else {
+                        // Vertical selection
+                        currentCaret = specialCaret;
+                        textArea.setCaret(specialCaret);
+                    }
                 }
                 BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
                 // Save caret shape into properties
-                properties.setProperty("CARET", caretButton.getText());
+                properties.setProperty("CARET", caretShape);
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+        });
+
+        // Selection mode button listener
+        selectionModeButton.addActionListener(ae -> {
+            try {
+                infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+                properties.load(infile);
+                infile.close();
+                selectionMode = properties.getProperty("SELECTION_MODE");
+                if (selectionModeButton.getText().equals(VERTICAL_SELECTION)) {
+                    // Horizontal selection
+                    // --------------------
+                    selectionMode = HORIZONTAL_SELECTION;
+                    selectionModeButton.setText(selectionMode);
+                    // Deselect all selected area
+                    textArea.getHighlighter().removeAllHighlights();
+                    if (caretShape.equals(SHORT_CARET)) {
+                        textArea.setCaret(basicCaret);
+                    } else {
+                        // Long caret 
+                        textArea.setCaret(longCaret);
+                    }
+                } else {
+                    // Vertical selection
+                    // ------------------
+                    selectionMode = VERTICAL_SELECTION;
+                    selectionModeButton.setText(selectionMode);
+                    // Deselect the selection
+                    int end = textArea.getSelectionEnd();
+                    textArea.setSelectionStart(end);
+                    textArea.setSelectionEnd(end);
+                    // Set special caret
+                    textArea.setCaret(specialCaret);
+                }
+                BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                // Save caret shape into properties
+                properties.setProperty("SELECTION_MODE", selectionMode);
                 properties.store(outfile, PROP_COMMENT);
                 outfile.close();
             } catch (Exception exc) {
@@ -708,7 +866,7 @@ public final class EditFile extends JFrame {
         leftButton.addActionListener(ae -> {
             textArea.requestFocusInWindow();
             shiftLeft();
-            if (!progLanguage.equals("*NONE")) {
+            if (selectionMode.equals(HORIZONTAL_SELECTION) && !progLanguage.equals("*NONE")) {
                 highlightBlocks(progLanguage);
             }
         });
@@ -717,7 +875,7 @@ public final class EditFile extends JFrame {
         rightButton.addActionListener(ae -> {
             textArea.requestFocusInWindow();
             shiftRight();
-            if (!progLanguage.equals("*NONE")) {
+            if (selectionMode.equals(HORIZONTAL_SELECTION) && !progLanguage.equals("*NONE")) {
                 highlightBlocks(progLanguage);
             }
         });
@@ -753,6 +911,25 @@ public final class EditFile extends JFrame {
         textArea.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Toolkit.getDefaultToolkit()
                 .getMenuShortcutKeyMask()), "shiftRight");
         textArea.getActionMap().put("shiftRight", new ArrowRight());
+
+        // Enable custom processing of function key Ctrl C = Custom copy
+        textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_MASK), "copy");
+        textArea.getActionMap().put("copy", new CustomCopy());
+
+        // Enable custom processing of function key Ctrl X = Custom cut
+        textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.CTRL_MASK), "cut");
+        textArea.getActionMap().put("cut", new CustomCut());
+
+        // Enable custom processing of function key Ctrl V = Custom paste
+        textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_MASK), "paste");
+        textArea.getActionMap().put("paste", new CustomPaste());
+
+        // Enable custom processing of key <-- = Custom delete
+        textArea.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("DELETE"), "delete");
+        textArea.getActionMap().put("delete", new CustomDelete());
 
         Container cont = getContentPane();
         cont.add(globalPanel);
@@ -873,7 +1050,7 @@ public final class EditFile extends JFrame {
                 }
                 characterSetLabel.setText(pcCharset + " character set was used for display.");
                 // Use PC charset parameter for conversion
-                List<String> list = Files.readAllLines(filePath, Charset.forName(pcCharset));
+                list = Files.readAllLines(filePath, Charset.forName(pcCharset));
                 if (list != null) {
                     // Concatenate all text lines from the list obtained from the file
                     String text = list.stream().reduce("", (a, b) -> a + b + NEW_LINE);
@@ -917,9 +1094,14 @@ public final class EditFile extends JFrame {
      * @param edit
      */
     @SuppressWarnings("UseSpecificCatch")
+    Path tmpFilePath;
+
     protected void displaySourceMember(boolean edit) {
 
         this.setTitle("Edit member " + filePathString);
+        // Extract individual names (libraryName, fileName, memberName) from the AS400 IFS path
+        extractNamesFromIfsPath(filePathString);
+
         caretPosition = textArea.getCaretPosition();
 
         IFSFile ifsFile = new IFSFile(remoteServer, filePathString);
@@ -984,6 +1166,15 @@ public final class EditFile extends JFrame {
             // Close the file
             as400seqFile.close();
 
+
+            // Copy text area to a temporary file in "workfiles" directory
+            Path tmpDirPath = Paths.get(System.getProperty("user.dir"), "workfiles");
+            String tmpFileName = "MBR." + memberName + ".";
+            tmpFilePath = Files.createTempFile(tmpDirPath, tmpFileName, ".txt");
+            byte[] byteArr = textArea.getText().getBytes();
+            Files.write(tmpFilePath, byteArr);
+            System.out.println("Dspl: " + tmpFilePath);
+
             // Prepare editing and make editor visible
             prepareEditingAndShow();
 
@@ -1001,8 +1192,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Prepare text area and editor and set location and visibility of the
-     * window.
+     * Prepare text area and set location and visibility of the window.
      */
     private void prepareEditingAndShow() {
 
@@ -1014,7 +1204,7 @@ public final class EditFile extends JFrame {
         // Set scroll bar to top
         textArea.setCaretPosition(0);
         // Listener for undoable edits
-        editor.getDocument().addUndoableEditListener(undoHandler);
+        textArea.getDocument().addUndoableEditListener(undoHandler);
         // Undo button listener
         undoButton.addActionListener(new UndoAction());
         // Redo button listener
@@ -2053,15 +2243,16 @@ public final class EditFile extends JFrame {
         if (overWriteFile.equals("Y")) {
             if (methodName.equals("rewriteIfsFile")) {
                 rewriteIfsFile();
-                displayIfsFile(true);
+                prepareEditingAndShow();
             } else if (methodName.equals("rewriteSourceMember")) {
                 // Save edited data from text area back to the member
                 rewriteSourceMember();
-                displaySourceMember(true);
+                prepareEditingAndShow();
+                //displaySourceMember(true);
             } else if (methodName.equals("rewritePcFile")) {
                 // Save edited data from text area back to the member
                 rewritePcFile();
-                displayPcFile(true);
+                prepareEditingAndShow();
             }
         } else {
             row = "Error: IFS file  " + filePathString
@@ -2146,16 +2337,13 @@ public final class EditFile extends JFrame {
         extractNamesFromIfsPath(filePathString);
 
         // Path to the output source member
-        String outMemberPath = "/QSYS.LIB/" + libraryName + ".LIB/" + fileName + ".FILE" + "/"
+        String outMemberPathString = "/QSYS.LIB/" + libraryName + ".LIB/" + fileName + ".FILE" + "/"
                 + memberName + ".MBR";
-        String clrPfmCommand;
-
-        // Enable calling CL commands
-        CommandCall cmdCall = new CommandCall(remoteServer);
-
-        msgText = "";
 
         try {
+            System.out.println("Edit: " + tmpFilePath);
+            Files.delete(tmpFilePath);
+            String[] lines = textArea.getText().split("\n");
 
             // If overwrite is not allowed - return
             // ------------------------------------
@@ -2169,58 +2357,66 @@ public final class EditFile extends JFrame {
 
             // Overwrite is allowed
             // --------------------
-            String[] lines = textArea.getText().split("\n");
 
             // Obtain output database file record description
-            AS400FileRecordDescription outRecDesc = new AS400FileRecordDescription(remoteServer, outMemberPath);
+            AS400FileRecordDescription outRecDesc = new AS400FileRecordDescription(remoteServer, outMemberPathString);
             // Retrieve record format from the record description
             RecordFormat[] format = outRecDesc.retrieveRecordFormat();
             // Obtain output record object
             Record outRecord = new Record(format[0]);
+
+            msgText = "";
             if (lines.length > 0) {
-
                 // Create the member (SequentialFile object)
-                outSeqFile = new SequentialFile(remoteServer, outMemberPath);
-
-                // Clear physical file member
-                clrPfmCommand = "CLRPFM FILE(" + libraryName + "/" + fileName + ") MBR(" + memberName + ")";
-                cmdCall.run(clrPfmCommand);
-
+                outSeqFile = new SequentialFile(remoteServer, outMemberPathString);
                 // Set the record format (the only one)
                 outSeqFile.setRecordFormat(format[0]);
 
                 try {
-                    outSeqFile.open();
+                    outSeqFile.open(AS400File.READ_WRITE, 100000, AS400File.COMMIT_LOCK_LEVEL_NONE);
                 } catch (com.ibm.as400.access.AS400Exception as400exc) {
-
+                    as400exc.printStackTrace();
                     // Add new member if open could not be performed (when the member does not exist)
                     // (the second parameter is a text description)
                     // The new member inherits the CCSID from its parent Source physical file
                     outSeqFile.addPhysicalFileMember(memberName, "Source member " + memberName);
                     // Open the new member
-                    outSeqFile.open(AS400File.WRITE_ONLY, 100000, AS400File.COMMIT_LOCK_LEVEL_NONE);
+                    outSeqFile.open(AS400File.READ_WRITE, 100000, AS400File.COMMIT_LOCK_LEVEL_NONE);
                 }
 
                 // Member records contain sequence and data fields
                 // -----------------------------------------------
-                // Get lengths of three fields of the source record
-                int lenSEQ = format[0].getFieldDescription("SRCSEQ").getLength();
-                int lenDAT = format[0].getFieldDescription("SRCDAT").getLength();
+                // Get length of member data field
                 int lenDTA = format[0].getFieldDescription("SRCDTA").getLength();
-
+                // Base sequential number - 6 digits
                 BigDecimal seqNumber = new BigDecimal("0000.00");
+                // Increment to the previous sequential number - 6 digits
                 BigDecimal increment = new BigDecimal("0001.00");
+
+                // Get actual date and transform it to YYMMDD
+                LocalDate date = LocalDate.now();
+                int intYear = date.getYear();
+                int intMonth = date.getMonthValue();
+                int intDay = date.getDayOfMonth();
+                String strYear = String.valueOf(intYear);
+                String strMonth = String.valueOf(intMonth);
+                if (intMonth < 10) {
+                    strMonth = "0" + strMonth;
+                }
+                String strDay = String.valueOf(intDay);
+                if (intDay < 10) {
+                    strDay = "0" + strDay;
+                }
+                String strSrcDat = strYear.substring(2) + strMonth + strDay;
 
                 String dataLine;
                 // Process all lines
                 for (int idx = 0; idx < lines.length; idx++) {
                     //System.out.println("0'" + lines[idx] + "'");
                     if (lines[idx].equals("\n")) {
-
                         //System.out.println("1'" + lines[idx] + "'");
                         dataLine = " ";
                     } else {
-
                         //System.out.println("2'" + lines[idx] + "'");
                         dataLine = lines[idx].replace("\r", "");
                     }
@@ -2229,24 +2425,10 @@ public final class EditFile extends JFrame {
                     // Insert sequential number into the source record (zoned decimal, 2 d.p.)
                     outRecord.setField("SRCSEQ", seqNumber);
 
-                    // Get actual date and transform it to YYMMDD
-                    LocalDate date = LocalDate.now();
-                    int intYear = date.getYear();
-                    int intMonth = date.getMonthValue();
-                    int intDay = date.getDayOfMonth();
-                    String strYear = String.valueOf(intYear);
-                    String strMonth = String.valueOf(intMonth);
-                    if (intMonth < 10) {
-                        strMonth = "0" + strMonth;
-                    }
-                    String strDay = String.valueOf(intDay);
-                    if (intDay < 10) {
-                        strDay = "0" + strDay;
-                    }
                     // Insert today's date YYMMDD into the source record (zoned decimal, 0 d.p.)
-                    outRecord.setField("SRCDAT", new BigDecimal(strYear.substring(2) + strMonth + strDay));
+                    outRecord.setField("SRCDAT", new BigDecimal(strSrcDat));
 
-                    // Adjust data line obtained from 
+                    // Adjust data line obtained from the text area - truncate or pad by spaces if necessary
                     int dataLength;
                     if (dataLine.length() >= lenDTA) {
                         // Shorten the data line to fit the data field in the record
@@ -2256,22 +2438,17 @@ public final class EditFile extends JFrame {
                         char[] chpad = new char[lenDTA - dataLine.length()];
                         for (int jdx = 0; jdx < chpad.length; jdx++) {
                             chpad[jdx] = ' '; // pad the data line with spaces
-                            //System.out.println("chpad["+jdx+"]: " + chpad[jdx]);
                         }
                         dataLine = dataLine + String.valueOf(chpad);
                         dataLength = lenDTA;
                     }
-                    //System.out.println("3'" + dataLine + "'");
-                    //System.out.println("dataLength: " + dataLength);
-                    //System.out.println(dataLine.substring(lenSEQ + lenDAT, lenSEQ + lenDAT + dataLength));
-
-                    // Insert data into the source record
-                    //                    outRecord.setField("SRCDTA", dataLine.substring(lenSEQ + lenDAT, lenSEQ + lenDAT + dataLength));
+                    // Insert data to the member data field
                     outRecord.setField("SRCDTA", dataLine.substring(0, dataLength));
 
+                    // Update the member record with adjusted data from the text area
                     try {
-                        // Write source record
-                        outSeqFile.write(outRecord);
+                        outSeqFile.positionCursor(idx + 1);
+                        outSeqFile.update(outRecord);
 
                     } catch (Exception exc) {
                         exc.printStackTrace();
@@ -2412,7 +2589,7 @@ public final class EditFile extends JFrame {
         @Override
         public void actionPerformed(ActionEvent ae) {
             shiftLeft();
-            if (!progLanguage.equals("*NONE")) {
+            if (selectionMode.equals(HORIZONTAL_SELECTION) && !progLanguage.equals("*NONE")) {
                 highlightBlocks(progLanguage);
             }
         }
@@ -2422,55 +2599,82 @@ public final class EditFile extends JFrame {
      *
      */
     protected void shiftLeft() {
-        selectedText = textArea.getSelectedText();
-        selectionStart = textArea.getSelectionStart();
-        int numberOfLines = 0;
-        if (selectedText != null) {
-            String[] strArr = selectedText.split("\n");
-            int minPos = 10000;
-            if (strArr.length > 0) {
-                for (int idx = 0; idx < strArr.length; idx++) {
-                    if (!strArr[idx].isEmpty()) {
-                        int position = 0;
-                        //minPos = strArr[idx].length();
-                        for (position = 0; position < strArr[idx].length(); position++) {
-                            if (!strArr[idx].isEmpty()) {
-                                if (strArr[idx].charAt(position) != ' ') {
-                                    if (position < minPos) {
-                                        minPos = position;
+        if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+            selectedText = textArea.getSelectedText();
+            selectionStart = textArea.getSelectionStart();
+            int numberOfLines = 0;
+            if (selectedText != null) {
+                String[] strArr = selectedText.split("\n");
+                int minPos = 10000;
+                if (strArr.length > 0) {
+                    for (int idx = 0; idx < strArr.length; idx++) {
+                        if (!strArr[idx].isEmpty()) {
+                            int position = 0;
+                            //minPos = strArr[idx].length();
+                            for (position = 0; position < strArr[idx].length(); position++) {
+                                if (!strArr[idx].isEmpty()) {
+                                    if (strArr[idx].charAt(position) != ' ') {
+                                        if (position < minPos) {
+                                            minPos = position;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                int numberOfEmptyLines = 0;
-                shiftedText = "";
-                if (minPos > 0) {
-                    for (numberOfLines = 0; numberOfLines < strArr.length; numberOfLines++) {
-                        if (!strArr[numberOfLines].isEmpty()) {
-                            strArr[numberOfLines] = strArr[numberOfLines].substring(1);
-                            shiftedText += strArr[numberOfLines] + "\n";
-                        } else {
-                            numberOfEmptyLines += 2;
-                            shiftedText += " \n"; // 2 characters added
+                    int numberOfEmptyLines = 0;
+                    shiftedText = "";
+                    if (minPos > 0) {
+                        for (numberOfLines = 0; numberOfLines < strArr.length; numberOfLines++) {
+                            if (!strArr[numberOfLines].isEmpty()) {
+                                strArr[numberOfLines] = strArr[numberOfLines].substring(1);
+                                shiftedText += strArr[numberOfLines] + "\n";
+                            } else {
+                                numberOfEmptyLines += 2;
+                                shiftedText += " \n"; // 2 characters added
+                            }
                         }
+                        if (!selectedText.endsWith("\n")) {
+                            shiftedText = shiftedText.substring(0, shiftedText.length() - 1);
+                        }
+                        textArea.replaceSelection(shiftedText);
                     }
-                    if (!selectedText.endsWith("\n")) {
-                        shiftedText = shiftedText.substring(0, shiftedText.length() - 1);
+                    if (!progLanguage.equals("*NONE")) {
+                        highlightBlocks(progLanguage);
                     }
-                    textArea.replaceSelection(shiftedText);
+                    // Select shifted text
+                    textArea.select(selectionStart, selectionStart + shiftedText.length());
                 }
-                if (!progLanguage.equals("*NONE")) {
-                    highlightBlocks(progLanguage);
+            }
+        } else {
+            // Vertical selection
+            selections = textArea.getHighlighter().getHighlights();
+            String[] strArr = new String[selections.length];
+            try {
+                int cnt = selections.length;
+                for (int idx = 0; idx < cnt; idx++) {
+                    startSel = selections[idx].getStartOffset();
+                    endSel = selections[idx].getEndOffset();
+                    int line = textArea.getLineOfOffset(startSel);
+                    int lineStartOffset = textArea.getLineStartOffset(line);
+                    if (startSel > lineStartOffset) {
+                        String selectedText = textArea.getText(startSel, endSel - startSel);
+                        strArr[idx] = selectedText;
+                        if (!selectedText.isEmpty()) {
+                            //System.out.println("selectedText: '" + strArr[idx] + "'");
+                            textArea.replaceRange(selectedText + " ", startSel - 1, endSel);
+                            selectionHighlighter.addHighlight(startSel - 1, endSel - 1, DefaultHighlighter.DefaultPainter);
+                        }
+                        textArea.setCaretPosition(endSel - 1);
+                    }
                 }
-                // Select shifted text
-                textArea.select(selectionStart, selectionStart + shiftedText.length());
+            } catch (Exception exc) {
+                System.out.println("Error: " + exc.toString());
+                exc.printStackTrace();
             }
         }
+
     }
-
-
 
     /**
      * Inner class for Ctrl + Arrow Left function key
@@ -2481,6 +2685,9 @@ public final class EditFile extends JFrame {
         public void actionPerformed(ActionEvent ae) {
             shiftRight();
             textArea.requestFocusInWindow();
+            if (selectionMode.equals(HORIZONTAL_SELECTION) && !progLanguage.equals("*NONE")) {
+                highlightBlocks(progLanguage);
+            }
         }
     }
 
@@ -2488,29 +2695,275 @@ public final class EditFile extends JFrame {
      *
      */
     protected void shiftRight() {
-        selectedText = textArea.getSelectedText();
-        selectionStart = textArea.getSelectionStart();
-        int lineNbr = 0;
-        char[] charArr = new char[1];
-        Arrays.fill(charArr, ' ');
+        if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+            selectedText = textArea.getSelectedText();
+            selectionStart = textArea.getSelectionStart();
+            int lineNbr = 0;
+            char[] charArr = new char[1];
+            Arrays.fill(charArr, ' ');
 
-        if (selectedText != null) {
-            String[] strArr = selectedText.split("\n");
-            String[] lines = new String[strArr.length];
-            shiftedText = "";
-            for (lineNbr = 0; lineNbr < strArr.length; lineNbr++) {
-                lines[lineNbr] = String.valueOf(charArr) + strArr[lineNbr].substring(0, strArr[lineNbr].length());
-                shiftedText += lines[lineNbr] + "\n";
+            if (selectedText != null) {
+                String[] strArr = selectedText.split("\n");
+                String[] lines = new String[strArr.length];
+                shiftedText = "";
+                for (lineNbr = 0; lineNbr < strArr.length; lineNbr++) {
+                    lines[lineNbr] = String.valueOf(charArr) + strArr[lineNbr].substring(0, strArr[lineNbr].length());
+                    shiftedText += lines[lineNbr] + "\n";
+                }
+                if (!selectedText.endsWith("\n")) {
+                    shiftedText = shiftedText.substring(0, shiftedText.length() - 1);
+                }
+                textArea.replaceSelection(shiftedText);
+                if (!progLanguage.equals("*NONE")) {
+                    highlightBlocks(progLanguage);
+                }
+                // Select shifted text
+                textArea.select(selectionStart, selectionStart + shiftedText.length());
             }
-            if (!selectedText.endsWith("\n")) {
-                shiftedText = shiftedText.substring(0, shiftedText.length() - 1);
+        } else {
+            // Vertical selection
+            selections = textArea.getHighlighter().getHighlights();
+            String[] strArr = new String[selections.length];
+
+            try {
+                int cnt = selections.length;
+                for (int idx = 0; idx < cnt; idx++) {
+                    startSel = selections[idx].getStartOffset();
+                    endSel = selections[idx].getEndOffset();
+                }
+
+                for (int idx = 0; idx < cnt; idx++) {
+                    startSel = selections[idx].getStartOffset();
+                    endSel = selections[idx].getEndOffset();
+                    String selectedText = textArea.getText(startSel, endSel - startSel);
+                    strArr[idx] = selectedText;
+                    if (!selectedText.isEmpty()) {
+                        textArea.insert(" ", endSel);
+                        textArea.replaceRange(" " + selectedText, startSel, endSel + 1);
+                        selectionHighlighter.addHighlight(startSel + 1, endSel + 1, DefaultHighlighter.DefaultPainter);
+                    }
+                }
+            } catch (Exception exc) {
+                System.out.println("Error: " + exc.toString());
+                exc.printStackTrace();
             }
-            textArea.replaceSelection(shiftedText);
-            if (!progLanguage.equals("*NONE")) {
-                highlightBlocks(progLanguage);
+        }
+    }
+
+    /**
+     * Inner class for Ctrl C - Custom copy
+     */
+    class CustomCopy extends AbstractAction {
+
+        @Override
+        public void actionPerformed(ActionEvent ae) {
+            if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+                // Horiontal selection
+                int startSel = textArea.getSelectionStart();
+                int endSel = textArea.getSelectionEnd();
+                try {
+                    selectedText = textArea.getText(startSel, endSel - startSel);
+                    //System.out.println("selectedText: "+selectedText); 
+                    StringSelection stringSelections = new StringSelection(selectedText);
+                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelections, stringSelections);
+
+                } catch (Exception exc) {
+                    exc.printStackTrace();
+                }
+            } else {
+                // Vertical selection
+                try {
+                    Highlighter.Highlight[] selections = textArea.getHighlighter().getHighlights();
+                    //String selectedText = "";
+                    int cnt = selections.length;
+                    selectedArray = new String[cnt];
+                    for (int idx = 0; idx < cnt; idx++) {
+                        int start = selections[idx].getStartOffset();
+                        int end = selections[idx].getEndOffset();
+                        selectedArray[idx] = textArea.getText(start, end - start);
+                        selectedText += selectedArray[idx] + '\n';
+                        StringSelection stringSelections = new StringSelection(selectedText);
+                        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelections, stringSelections);
+                    }
+                    // In order to paste the copied area again with copied text
+                    // set caret to its original position that it has before the operation
+                    int caretPos = selections[0].getStartOffset();
+                    textArea.setCaretPosition(caretPos);
+                } catch (Exception exc) {
+                    exc.printStackTrace();
+                }
             }
-            // Select shifted text
-            textArea.select(selectionStart, selectionStart + shiftedText.length());
+        }
+    }
+
+    /**
+     * Inner class for Ctrl + X - Custom cut
+     */
+    class CustomCut extends AbstractAction {
+
+        @Override
+        public void actionPerformed(ActionEvent ae) {
+            if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+                // Horiontal selection
+                int startSel = textArea.getSelectionStart();
+                int endSel = textArea.getSelectionEnd();
+                try {
+                    selectedText = textArea.getText(startSel, endSel - startSel);
+                    //System.out.println("selectedText: "+selectedText);  
+                    textArea.replaceRange("", startSel, endSel);
+                } catch (Exception exc) {
+                    exc.printStackTrace();
+                }
+            } else {
+                // Vertical selection
+                try {
+                    Highlighter.Highlight[] selections = textArea.getHighlighter().getHighlights();
+                    //String selectedText = "";
+                    int cnt = selections.length;
+                    selectedArray = new String[cnt];
+                    for (int idx = 0; idx < cnt; idx++) {
+                        int start = selections[idx].getStartOffset();
+                        int end = selections[idx].getEndOffset();
+                        selectedArray[idx] = textArea.getDocument().getText(start, end - start);
+                        selectedText += selectedArray[idx] + '\n';
+                        StringSelection stringSelections = new StringSelection(selectedText);
+                        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelections, stringSelections);
+                        char[] charArr = new char[end - start];
+                        Arrays.fill(charArr, ' ');
+                        textArea.replaceRange(String.valueOf(charArr), start, end);
+                    }
+                    // In order to paste the cut area again with cut text
+                    // set caret to its original position that it has before the operation
+                    int caretPos = selections[0].getStartOffset();
+                    textArea.setCaretPosition(caretPos - selectedArray[0].length());
+                } catch (Exception exc) {
+                    exc.printStackTrace();
+                }
+            }
+        }
+    }
+
+    /**
+     * Inner class for Ctrl + V - Custom paste
+     */
+    class CustomPaste extends AbstractAction {
+
+        @Override
+        public void actionPerformed(ActionEvent ae) {
+            if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+                // Horiontal selection
+                int caretPosition = textArea.getCaretPosition();
+                try {
+                    if (caretPosition < textArea.getText().length()) {
+                        textArea.insert(selectedText, caretPosition);
+                    } else {
+                        textArea.append(selectedText);
+                    }
+                } catch (Exception exc) {
+                    exc.printStackTrace();
+                }
+            } else {
+                // Vertical selection
+                int caretPosition = textArea.getCaretPosition();
+                try {
+                    int line = textArea.getLineOfOffset(caretPosition);
+                    int lineStartOffset = textArea.getLineStartOffset(line);
+                    int offset = caretPosition - lineStartOffset;
+                    //System.out.println("line: " + line);
+                    //System.out.println("lineStartOffset: " + lineStartOffset);
+                    for (int idx = 0; idx < selectedArray.length; idx++) {
+                        textArea.replaceRange(selectedArray[idx], caretPosition, caretPosition + selectedArray[idx].length());
+                        line++;
+                        lineStartOffset = textArea.getLineStartOffset(line);
+                        caretPosition = lineStartOffset + offset;
+                    }
+                } catch (Exception exc) {
+                    exc.printStackTrace();
+                }
+
+            }
+
+        }
+    }
+
+    /**
+     * Inner class for Delete or "<--" key - Custom delete
+     */
+    class CustomDelete extends AbstractAction {
+
+        @Override
+        public void actionPerformed(ActionEvent ae) {
+            if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+                // Horiontal selection
+                selectedText = "";
+                int startSel = textArea.getSelectionStart();
+                int endSel = textArea.getSelectionEnd();
+                try {
+                    selectedText = textArea.getText(startSel, endSel - startSel);
+                    //System.out.println("selectedText: "+selectedText);  
+                    StringSelection stringSelections = new StringSelection(selectedText);
+                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelections, stringSelections);
+                    textArea.replaceRange("", startSel, endSel);
+                } catch (Exception exc) {
+                    exc.printStackTrace();
+                }
+            } else {
+                // Vertical selection
+                int textAreaLen = textArea.getText().length();
+                selections = textArea.getHighlighter().getHighlights();
+                //String[] strArr = new String[selections.length];
+                String[] lines = textArea.getText().split("\n");
+                int nbrOfLines = 0;
+                try {
+                    int cnt = selections.length;
+                    int startSel0 = selections[0].getStartOffset();
+                    int endSel0 = selections[0].getEndOffset();
+                    int diff0 = endSel0 - startSel0;
+                    int lineNbr0 = textArea.getLineOfOffset(startSel0);
+                    int lineStartOffset0 = textArea.getLineStartOffset(lineNbr0);
+                    int lineEnd0 = textArea.getText().indexOf("\n", lineStartOffset0);
+                    int lineLen0 = lineEnd0 - lineStartOffset0;
+                    for (int idx = 0; idx < cnt; idx++) {
+                        startSel = selections[idx].getStartOffset();
+                        endSel = selections[idx].getEndOffset();
+                        nbrOfLines = textArea.getLineOfOffset(startSel);
+                    }
+
+                    for (int idx = 0; idx < cnt; idx++) {
+                        startSel = selections[idx].getStartOffset();
+                        endSel = selections[idx].getEndOffset();
+                        int diff = endSel - startSel;
+                        int lineNbr = textArea.getLineOfOffset(startSel);
+                        int lineStartOffset = textArea.getLineStartOffset(lineNbr);
+                        int lineEnd = textArea.getText().indexOf("\n", lineStartOffset);
+                        //int lineLen = lineEnd - lineStartOffset;
+                        System.out.println("Line number " + (lineNbr));
+                        System.out.println("'" + lines[lineNbr] + "'");
+                        if (diff < lineLen0) {
+                            // Partial chunk of the line
+                            if (lineNbr > lines.length) {
+                                //System.out.println("Jedna");
+                                textArea.replaceRange(textArea.getText().substring(endSel, lineEnd - 1), startSel, lineEnd - 1);
+                            } else {
+
+                                //System.out.println("Jedna+");
+                                textArea.replaceRange(textArea.getText().substring(endSel, lineEnd), startSel, lineEnd);
+                            }
+                        } else {
+                            // Whole line selected
+                            System.out.println("Dvě");
+                            int lastLineNbr = textArea.getLineOfOffset(endSel);
+                            int lastLineStartOffset = textArea.getLineStartOffset(lastLineNbr);
+                            int lastLineEnd = textArea.getText().indexOf('\n', lastLineStartOffset);
+                            //int lastLineLen = lastLineEnd - lastLineStartOffset;
+                            textArea.replaceRange("", startSel0, lastLineEnd + 1);
+                        }
+
+                    }
+                } catch (Exception exc) {
+                    exc.printStackTrace();
+                }
+            }
         }
     }
 
@@ -2538,14 +2991,14 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Implements custom caret as a long vertical line with a short red line
-     * pointer
+     * Implements custom caret as a long vertical line with a short red line pointer
      */
-    public class CustomCaret extends DefaultCaret {
+    public class LongCaret extends DefaultCaret {
 
         int oldDot;
 
-        protected void damage(Rectangle r) {
+        @Override
+        public void damage(Rectangle r) {
             // give values to x,y,width,height (inherited from java.awt.Rectangle)
             x = r.x;
             y = 0; // upper edge of the vertical line is at the upper edge of the text area
@@ -2555,6 +3008,7 @@ public final class EditFile extends JFrame {
             repaint(); // calls getComponent().repaint(x, y, width, height)
         }
 
+        @Override
         public void paint(Graphics g) {
 
             JTextComponent component = getComponent();
@@ -2574,5 +3028,133 @@ public final class EditFile extends JFrame {
                 g.fillRect(verticalLine.x, verticalLine.y, width, fontSize);
             }
         }
+    }
+
+    /**
+     * Implements vertical (rectangular) selection of text
+     */
+    public class SpecialCaret extends DefaultCaret {
+
+        Point lastPoint = new Point(0, 0);
+
+        @Override
+        public void mouseMoved(MouseEvent me) {
+            if (selectionMode.equals(VERTICAL_SELECTION)) {
+                super.mouseMoved(me);
+                lastPoint = new Point(me.getX(), me.getY());
+            } else {
+                super.mouseMoved(me);
+            }
+        }
+
+        @Override
+        public void mousePressed(MouseEvent me) {
+            if (selectionMode.equals(VERTICAL_SELECTION)) {
+                super.mousePressed(me);
+                getComponent().getHighlighter().removeAllHighlights();
+            }
+        }
+
+        @Override
+        protected void moveCaret(MouseEvent me) {
+            if (selectionMode.equals(VERTICAL_SELECTION)) {
+                Point pt = new Point(me.getX(), me.getY());
+                int pos = getComponent().getUI().viewToModel(getComponent(), pt);
+                if (pos >= 0) {
+                    setDot(pos);
+                    Point start = new Point(Math.min(lastPoint.x, pt.x), Math.min(lastPoint.y, pt.y));
+                    Point end = new Point(Math.max(lastPoint.x, pt.x), Math.max(lastPoint.y, pt.y));
+                    customHighlight(start, end);
+                }
+            }
+        }
+
+        protected void customHighlight(Point start, Point end) {
+            if (selectionMode.equals(VERTICAL_SELECTION)) {
+                getComponent().getHighlighter().removeAllHighlights();
+                int y = start.y;
+                int firstX = start.x;
+                int lastX = end.x;
+
+                int pos1 = getComponent().getUI().viewToModel(getComponent(), new Point(firstX, y));
+                int pos2 = getComponent().getUI().viewToModel(getComponent(), new Point(lastX, y));
+                try {
+                    getComponent().getHighlighter()
+                            .addHighlight(pos1, pos2, ((DefaultHighlighter) getComponent().getHighlighter()).DefaultPainter);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                y++;
+                while (y < end.y) {
+                    int pos1new = getComponent().getUI().viewToModel(getComponent(), new Point(firstX, y));
+                    int pos2new = getComponent().getUI().viewToModel(getComponent(), new Point(lastX, y));
+                    if (pos1 != pos1new) {
+                        pos1 = pos1new;
+                        pos2 = pos2new;
+                        try {
+                            getComponent().getHighlighter()
+                                    .addHighlight(pos1, pos2, ((DefaultHighlighter) getComponent().getHighlighter()).DefaultPainter);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                    y++;
+                }
+            }
+        }
+
+        int oldDot;
+
+        @Override
+        public void damage(Rectangle verticalLine) {
+            if (caretShape.equals(LONG_CARET)) {
+                // Long caret
+                // ----------
+                // give values to x,y,width,height (inherited from java.awt.Rectangle)
+                x = verticalLine.x;
+                y = 0; // upper edge of the vertical line is at the upper edge of the text area
+                height = textArea.getHeight();
+                width = 2;
+                repaint(); // calls getComponent().repaint(x, y, width, height)
+            } else {
+                // Short caret
+                // -----------
+                x = verticalLine.x;
+                y = verticalLine.y;
+                height = fontSize + 2;
+                width = 1;
+                repaint();
+            }
+        }
+
+        @Override
+        public void paint(Graphics g) {
+            JTextComponent component = getComponent();
+            int dot = getDot();
+            Rectangle verticalLine = null;
+            try {
+                verticalLine = component.modelToView(dot);
+            } catch (BadLocationException ble) {
+                return;
+            }
+            //if (isVisible()) {
+            if (caretShape.equals(LONG_CARET)) {
+                // Long caret
+                // ----------
+                // The long vertical line will be light gray
+                g.setColor(Color.LIGHT_GRAY);
+                g.fillRect(verticalLine.x, 0, width, height);
+                // The short line segment of the caret in the y position will be red
+                g.setColor(Color.RED);
+                g.fillRect(verticalLine.x, verticalLine.y, 2, fontSize);
+            } else {
+                // Short caret
+                // -----------
+                g.setColor(Color.BLACK);
+                g.fillRect(verticalLine.x, verticalLine.y, 1, fontSize + 2);
+            }
+            //}
+        }
+
     }
 }

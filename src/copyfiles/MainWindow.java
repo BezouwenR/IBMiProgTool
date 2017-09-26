@@ -495,7 +495,8 @@ public class MainWindow extends JFrame {
                 properties.setProperty("COMPILE_WINDOW_X", "240");
                 properties.setProperty("COMPILE_WINDOW_Y", "40");
                 properties.setProperty("FONT_SIZE", "12");
-                properties.setProperty("CARET", "Short caret"); // or Long caret
+                properties.setProperty("CARET", "Short caret"); // or "Long caret"
+                properties.setProperty("SELECTION_MODE", "Horizontal selection"); // or "Vertical selection"
                 properties.setProperty("HIGHLIGHT_BLOCKS", "*NONE");
                 // Create a new text file in directory "paramfiles"
                 outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
