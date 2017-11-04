@@ -207,10 +207,16 @@ public class AddAS400Nodes extends SwingWorker<String, String> {
                         String bareLibraryName = libraryName.substring(0, ifsFile.getName().lastIndexOf("."));
                         // Select libraries on file pattern and member pattern
                         if (bareLibraryName.matches(libraryWildCard)) {
-
                             // Select Source Physical Files depending on member pattern
                             files = ifsFile.listFiles(filePattern + ".FILE");
-
+                            // Add empty library
+                            if (files.length == 0) {
+                                mainWindow.row = "Info: Library 0  " + libraryName + "  added.";
+                                mainWindow.msgVector.add(mainWindow.row);
+                                mainWindow.showMessages(mainWindow.noNodes);
+                                nodeLevel2 = new DefaultMutableTreeNode(libraryName);
+                                nodeParam.add(nodeLevel2);
+                            }
                             boolean libraryAdded = false; // Note Library not yet added
                             labelFile:
                             for (IFSFile file : files) {
@@ -229,11 +235,11 @@ public class AddAS400Nodes extends SwingWorker<String, String> {
                                     }
                                     // Add the file
                                     //if (file.isSourcePhysicalFile()) {
-                                        mainWindow.row = "Info: File 1  " + file.toString() + "  added.";
-                                        mainWindow.msgVector.add(mainWindow.row);
-                                        mainWindow.showMessages(mainWindow.noNodes);
-                                        nodeLevel3 = new DefaultMutableTreeNode(fileName);
-                                        nodeLevel2.add(nodeLevel3);
+                                    mainWindow.row = "Info: File 1  " + file.toString() + "  added.";
+                                    mainWindow.msgVector.add(mainWindow.row);
+                                    mainWindow.showMessages(mainWindow.noNodes);
+                                    nodeLevel3 = new DefaultMutableTreeNode(fileName);
+                                    nodeLevel2.add(nodeLevel3);
                                     //}
                                 } else {
                                     // Member pattern is specific 
@@ -254,12 +260,12 @@ public class AddAS400Nodes extends SwingWorker<String, String> {
                                                 }
                                                 // Add the Source Physical File
                                                 //if (file.isSourcePhysicalFile()) {
-                                                    mainWindow.row = "Info: File 2  " + file.toString() + "  added.";
-                                                    mainWindow.msgVector.add(mainWindow.row);
-                                                    mainWindow.showMessages(mainWindow.noNodes);
-                                                    nodeLevel3 = new DefaultMutableTreeNode(fileName);
-                                                    nodeLevel2.add(nodeLevel3);
-                                                    continue labelFile; // Get next file to check
+                                                mainWindow.row = "Info: File 2  " + file.toString() + "  added.";
+                                                mainWindow.msgVector.add(mainWindow.row);
+                                                mainWindow.showMessages(mainWindow.noNodes);
+                                                nodeLevel3 = new DefaultMutableTreeNode(fileName);
+                                                nodeLevel2.add(nodeLevel3);
+                                                continue labelFile; // Get next file to check
                                                 //}
                                             }
                                         }

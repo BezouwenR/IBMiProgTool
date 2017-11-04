@@ -1870,8 +1870,7 @@ public final class EditFile extends JFrame {
 
                             case "RPG **FREE": {
                                 // Before block statement: All spaces or empty
-                                // After block statement: A space or semicolon or
-                                // new line
+                                // After block statement: A space or semicolon or new line
                                 if ((text.substring(startOfLine, startOfBlockStmt).equals(fixedLengthSpaces(startOfBlockStmt
                                         - startOfLine))
                                         || text.substring(startOfLine, startOfBlockStmt).isEmpty())
@@ -1887,38 +1886,40 @@ public final class EditFile extends JFrame {
                                 // Before block statement: at least 7 spaces
                                 // After block statement: A space or new line or semicolon
                                 // No asterisk comment (* in column 7)
-                                if ((text.substring(startOfLine + 7, startOfBlockStmt).equals(fixedLengthSpaces(startOfBlockStmt
-                                        - (startOfLine + 7)))
-                                        || text.substring(startOfLine, startOfBlockStmt).isEmpty())
-                                        && (text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(" ")
-                                        || text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(NEW_LINE)
-                                        || text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(";"))
-                                        && !text.substring(startOfLine + 6, startOfLine + 7).equals("*")) {
-                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                if (text.length() >= 7) {
+                                    if ((text.substring(startOfLine + 7, startOfBlockStmt).equals(fixedLengthSpaces(startOfBlockStmt
+                                            - (startOfLine + 7)))
+                                            || text.substring(startOfLine, startOfBlockStmt).isEmpty())
+                                            && (text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(" ")
+                                            || text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(NEW_LINE)
+                                            || text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(";"))
+                                            && !text.substring(startOfLine + 6, startOfLine + 7).equals("*")) {
+                                        blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                    }
                                 }
                                 break;
                             } // End of case RPG /FREE
 
                             case "RPG IV fixed": {
-                                // C in column 6 and no asterisk comment (* in
-                                // column 7) and block statement in column 26
-                                // (Opcode)
-                                if (text.substring(startOfLine + 5, startOfLine + 6).equals("C")
-                                        && !text.substring(startOfLine + 6, startOfLine + 7).equals("*")
-                                        && startOfBlockStmt - startOfLine == 25) {
-                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                // C in column 6 and no asterisk comment (* in column 7) and block statement in column 26 (Opcode)
+                                if (text.length() >= 5) {
+                                    if (text.substring(startOfLine + 5, startOfLine + 6).equals("C")
+                                            && !text.substring(startOfLine + 6, startOfLine + 7).equals("*")
+                                            && startOfBlockStmt - startOfLine == 25) {
+                                        blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                    }
                                 }
                                 break;
                             } // End of case RPG IV fixed
 
                             case "RPG III": {
-                                // C in column 6 and no asterisk comment (* in
-                                // column 7) and block statement in column 28
-                                // (Opcode)
-                                if (text.substring(startOfLine + 5, startOfLine + 6).equals("C")
-                                        && !text.substring(startOfLine + 6, startOfLine + 7).equals("*")
-                                        && startOfBlockStmt - startOfLine == 27) {
-                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                // C in column 6 and no asterisk comment (* in column 7) and block statement in column 28 (Opcode)
+                                if (text.length() >= 5) {
+                                    if (text.substring(startOfLine + 5, startOfLine + 6).equals("C")
+                                            && !text.substring(startOfLine + 6, startOfLine + 7).equals("*")
+                                            && startOfBlockStmt - startOfLine == 27) {
+                                        blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                    }
                                 }
                                 break;
                             } // End of case RPG RPG III
@@ -1927,10 +1928,8 @@ public final class EditFile extends JFrame {
                                 String line = text.substring(startOfLine, endOfLine);
                                 int commentLeftPos = line.indexOf("/*");
                                 int commentRightPos = line.indexOf("*/");
-                                // One comment exists in the line and the block
-                                // statement is outside
-                                // (We do not assume that there are more comments in
-                                // the line.)
+                                // One comment exists in the line and the block statement is outside
+                                // (We do not assume that there are more comments in the line.)
                                 if (commentRightPos > 4 && commentLeftPos < commentRightPos
                                         && (endOfBlockStmt <= startOfLine + commentLeftPos
                                         || startOfBlockStmt >= startOfLine + commentRightPos + "*/".length())) {
@@ -1945,12 +1944,15 @@ public final class EditFile extends JFrame {
 
                             case "COBOL": {
                                 // No asterisk or slash comment (* or / in column 7)
-                                // and the block statement in columns 12 to 72
-                                if (!text.substring(startOfLine + 6, startOfLine + 7).equals("*")
-                                        && !text.substring(startOfLine + 6, startOfLine + 7).equals("/")
-                                        && startOfBlockStmt - startOfLine >= 11
-                                        && endOfBlockStmt - startOfLine <= 72) {
-                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                // and the block statement is in columns 12 to 72
+
+                                if (text.length() >= 7) {
+                                    if (!text.substring(startOfLine + 6, startOfLine + 7).equals("*")
+                                            && !text.substring(startOfLine + 6, startOfLine + 7).equals("/")
+                                            && startOfBlockStmt - startOfLine >= 11
+                                            && endOfBlockStmt - startOfLine <= 72) {
+                                        blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                    }
                                 }
                                 break;
                             } // End of case COBOL

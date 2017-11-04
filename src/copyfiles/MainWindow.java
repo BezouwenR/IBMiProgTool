@@ -136,6 +136,7 @@ public class MainWindow extends JFrame {
     JMenuItem helpMenuItemRPGIII;
     JMenuItem helpMenuItemRPGIV;
     JMenuItem helpMenuItemCOBOL;
+    JMenuItem helpMenuItemDDS;
 
     JPanel panelTop;
     JPanel panelPathLeft;
@@ -634,12 +635,14 @@ public class MainWindow extends JFrame {
         helpMenuItemRPGIII = new JMenuItem("RPG III forms");
         helpMenuItemRPGIV = new JMenuItem("RPG IV forms");
         helpMenuItemCOBOL = new JMenuItem("COBOL form");
-
+        helpMenuItemDDS = new JMenuItem("DDS forms");
+        
         helpMenu.add(helpMenuItemEN);
         helpMenu.add(helpMenuItemCZ);
         helpMenu.add(helpMenuItemRPGIII);
         helpMenu.add(helpMenuItemRPGIV);
         helpMenu.add(helpMenuItemCOBOL);
+        helpMenu.add(helpMenuItemDDS);
         menuBar.add(helpMenu);
 
         setJMenuBar(menuBar); // In macOS on the main system menu bar above, in Windows on the window menu bar
@@ -865,10 +868,10 @@ public class MainWindow extends JFrame {
             if (command.equals("Help English")) {
                 if (Desktop.isDesktopSupported()) {
                     String uri = Paths
-                            .get(System.getProperty("user.dir"), "helpfiles", "IBMiProgTool_doc_EN.pdf")
-                            .toString();
+                            .get(System.getProperty("user.dir"), "helpfiles", "IBMiProgTool_doc_EN.pdf").toString();
                     // Replace backslashes by forward slashes in Windows
                     uri = uri.replace('\\', '/');
+                    uri = uri.replace(" ", "%20");
                     try {
                         // Invoke the standard browser in the operating system
                         Desktop.getDesktop().browse(new URI("file://" + uri));
@@ -884,10 +887,10 @@ public class MainWindow extends JFrame {
             if (command.equals("Nápověda česky")) {
                 if (Desktop.isDesktopSupported()) {
                     String uri = Paths
-                            .get(System.getProperty("user.dir"), "helpfiles", "IBMiProgTool_doc_CZ.pdf")
-                            .toString();
+                            .get(System.getProperty("user.dir"), "helpfiles", "IBMiProgTool_doc_CZ.pdf").toString();
                     // Replace backslashes by forward slashes in Windows
                     uri = uri.replace('\\', '/');
+                    uri = uri.replace(" ", "%20");
                     try {
                         // Invoke the standard browser in the operating system
                         Desktop.getDesktop().browse(new URI("file://" + uri));
@@ -903,8 +906,7 @@ public class MainWindow extends JFrame {
             if (command.equals("RPG III forms")) {
                 if (Desktop.isDesktopSupported()) {
                     String uri = Paths
-                            .get(System.getProperty("user.dir"), "helpfiles", "RPG_III_forms.pdf")
-                            .toString();
+                            .get(System.getProperty("user.dir"), "helpfiles", "RPG_III_forms.pdf").toString();
                     // Replace backslashes by forward slashes in Windows
                     uri = uri.replace('\\', '/');
                     try {
@@ -922,10 +924,10 @@ public class MainWindow extends JFrame {
             if (command.equals("RPG IV forms")) {
                 if (Desktop.isDesktopSupported()) {
                     String uri = Paths
-                            .get(System.getProperty("user.dir"), "helpfiles", "RPG_IV_forms.pdf")
-                            .toString();
+                            .get(System.getProperty("user.dir"), "helpfiles", "RPG_IV_forms.pdf").toString();
                     // Replace backslashes by forward slashes in Windows
                     uri = uri.replace('\\', '/');
+                    uri = uri.replace(" ", "%20");
                     try {
                         // Invoke the standard browser in the operating system
                         Desktop.getDesktop().browse(new URI("file://" + uri));
@@ -941,10 +943,29 @@ public class MainWindow extends JFrame {
             if (command.equals("COBOL form")) {
                 if (Desktop.isDesktopSupported()) {
                     String uri = Paths
-                            .get(System.getProperty("user.dir"), "helpfiles", "COBOL_form.pdf")
-                            .toString();
+                            .get(System.getProperty("user.dir"), "helpfiles", "COBOL_form.pdf").toString();
                     // Replace backslashes by forward slashes in Windows
                     uri = uri.replace('\\', '/');
+                    uri = uri.replace(" ", "%20");
+                    try {
+                        // Invoke the standard browser in the operating system
+                        Desktop.getDesktop().browse(new URI("file://" + uri));
+                    } catch (Exception exc) {
+                        exc.printStackTrace();
+                    }
+                }
+            }
+        });
+        // Register HelpWindow menu item listener
+        helpMenuItemDDS.addActionListener(ae -> {
+            String command = ae.getActionCommand();
+            if (command.equals("DDS forms")) {
+                if (Desktop.isDesktopSupported()) {
+                    String uri = Paths
+                            .get(System.getProperty("user.dir"), "helpfiles", "DDS_forms.pdf").toString();
+                    // Replace backslashes by forward slashes in Windows
+                    uri = uri.replace('\\', '/');
+                    uri = uri.replace(" ", "%20");
                     try {
                         // Invoke the standard browser in the operating system
                         Desktop.getDesktop().browse(new URI("file://" + uri));
