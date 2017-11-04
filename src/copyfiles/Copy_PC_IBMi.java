@@ -24,7 +24,8 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDate;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Properties;
 import java.util.stream.Stream;
 
@@ -46,6 +47,7 @@ public class Copy_PC_IBMi {
     String qsyslib;
     String libraryName;
     String fileName;
+    String saveFileName;
     String memberName;
 
     BufferedReader inFile;
@@ -56,6 +58,7 @@ public class Copy_PC_IBMi {
     Path parPath = Paths.get(System.getProperty("user.dir"), "paramfiles", "Parameters.txt");
     String encoding = System.getProperty("file.encoding", "UTF-8");
 
+    String userName;
     String pcCharset;
     String ibmCcsid;
     int ibmCcsidInt;
@@ -111,6 +114,8 @@ public class Copy_PC_IBMi {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
+
+        userName = properties.getProperty("USERNAME");
 
         pcCharset = properties.getProperty("PC_CHARSET");
         if (!pcCharset.equals("*DEFAULT")) {
@@ -169,14 +174,12 @@ public class Copy_PC_IBMi {
             }
 
             // Remove message scroll listener (cancel scrolling to the last message)
-            //mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
+            mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
         }
     }
 
     /**
-     * Copying simple PC file to IBMi IFS directory/file or
-     * to Source File/Source Member or
-     * to Save File
+     * Copying simple PC file to IBMi IFS directory/file or to Source File/Source Member or to Save File
      *
      * @param sourcePathString
      * @param targetPathString
@@ -196,7 +199,7 @@ public class Copy_PC_IBMi {
                 // IFS file or directory object
                 IFSFile targetPath = new IFSFile(remoteServer, targetPathString);
 
-                // PC file to general IFS directory or file:   
+                // PC file to general IFS directory or file:
                 // =========================================
                 //
                 if (!targetPathString.startsWith("/QSYS.LIB")) {
@@ -204,7 +207,7 @@ public class Copy_PC_IBMi {
                     String outFileName;
                     if (targetPath.isDirectory()) { //
                         // to IFS directory:
-                        // IFS file name = IFS directory name + PC file name 
+                        // IFS file name = IFS directory name + PC file name
                         outFileName = targetPathString + "/" + pcFilePath.getFileName();
                         if (outFileName.endsWith(".savf")) {
                             copyToSaveFile(sourcePathString, outFileName, notToLibrary);
@@ -222,10 +225,11 @@ public class Copy_PC_IBMi {
 
                         // If input PC file ends with .savf, output IFS file must also end with .savf
                         if (sourcePathString.endsWith(".savf") && !outFileName.endsWith(".savf")) {
-                            row = "Error: PC file  " + sourcePathString + "  ending with suffix \".savf\" cannot be copied to IFS file  "
+                            row = "Error: PC file  " + sourcePathString
+                                    + "  ending with suffix \".savf\" cannot be copied to IFS file  "
                                     + outFileName + "  with a different suffix.";
                             mainWindow.msgVector.add(row);
-                            mainWindow.reloadRightSideAndShowMessages();
+                            mainWindow.showMessages();
                             return "ERROR";
                         }
                     }
@@ -236,7 +240,7 @@ public class Copy_PC_IBMi {
                         row = "Error: PC file  " + sourcePathString + "  was NOT copied to the existing file  "
                                 + outFileName + ". Overwriting files is not allowed.";
                         mainWindow.msgVector.add(row);
-                        mainWindow.reloadRightSideAndShowMessages();
+                        mainWindow.showMessages();
                         return "ERROR";
                     }
 
@@ -250,7 +254,7 @@ public class Copy_PC_IBMi {
                     // No conversion - binary copy
                     // ---------------------------
                     //
-                    // If both sides have corresponding Unicode or single byte European character sets 
+                    // If both sides have corresponding Unicode or single byte European character sets
                     // no conversion id necessary and transfer is faster.
                     if (pcCharset.toUpperCase().equals("UTF-8") && ibmCcsid.equals("1208")
                             || pcCharset.toUpperCase().equals("UTF-16") && ibmCcsid.equals("1200")
@@ -272,8 +276,7 @@ public class Copy_PC_IBMi {
 
                         // Open output IFS file - SHARED for all users, REWRITE data
                         //
-                        IFSFileOutputStream ifsOutStream = new IFSFileOutputStream(remoteServer, outFileName,
-                                IFSFileOutputStream.SHARE_ALL, false);
+                        IFSFileOutputStream ifsOutStream = new IFSFileOutputStream(remoteServer, outFileName, IFSFileOutputStream.SHARE_ALL, false);
                         // Force this CCSID as an attribute to the output IFS file
                         outFilePath.setCCSID(ibmCcsidInt);
 
@@ -299,14 +302,16 @@ public class Copy_PC_IBMi {
                         fileChannel.close();
 
                         if (fromWalk) {
-                            row = "Info: PC file  " + sourcePathString + "  was copied unchanged (binary) to IFS file  " + outFileName
+                            row = "Info: PC file  " + sourcePathString + "  was copied unchanged (binary) to IFS file  "
+                                    + outFileName
                                     + ", CCSID " + ibmCcsid + ".";
                         } else {
-                            row = "Comp: PC file  " + sourcePathString + "  was copied unchanged (binary) to IFS file  " + outFileName
+                            row = "Comp: PC file  " + sourcePathString + "  was copied unchanged (binary) to IFS file  "
+                                    + outFileName
                                     + ", CCSID " + ibmCcsid + ".";
                         }
                         mainWindow.msgVector.add(row);
-                        mainWindow.reloadRightSideAndShowMessages();
+                        mainWindow.showMessages();
 
                     } else {
 
@@ -324,11 +329,10 @@ public class Copy_PC_IBMi {
                         }
                         // Input will be decoded using PC charset parameter.
                         bufferedReader = Files.newBufferedReader(pcFilePath, Charset.forName(pcCharset));
-                        //}
+                        // }
                         // Open output
-                        IFSFileOutputStream ifsOutStream = new IFSFileOutputStream(remoteServer, outFileName,
-                                IFSFileOutputStream.SHARE_ALL, false, ibmCcsidInt);
-                        // Force the CCSID from application parameter to the IFS file as an attribute 
+                        IFSFileOutputStream ifsOutStream = new IFSFileOutputStream(remoteServer, outFileName, IFSFileOutputStream.SHARE_ALL, false, ibmCcsidInt);
+                        // Force the CCSID from application parameter to the IFS file as an attribute
                         outFilePath.setCCSID(ibmCcsidInt);
 
                         // Copy data
@@ -356,10 +360,11 @@ public class Copy_PC_IBMi {
                                 byteArray = textConverter.toBytes(textLine);
                             } catch (Exception exc) {
                                 exc.printStackTrace();
-                                row = "Error: 1 Copying PC text file  " + sourcePathString + "  to IFS file  " + targetPathString
+                                row = "Error: 1 Copying PC text file  " + sourcePathString + "  to IFS file  "
+                                        + targetPathString
                                         + ".  Convert  " + pcCharset + " -> " + ibmCcsid + ".  -  " + exc.toString();
                                 mainWindow.msgVector.add(row);
-                                mainWindow.reloadRightSideAndShowMessages();
+                                mainWindow.showMessages();
                                 return "ERROR";
                             }
                             ifsOutStream.write(byteArray);
@@ -377,7 +382,7 @@ public class Copy_PC_IBMi {
                                     + ",  Convert " + pcCharset + " -> " + ibmCcsid + ".";
                         }
                         mainWindow.msgVector.add(row);
-                        mainWindow.reloadRightSideAndShowMessages();
+                        mainWindow.showMessages();
                     }
                     return "";
                 } //
@@ -396,27 +401,29 @@ public class Copy_PC_IBMi {
                     // PC file with suffix .savf to LIBRARY
                     if (pcFilePath.getFileName().toString().endsWith(".savf")) {
                         msgText = copyToSaveFile(sourcePathString, targetPathString, toLibrary);
-                    } //                   
+                    } //
                     //
-                    // PC file without .savf suffix is NOT ALLOWED to copy to LIBRARY! 
+                    // PC file without .savf suffix is NOT ALLOWED to copy to LIBRARY!
                     else {
-                        row = "Error: PC file  " + sourcePathString + "  without .savf suffix cannot be copied to the library  "
+                        row = "Error: PC file  " + sourcePathString
+                                + "  without .savf suffix cannot be copied to the library  "
                                 + libraryName + ".";
                         mainWindow.msgVector.add(row);
-                        mainWindow.reloadRightSideAndShowMessages();
+                        mainWindow.showMessages();
                     }
 
                     // PC file to SAVE FILE
                 } else if (targetPathString.contains(".LIB")
-                        && targetPathString.endsWith(".FILE")
-                        && targetPath.getSubtype().equals("SAVF")) {
+                        && targetPathString.endsWith(".SAVF")
+                        //&& targetPath.getSubtype().equals("SAVF")
+                        ) {
 
                     msgText = copyToSaveFile(sourcePathString, targetPathString, notToLibrary);
                     if (!msgText.isEmpty()) {
                         row = "Comp: PC file  " + sourcePathString + "  was NOT copied to the save file  "
                                 + libraryName + "/" + fileName + ".";
                         mainWindow.msgVector.add(row);
-                        mainWindow.reloadRightSideAndShowMessages();
+                        mainWindow.showMessages();
                     }
                 } else if (targetPathString.endsWith(".FILE")) { //
 
@@ -426,16 +433,16 @@ public class Copy_PC_IBMi {
                         row = "Error: PC file  " + sourcePathString + "  ending with .savf cannot be copied to source file  "
                                 + libraryName + "/" + fileName + ".";
                         mainWindow.msgVector.add(row);
-                        mainWindow.reloadRightSideAndShowMessages();
+                        mainWindow.showMessages();
                         return "ERROR";
                     }
                     // Insert to source file as a member
                     msgText = copyToSourceFile(sourcePathString, targetPathString);
                     if (!msgText.isEmpty()) {
-                        row = "Comp: PC file  " + sourcePathString + "  was NOT copied to the existing source physical file  "
-                                + libraryName + "/" + fileName + ".";
+                        row = "Comp: PC file  " + sourcePathString + "  was NOT copied to the existing source physical file  " // + libraryName + "/" + fileName + "."
+                                ;
                         mainWindow.msgVector.add(row);
-                        mainWindow.reloadRightSideAndShowMessages();
+                        mainWindow.showMessages();
                     }
                 } else if (targetPathString.endsWith(".MBR")) { //
                     if (Files.isDirectory(pcFilePath)) {
@@ -445,10 +452,11 @@ public class Copy_PC_IBMi {
                     } else {
                         // File ending with .savf is not allowed to source member
                         if (sourcePathString.endsWith(".savf")) {
-                            row = "Error: PC file  " + sourcePathString + "  ending with .savf cannot be copied to source member  "
+                            row = "Error: PC file  " + sourcePathString
+                                    + "  ending with .savf cannot be copied to source member  "
                                     + libraryName + "/" + fileName + "/" + memberName + ".";
                             mainWindow.msgVector.add(row);
-                            mainWindow.reloadRightSideAndShowMessages();
+                            mainWindow.showMessages();
                             return "ERROR";
                         }
 
@@ -456,18 +464,20 @@ public class Copy_PC_IBMi {
                         msgText = copyToSourceMember(sourcePathString, targetPathString, notFromDirectory);
                     }
                     if (!msgText.isEmpty()) {
-                        row = "Comp: PC file  " + sourcePathString + "  was NOT copied to the existing source physical member  "
+                        row = "Comp: PC file  " + sourcePathString
+                                + "  was NOT copied to the existing source physical member  "
                                 + libraryName + "/" + fileName + "(" + memberName + ").";
                         mainWindow.msgVector.add(row);
-                        mainWindow.reloadRightSideAndShowMessages();
+                        mainWindow.showMessages();
                     }
                 }
 
             } catch (Exception exc) {
                 exc.printStackTrace();
-                row = "Error: 2 Copying PC file  " + sourcePathString + "  to IFS file  " + targetPathString + ". Convert  " + pcCharset + " -> " + ibmCcsid + ".  -  " + exc.toString();
+                row = "Error: 2 Copying PC file  " + sourcePathString + "  to IFS file  " + targetPathString + ". Convert  "
+                        + pcCharset + " -> " + ibmCcsid + ".  -  " + exc.toString();
                 mainWindow.msgVector.add(row);
-                mainWindow.reloadRightSideAndShowMessages();
+                mainWindow.showMessages();
                 return "ERROR";
             }
         }
@@ -489,14 +499,15 @@ public class Copy_PC_IBMi {
 
         if (!sourcePathString.contains(pcFileSep + ".")) {
 
-            IFSFile targetPath = new IFSFile(remoteServer, targetPathString + "/" + sourcePathString.substring(sourcePathStringPrefix.length()));
+            IFSFile targetPath = new IFSFile(remoteServer, targetPathString + "/"
+                    + sourcePathString.substring(sourcePathStringPrefix.length()));
 
             //
             // To IFS (Integrated File System):
             // --------------------------------
             if (!targetPathString.startsWith("/QSYS.LIB")) {
 
-                // Create the first shadow IFS directory 
+                // Create the first shadow IFS directory
                 try {
                     if (!targetPath.exists()) {
 
@@ -504,14 +515,15 @@ public class Copy_PC_IBMi {
                         targetPath.mkdir();
 
                         // Add message text to the message table and show it
-                        row = "Info: Directory  " + sourcePathString + "  was created in IFS directory  " + targetPathString + ".";
+                        row = "Info: Directory  " + sourcePathString + "  was created in IFS directory  " + targetPathString
+                                + ".";
                         mainWindow.msgVector.add(row);
                     }
                 } catch (Exception exc) {
                     exc.printStackTrace();
                     row = exc.toString();
                     mainWindow.msgVector.add(row);
-                    mainWindow.reloadRightSideAndShowMessages();
+                    mainWindow.showMessages();
                     return;
                 }
 
@@ -529,7 +541,7 @@ public class Copy_PC_IBMi {
                             + sourcePathString + "  was NOT completely copied to IFS directory  " + targetPathString + ".";
                 }
                 mainWindow.msgVector.add(row);
-                mainWindow.reloadRightSideAndShowMessages();
+                mainWindow.showMessages();
             }
 
             // To Library system:
@@ -540,7 +552,7 @@ public class Copy_PC_IBMi {
                     ibmCcsid = "500";
                 }
 
-                // To library: 
+                // To library:
                 // -----------
                 // Create new source physical file in the library and call copyToSourceFile() method
                 if (targetPathString.endsWith(".LIB")) {
@@ -574,16 +586,18 @@ public class Copy_PC_IBMi {
                         // Send all messages from the command. After ESCAPE message - return.
                         for (AS400Message as400Message : as400MessageList) {
                             if (as400Message.getType() == AS400Message.ESCAPE) {
-                                row = "Error: Create source physical file  " + libraryName + "/" + fileName + " using CRTSRCPF command  -  "
+                                row = "Error: Create source physical file  " + libraryName + "/" + fileName
+                                        + " using CRTSRCPF command  -  "
                                         + as400Message.getID() + " " + as400Message.getText();
                                 mainWindow.msgVector.add(row);
-                                mainWindow.reloadRightSideAndShowMessages();
+                                mainWindow.showMessages();
                                 return;
                             } else {
-                                row = "Info: Create source physical file  " + libraryName + "/" + fileName + " using CRTSRCPF command  -  "
+                                row = "Info: Create source physical file  " + libraryName + "/" + fileName
+                                        + " using CRTSRCPF command  -  "
                                         + as400Message.getID() + " " + as400Message.getText();
                                 mainWindow.msgVector.add(row);
-                                mainWindow.reloadRightSideAndShowMessages();
+                                mainWindow.showMessages();
                             }
                         }
                     } catch (Exception exc) {
@@ -591,8 +605,8 @@ public class Copy_PC_IBMi {
                         row = "Error: Copying PC directory  " + sourcePathString + "  to source physical File  "
                                 + libraryName + "/" + fileName + "  -  " + exc.toString();
                         mainWindow.msgVector.add(row);
-                        mainWindow.reloadRightSideAndShowMessages();
-                        return; // Must return! Could be fatal error (e. g. lock of the source file)! 
+                        mainWindow.showMessages();
+                        return; // Must return! Could be fatal error (e. g. lock of the source file)!
                     }
 
                     // Copy members to the new source physical file in a library
@@ -602,11 +616,12 @@ public class Copy_PC_IBMi {
                         row = "Comp: PC directory  " + sourcePathString + "  was copied to source physical file  "
                                 + libraryName + "/" + fileName + ".";
                     } else {
-                        row = "Comp: PC directory  " + sourcePathString + "  was NOT completely copied to source physical file  "
+                        row = "Comp: PC directory  " + sourcePathString
+                                + "  was NOT completely copied to source physical file  "
                                 + libraryName + "/" + fileName + ".";
                     }
                     mainWindow.msgVector.add(row);
-                    mainWindow.reloadRightSideAndShowMessages();
+                    mainWindow.showMessages();
                 } //
                 //
                 // To already existing or just created source physical file:
@@ -620,29 +635,31 @@ public class Copy_PC_IBMi {
                         row = "Comp: PC directory  " + sourcePathString + "  was copied to source physical file  "
                                 + libraryName + "/" + fileName + ".";
                     } else {
-                        row = "Comp: PC directory  " + sourcePathString + "  was NOT completely copied to source physical file  "
+                        row = "Comp: PC directory  " + sourcePathString
+                                + "  was NOT completely copied to source physical file  "
                                 + libraryName + "/" + fileName + ".";
                     }
                     mainWindow.msgVector.add(row);
-                    mainWindow.reloadRightSideAndShowMessages();
+                    mainWindow.showMessages();
                 } //
                 //
                 // To existing source physical file member:
                 // ----------------------------------------
                 else if (targetPathString.endsWith(".MBR")) {
                     row = "Error: PC directory  "
-                            + sourcePathString + "  cannot be copied to a source physical file member  " + libraryName + "/" + fileName + "(" + memberName + ").";
+                            + sourcePathString + "  cannot be copied to a source physical file member  " + libraryName + "/"
+                            + fileName + "(" + memberName + ").";
                     mainWindow.msgVector.add(row);
-                    mainWindow.reloadRightSideAndShowMessages();
+                    mainWindow.showMessages();
                 }
             }
         }
     }
 
     /**
-     * Walk through PC directory recursively to create shadow directories in IFS target directory.
-     * Shadow directories are named by last names of the PC directory paths
-     * so that only one-level directories are inserted to the IFS target directory.
+     * Walk through PC directory recursively to create shadow directories in IFS target directory. Shadow directories are
+     * named by last names of the PC directory paths so that only one-level directories are inserted to the IFS target
+     * directory.
      *
      * @param remoteServer
      * @param sourcePathString
@@ -658,7 +675,8 @@ public class Copy_PC_IBMi {
             stream.forEach(inPath -> {
                 String pcPathName = inPath.toString();
                 // Path to the new shadow directory to be created in IFS
-                String newDirPathString = ifsPath.toString() + "/" + pcPathName.substring(pcPathName.lastIndexOf(pcFileSep) + 1);
+                String newDirPathString = ifsPath.toString() + "/"
+                        + pcPathName.substring(pcPathName.lastIndexOf(pcFileSep) + 1);
 
                 IFSFile ifsNewPath = new IFSFile(remoteServer, newDirPathString);
 
@@ -672,9 +690,9 @@ public class Copy_PC_IBMi {
                             row = "Info: Directory  " + pcPathName
                                     + "  was created in IFS directory  " + ifsPath.toString() + ".";
                             mainWindow.msgVector.add(row);
-                            mainWindow.reloadRightSideAndShowMessages();
+                            mainWindow.showMessages();
                         }
-                        // Recursive call with different PC path 
+                        // Recursive call with different PC path
                         walkPcDirectory_CreateNestedIfsDirectories(remoteServer, pcPathName, ifsNewPath);
                     } catch (Exception exc) {
                         exc.printStackTrace();
@@ -690,12 +708,15 @@ public class Copy_PC_IBMi {
     /**
      * Copying PC files to IFS directories created before (see walkPcDirectory_CreateNestedIfsDirectories method).
      *
-     * @param sourcePathString Source PC directory name
-     * @param ifsPath Target IFS directory path
+     * @param sourcePathString
+     * Source PC directory name
+     * @param ifsPath
+     * Target IFS directory path
      * @param sourcePathStringPrefix
      * @return
      */
-    protected String copyPcFilesToIfsDirectories(String sourcePathString, IFSFile ifsPath, String sourcePathStringPrefix) {
+    protected String copyPcFilesToIfsDirectories(String sourcePathString, IFSFile ifsPath,
+            String sourcePathStringPrefix) {
         msgTextDir = "";
         atLeastOneErrorInFiles = false;
 
@@ -724,7 +745,7 @@ public class Copy_PC_IBMi {
                             // Recursive call with new IFS path object
                             copyPcFilesToIfsDirectories(pcPathName, ifsNewPath, sourcePathStringPrefix);
                         }
-                    } else //                    
+                    } else //
                     //
                     // Simple PC file:
                     // ---------------
@@ -741,9 +762,11 @@ public class Copy_PC_IBMi {
 
                             // Add a message in the message table and show it
                             if (atLeastOneErrorInFiles) {
-                                row = "Comp: PC file  " + nextPcFile + "  was NOT copied to IFS directory  " + ifsNewPath.toString() + ".";
+                                row = "Comp: PC file  " + nextPcFile + "  was NOT copied to IFS directory  "
+                                        + ifsNewPath.toString() + ".";
                             } else {
-                                row = "Comp: PC file  " + nextPcFile + "  was copied to IFS directory  " + ifsNewPath.toString() + ".";
+                                row = "Comp: PC file  " + nextPcFile + "  was copied to IFS directory  " + ifsNewPath.toString()
+                                        + ".";
                             }
                         }
                     }
@@ -754,10 +777,11 @@ public class Copy_PC_IBMi {
             exc.printStackTrace();
             row = "Error PC files to IFS: " + exc.toString();
             mainWindow.msgVector.add(row);
-            mainWindow.reloadRightSideAndShowMessages();
+            mainWindow.showMessages();
         }
         return msgText;
     }
+
 
     /**
      * Copy PC text file to the IBM i source member.
@@ -795,7 +819,8 @@ public class Copy_PC_IBMi {
         Path inTextFile = Paths.get(sourcePathString);
 
         // Path to the output source member
-        String outMemberPathString = "/QSYS.LIB/" + libraryName + ".LIB/" + fileName + ".FILE" + "/" + memberName + ".MBR";
+        String outMemberPathString = "/QSYS.LIB/" + libraryName + ".LIB/" + fileName + ".FILE" + "/" + memberName
+                + ".MBR";
         IFSFile ifsMbr = new IFSFile(remoteServer, outMemberPathString);
 
         String clrPfmCommand;
@@ -808,7 +833,7 @@ public class Copy_PC_IBMi {
 
         try {
 
-            // Open PC input file regarded as a text file.             
+            // Open PC input file regarded as a text file.
             if (pcCharset.equals("*DEFAULT")) {
                 // Decode input using its encoding. Ignore PC charset parameter.
                 inFile = Files.newBufferedReader(inTextFile);
@@ -819,7 +844,7 @@ public class Copy_PC_IBMi {
             try {
                 // Read the first text line
                 textLine = inFile.readLine();
-                // If an error is found in the first line of the file, 
+                // If an error is found in the first line of the file,
                 // processing is broken, the error is caught (see catch blocks), a message is reported,
                 // and no member is created.
             } catch (Exception exc) {
@@ -827,7 +852,7 @@ public class Copy_PC_IBMi {
                 row = "Error: Data of the PC file  " + sourcePathString + "  cannot be copied to the source physical file  "
                         + libraryName + "/" + fileName + "  -  " + exc.toString();
                 mainWindow.msgVector.add(row);
-                mainWindow.reloadRightSideAndShowMessages();
+                mainWindow.showMessages();
                 msgText = "ERROR";
                 return msgText;
             }
@@ -839,58 +864,14 @@ public class Copy_PC_IBMi {
                 row = "Info: PC file  " + sourcePathString + "  cannot be copied to the existing source physical member  "
                         + libraryName + "/" + fileName + "(" + memberName + "). Overwriting files is not allowed.";
                 mainWindow.msgVector.add(row);
-                mainWindow.reloadRightSideAndShowMessages();
+                mainWindow.showMessages();
                 return "ERROR";
             }
 
-            // Otherwise (member does not exist or overwrite is allowed)
+            // Otherwise: Member does not exist or overwrite of the existing member is allowed.
             // ---------
-            // Clear physical file member
-            clrPfmCommand = "CLRPFM FILE(" + libraryName + "/" + fileName + ") MBR(" + memberName + ")";
-            cmdCall.run(clrPfmCommand);
 
-            // Obtain output database file record description
-            AS400FileRecordDescription outRecDesc = new AS400FileRecordDescription(remoteServer, outMemberPathString);
-            // Retrieve record format from the record description
-            RecordFormat[] format = outRecDesc.retrieveRecordFormat();
-            // Obtain output record object
-            Record outRecord = new Record(format[0]);
-
-            //
-            // Note: Now create the member if no error was found in the first text line.
-            // -----
-            //
-            // Create the member (SequentialFile object)
-            outSeqFile = new SequentialFile(remoteServer, outMemberPathString);
-
-            // Obtain CCSID of the source file (parent of the member)
-            IFSFile outMemberPath = new IFSFile(remoteServer, outMemberPathString);
-
-            // Set the record format (the only one)
-            outSeqFile.setRecordFormat(format[0]);
-
-            try {
-                // Open the member
-                outSeqFile.open();
-
-            } catch (com.ibm.as400.access.AS400Exception as400exc) {
-                // as400exc.printStackTrace();
-                // Add new member if open could not be performed (when the member does not exist)
-                // (the second parameter is a text description)
-                // The new member inherits the CCSID from its parent Source physical file
-                outSeqFile.addPhysicalFileMember(memberName, "Source member " + memberName);
-
-                // Change member to set its Source Type
-                chgPfmCommand = "CHGPFM FILE(" + libraryName + "/" + fileName + ") MBR(" + memberName + ") SRCTYPE("
-                        + sourceType + ")";
-                // Perform the CL command
-                cmdCall.run(chgPfmCommand);
-
-                // Open the new member
-                outSeqFile.open();
-            }
-
-            // Decide if the input PC file contains prefix consisting of 
+            // Decide if the input PC file contains prefix consisting of
             // SEQUENCE NUMBER and DATE information fields in the first 6 + 6 positions.
             try {
                 // Non-empty member can be checked for information fields if the line is longer than 12
@@ -906,9 +887,54 @@ public class Copy_PC_IBMi {
                 seqAndDatePresent = false;
             }
 
-            // Input records contain sequence and data fields
-            // ----------------------------------------------
             if (seqAndDatePresent) {
+                // Input records contain sequence and data fields
+                // ----------------------------------------------
+
+                // Copying is done directly using a sequential file preserving sequence and data field values.
+
+                // Clear physical file member
+                clrPfmCommand = "CLRPFM FILE(" + libraryName + "/" + fileName + ") MBR(" + memberName + ")";
+                cmdCall.run(clrPfmCommand);
+
+                // Obtain output database file record description
+                AS400FileRecordDescription outRecDesc = new AS400FileRecordDescription(remoteServer, outMemberPathString);
+                // Retrieve record format from the record description
+                RecordFormat[] format = outRecDesc.retrieveRecordFormat();
+                // Obtain output record object
+                Record outRecord = new Record(format[0]);
+
+                //
+                // Note: Now create the member if no error was found in the first text line.
+                // -----
+                //
+                // Create the member (SequentialFile object)
+                outSeqFile = new SequentialFile(remoteServer, outMemberPathString);
+
+                // Set the record format (the only one)
+                outSeqFile.setRecordFormat(format[0]);
+
+                try {
+                    // Open the member
+                    outSeqFile.open();
+
+                } catch (com.ibm.as400.access.AS400Exception as400exc) {
+                    // as400exc.printStackTrace();
+                    // Add new member if open could not be performed (when the member does not exist)
+                    // (the second parameter is a text description)
+                    // The new member inherits the CCSID from its parent Source physical file
+                    outSeqFile.addPhysicalFileMember(memberName, "Source member " + memberName);
+
+                    // Change member to set its Source Type
+                    chgPfmCommand = "CHGPFM FILE(" + libraryName + "/" + fileName + ") MBR(" + memberName + ") SRCTYPE("
+                            + sourceType + ")";
+                    // Perform the CL command
+                    cmdCall.run(chgPfmCommand);
+
+                    // Open the new member
+                    outSeqFile.open();
+                }
+
                 // Process all lines
                 while (textLine != null) {
                     // Get lengths of three fields of the source record
@@ -924,102 +950,82 @@ public class Copy_PC_IBMi {
                         outSeqFile.write(outRecord);
                         // Read next text line
                         textLine = inFile.readLine();
-
                     } catch (Exception exc) {
                         exc.printStackTrace();
-                        row = "Error: 1 Data of the PC file  " + sourcePathString + "  cannot be copied to the source physical file  "
+                        row = "Error: 1 Data of the PC file  " + sourcePathString
+                                + "  cannot be copied to the source physical file  "
                                 + libraryName + "/" + fileName + "  -  " + exc.toString();
                         mainWindow.msgVector.add(row);
-                        mainWindow.reloadRightSideAndShowMessages();
+                        mainWindow.showMessages();
                         msgText = "ERROR";
                         break;
                     }
-
                 }
                 // Close files
                 inFile.close();
                 outSeqFile.close();
 
             } else {
-                // Input records contain data field only
-                // -------------------------------------
-                BigDecimal seqNumber = new BigDecimal("0000.00");
-                BigDecimal increment = new BigDecimal("0001.00");
+                // Input records DO NOT contain sequence and data fields
+                // -----------------------------------------------------
 
-                // Process all lines
-                while (textLine != null) {
-                    int lenDTA = format[0].getFieldDescription("SRCDTA").getLength();
-                    seqNumber = seqNumber.add(increment);
-                    // Insert sequential number into the source record (zoned decimal, 2 d.p.)
-                    outRecord.setField("SRCSEQ", seqNumber);
+                // Copying is done indirectly using a temporary IFS file in the /home/userName directory.
 
-                    // Get actual date and transform it to YYMMDD
-                    LocalDate date = LocalDate.now();
-                    int intYear = date.getYear();
-                    int intMonth = date.getMonthValue();
-                    int intDay = date.getDayOfMonth();
-                    String strYear = String.valueOf(intYear);
-                    String strMonth = String.valueOf(intMonth);
-                    if (intMonth < 10) {
-                        strMonth = "0" + strMonth;
-                    }
-                    String strDay = String.valueOf(intDay);
-                    if (intDay < 10) {
-                        strDay = "0" + strDay;
-                    }
-                    // Insert today's date YYMMDD into the source record (zoned decimal, 0 d.p.)
-                    outRecord.setField("SRCDAT", new BigDecimal(strYear.substring(2) + strMonth + strDay));
+                // First create an IFS '/home/userName directory if it does not exist
+                String home_userName = "/home/" + userName;
+                IFSFile ifsDir = new IFSFile(remoteServer, home_userName);
+                // Create new directory
+                ifsDir.mkdir();
 
-                    int dataLength;
-                    // Insert data into the source record
-                    if (lenDTA >= textLine.length()) {
-                        dataLength = textLine.length();
-                    } else {
-                        dataLength = lenDTA;
-                    }
-                    outRecord.setField("SRCDTA", textLine.substring(0, dataLength));
-                    try {
-                        // Write source record
-                        outSeqFile.write(outRecord);
-                        // Read next text line
-                        textLine = inFile.readLine();
-                    } catch (Exception exc) {
-                        exc.printStackTrace();
-                        row = "Error: 2 Some data of the PC file  " + sourcePathString + "  cannot be copied to the source physical file  "
-                                + libraryName + "/" + fileName + "  -  " + exc.toString();
-                        mainWindow.msgVector.add(row);
-                        mainWindow.reloadRightSideAndShowMessages();
-                        msgText = "ERROR";
-                        break;
-                    }
-                }
-                // Close files
-                inFile.close();
-                outSeqFile.close();
-                row = "Info: PC file  " + sourcePathString + "  was copied to source physical file member  "
-                        + libraryName + "/" + fileName + "(" + memberName + "). Convert " + pcCharset + " -> " + ibmCcsid + ".";
-                mainWindow.msgVector.add(row);
-                mainWindow.reloadRightSideAndShowMessages();
+                // String for command CHGATR to set CCSID attribute of the new directory
+                String command_CHGATR = "CHGATR OBJ('" + home_userName + ") ATR(*CCSID) VALUE(" + ibmCcsid
+                        + ") SUBTREE(*ALL)";
+                // Perform the command
+                cmdCall.run(command_CHGATR);
 
+                // Create hidden temporary file (with leading dot) in the directory
+                String tmp_File = home_userName + "/.tmp" + Timestamp.valueOf(LocalDateTime.now()).toString();
+                IFSFile ifsTmpFile = new IFSFile(remoteServer, tmp_File);
+                ifsTmpFile.createNewFile();
+
+                // Copy PC file to temporary IFS file
+                copyFromPcFile(sourcePathString, tmp_File, notFromWalk);
+
+                // Copy data from temporary IFS file to the member. If the member does not exist it is created.
+                String commandCpyFrmStmfString = "CPYFRMSTMF FROMSTMF('" + tmp_File + "') TOMBR('"
+                        + targetPathString
+                        + "') MBROPT(*REPLACE) CVTDTA(*AUTO) STMFCCSID(*STMF) DBFCCSID(*FILE)";
+                // Perform the command
+                cmdCall.run(commandCpyFrmStmfString);
+
+                // Delete the temporary file
+                ifsTmpFile.delete();
             }
+            row = "Info: PC file  " + sourcePathString + "  was copied to source physical file member  "
+                    + libraryName + "/" + fileName + "(" + memberName + "). Convert " + pcCharset + " -> " + ibmCcsid
+                    + ".";
+            mainWindow.msgVector.add(row);
+            mainWindow.showMessages();
+
             if (!msgText.isEmpty()) {
                 return "ERROR";
             }
             if (msgText.isEmpty() && !fromDirectory) {
                 row = "Comp: PC file  " + sourcePathString + "  was copied to source physical file member  "
-                        + libraryName + "/" + fileName + "(" + memberName + "). Convert " + pcCharset + " -> " + ibmCcsid + ".";
+                        + libraryName + "/" + fileName + "(" + memberName + "). Convert " + pcCharset + " -> " + ibmCcsid
+                        + ".";
                 mainWindow.msgVector.add(row);
-                mainWindow.reloadRightSideAndShowMessages();
+                mainWindow.showMessages();
                 return "";
             }
             if (!msgText.isEmpty() && !fromDirectory) {
                 row = "Comp: PC file  " + sourcePathString + "  was NOT completely copied to source physical file member  "
-                        + libraryName + "/" + fileName + "(" + memberName + "). Convert " + pcCharset + " -> " + ibmCcsid + ".";
+                        + libraryName + "/" + fileName + "(" + memberName + "). Convert " + pcCharset + " -> " + ibmCcsid
+                        + ".";
                 mainWindow.msgVector.add(row);
-                mainWindow.reloadRightSideAndShowMessages();
+                mainWindow.showMessages();
                 return "ERROR";
             }
-            return "";
 
         } catch (Exception exc) {
             try {
@@ -1032,10 +1038,10 @@ public class Copy_PC_IBMi {
             row = "Error: 3 PC file  " + sourcePathString + "  cannot be copied to the source physical file  "
                     + libraryName + "/" + fileName + "  -  " + exc.toString();
             mainWindow.msgVector.add(row);
-            mainWindow.reloadRightSideAndShowMessages();
+            mainWindow.showMessages();
             return "ERROR"; // Must not continue in order not to lock an object
         }
-        //        return "";
+        return "";
     }
 
     /**
@@ -1081,7 +1087,8 @@ public class Copy_PC_IBMi {
                         pcFileEmpty = false;
 
                         // Copy PC file to Source Physical File MEMBER (insert or rewrite)
-                        msgTextDir = copyToSourceMember(pathName, targetPathString + "/" + memberName + ".MBR", fromDirectory);
+                        msgTextDir = copyToSourceMember(pathName, targetPathString + "/" + memberName
+                                + ".MBR", fromDirectory);
                     }
                 });
                 inputStream.close();
@@ -1094,20 +1101,22 @@ public class Copy_PC_IBMi {
                     atLeastOneErrorInFiles = true;
                 }
                 if (atLeastOneErrorInFiles) {
-                    row = "Error: PC directory  " + sourcePathString + "  was NOT completely copied to source physical file  " + libraryName + "/" + fileName + ".";
+                    row = "Error: PC directory  " + sourcePathString
+                            + "  was NOT completely copied to source physical file  " + libraryName + "/" + fileName + ".";
                 } else {
-                    row = "Comp: PC directory  " + sourcePathString + "  was copied to source physical file  " + libraryName + "/" + fileName + ".";
+                    row = "Comp: PC directory  " + sourcePathString + "  was copied to source physical file  " + libraryName
+                            + "/" + fileName + ".";
                 }
                 msgText = atLeastOneErrorInFiles ? "ERROR" : "";
-                //mainWindow.msgVector.add(row);
-                //mainWindow.reloadRightSideAndShowMessages();
+                // mainWindow.msgVector.add(row);
+                // mainWindow.showMessages();
 
             } catch (Exception exc) {
                 exc.printStackTrace();
                 row = "Error: PC file  " + sourcePathString + "  cannot be copied to the source physical file  "
                         + libraryName + "/" + fileName + "  -  " + exc.toString();
                 mainWindow.msgVector.add(row);
-                mainWindow.reloadRightSideAndShowMessages();
+                mainWindow.showMessages();
                 return "ERROR";
             }
         } else {
@@ -1121,13 +1130,13 @@ public class Copy_PC_IBMi {
             if (msgText.isEmpty()) {
                 row = "Comp1: PC file  " + sourcePathString + "  was copied to source physical file member  "
                         + libraryName + "/" + fileName + "(" + memberName + ").";
-                //mainWindow.msgVector.add(row);
-                //mainWindow.reloadRightSideAndShowMessages();
+                // mainWindow.msgVector.add(row);
+                // mainWindow.showMessages();
             } else {
                 row = "Error: PC file  " + sourcePathString + "  was NOT copied to source physical file member  "
                         + libraryName + "/" + fileName + "(" + memberName + ").";
-                //mainWindow.msgVector.add(row);
-                //mainWindow.reloadRightSideAndShowMessages();
+                // mainWindow.msgVector.add(row);
+                // mainWindow.showMessages();
                 return msgText;
             }
         }
@@ -1149,14 +1158,16 @@ public class Copy_PC_IBMi {
         extractNamesFromIfsPath(targetPathString);
 
         String saveFilePathString;
-        String saveFileName;
 
         // Copy to LIBRARY
         if (toLibrary) {
             // Save file name is derived from PC file name excluding suffix .savf
-            saveFileName = sourcePathString.substring(sourcePathString.lastIndexOf(pcFileSep) + 1, sourcePathString.lastIndexOf(".savf"));
-            // Save file path string is derived from the path string of the library by adding the PC file name with suffix .SAVF in upper case
-            saveFilePathString = targetPathString + "/" + sourcePathString.substring(sourcePathString.lastIndexOf(pcFileSep) + 1).toUpperCase();
+            saveFileName = sourcePathString.substring(sourcePathString.lastIndexOf(pcFileSep)
+                    + 1, sourcePathString.lastIndexOf(".savf"));
+            // Save file path string is derived from the path string of the library by adding the PC file name with suffix
+            // .SAVF in upper case
+            saveFilePathString = targetPathString + "/"
+                    + sourcePathString.substring(sourcePathString.lastIndexOf(pcFileSep) + 1).toUpperCase();
 
             // Create a new Save File if it does not exist
             try {
@@ -1168,7 +1179,7 @@ public class Copy_PC_IBMi {
                 exc.printStackTrace();
                 row = "Error1: " + exc.toString();
                 mainWindow.msgVector.add(row);
-                mainWindow.reloadRightSideAndShowMessages();
+                mainWindow.showMessages();
                 return "ERROR";
             }
 
@@ -1181,9 +1192,10 @@ public class Copy_PC_IBMi {
                 // FTP Put command
                 ftp.put(sourcePathString, saveFilePathString);
                 ftp.disconnect();
-                row = "Comp: PC file  " + sourcePathString + "  was copied to save file  " + libraryName + "/" + saveFileName + ".";
+                row = "Comp: PC file  " + sourcePathString + "  was copied to save file  " + libraryName + "/"
+                        + saveFileName + ".";
                 mainWindow.msgVector.add(row);
-                mainWindow.reloadRightSideAndShowMessages();
+                mainWindow.showMessages();
                 return "";
 
             } catch (Exception exc) {
@@ -1191,7 +1203,7 @@ public class Copy_PC_IBMi {
                 row = "Error: Copying PC file  " + sourcePathString + "  to save file  " + libraryName + "/" + saveFileName
                         + "  failed:  " + exc.toString();
                 mainWindow.msgVector.add(row);
-                mainWindow.reloadRightSideAndShowMessages();
+                mainWindow.showMessages();
                 return "ERROR";
             }
         } //
@@ -1201,10 +1213,11 @@ public class Copy_PC_IBMi {
             saveFileName = sourcePathString.substring(sourcePathString.lastIndexOf(pcFileSep) + 1);
 
             if (!sourcePathString.endsWith(".savf")) {
-                row = "Error: Copying PC save file  " + sourcePathString + "  ending with suffix \".savf\" cannot be copied to the existing file  " + targetPathString
+                row = "Error: Copying PC save file  " + sourcePathString
+                        + "  ending with suffix \".savf\" cannot be copied to the existing file  " + targetPathString
                         + "  with a different suffix.";
                 mainWindow.msgVector.add(row);
-                mainWindow.reloadRightSideAndShowMessages();
+                mainWindow.showMessages();
                 return "ERROR";
             } else {
                 // Copy the PC file to Save file using FTP (File Transfer Protocol)
@@ -1215,9 +1228,10 @@ public class Copy_PC_IBMi {
                     // FTP Put command
                     ftp.put(sourcePathString, targetPathString);
                     ftp.disconnect();
-                    row = "Comp: PC save file  " + sourcePathString + "  was copied to IFS save file  " + targetPathString + ".";
+                    row = "Comp: PC save file  " + sourcePathString + "  was copied to IFS save file  " + targetPathString
+                            + ".";
                     mainWindow.msgVector.add(row);
-                    mainWindow.reloadRightSideAndShowMessages();
+                    mainWindow.showMessages();
                     return "";
 
                 } catch (Exception exc) {
@@ -1225,7 +1239,7 @@ public class Copy_PC_IBMi {
                     row = "Error: Copying PC save file  " + sourcePathString + "  to IFS save file  " + targetPathString
                             + "  failed:  " + exc.toString();
                     mainWindow.msgVector.add(row);
-                    mainWindow.reloadRightSideAndShowMessages();
+                    mainWindow.showMessages();
                     return "ERROR";
                 }
             }
@@ -1233,23 +1247,31 @@ public class Copy_PC_IBMi {
     }
 
     /**
-     * Extract individual names (libraryName, fileName, memberName) from the
-     * AS400 IFS path.
+     * Extract individual names (libraryName, fileName, memberName, saveFileName) from the AS400 IFS path.
      *
      * @param targetPathString
      */
-    protected void extractNamesFromIfsPath(String targetPathString) {
-
-        qsyslib = "/QSYS.LIB/";
-        if (targetPathString.startsWith(qsyslib) && targetPathString.length() > qsyslib.length()) {
-            libraryName = targetPathString.substring(targetPathString.indexOf("/QSYS.LIB/") + 10, targetPathString.lastIndexOf(".LIB"));
-            if (targetPathString.length() > qsyslib.length() + libraryName.length() + 5) {
-                fileName = targetPathString.substring(qsyslib.length() + libraryName.length() + 5, targetPathString.lastIndexOf(".FILE"));
-                if (targetPathString.length() > qsyslib.length() + libraryName.length() + 5 + fileName.length() + 6) {
-                    memberName = targetPathString.substring(qsyslib.length() + libraryName.length() + 5 + fileName.length() + 6,
-                            targetPathString.lastIndexOf(".MBR"));
+    protected void extractNamesFromIfsPath(String as400PathString) {
+        try {
+            qsyslib = "/QSYS.LIB/";
+            if (as400PathString.startsWith(qsyslib) && as400PathString.length() > qsyslib.length()) {
+                libraryName = as400PathString.substring(as400PathString.indexOf("/QSYS.LIB/") + 10, as400PathString.lastIndexOf(".LIB"));
+                if (as400PathString.length() > qsyslib.length() + libraryName.length() + 5) {
+                    if (as400PathString.contains(".FILE")) {
+                        fileName = as400PathString.substring(qsyslib.length() + libraryName.length() + 5, as400PathString.lastIndexOf(".FILE"));
+                        if (as400PathString.endsWith(".MBR")) {
+                            memberName = as400PathString.substring(as400PathString.lastIndexOf("/") + 1, as400PathString.lastIndexOf(".MBR"));
+                        }
+                    } else if (as400PathString.endsWith(".SAVF")) {
+                        saveFileName = as400PathString.substring(as400PathString.lastIndexOf("/") + 1, as400PathString.lastIndexOf(".SAVF"));
+                    }
                 }
             }
+        } catch (Exception exc) {
+            fileName = "";
+            saveFileName = "";
+            System.out.println("as400PathString: " + as400PathString);
+            exc.printStackTrace();
         }
     }
 }

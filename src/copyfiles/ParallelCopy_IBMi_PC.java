@@ -62,8 +62,7 @@ public class ParallelCopy_IBMi_PC extends SwingWorker<String, String> {
       
       for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
          String sourcePathString = clipboardPathStrings[idx];
-         Copy_IBMi_PC ibmpc = new Copy_IBMi_PC(remoteServer, sourcePathString,
-               targetPathString, mainWindow);
+         Copy_IBMi_PC ibmpc = new Copy_IBMi_PC(remoteServer, sourcePathString, targetPathString, mainWindow);
          ibmpc.copyingToPC(sourcePathString, targetPathString);
       }
       if (leftInfo != null) {
@@ -71,6 +70,7 @@ public class ParallelCopy_IBMi_PC extends SwingWorker<String, String> {
       } else {
          mainWindow.reloadLeftSide(nodes);
       }
-      mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
+      mainWindow.scrollMessagePane.getVerticalScrollBar()
+              .removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
    }
 }

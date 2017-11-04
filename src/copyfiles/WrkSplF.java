@@ -2,6 +2,8 @@ package copyfiles;
 
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400Text;
+import com.ibm.as400.access.PrintObject;
+import com.ibm.as400.access.PrintObjectTransformedInputStream;
 import com.ibm.as400.access.PrintParameterList;
 import com.ibm.as400.access.SpooledFile;
 import com.ibm.as400.access.SpooledFileList;
@@ -562,7 +564,7 @@ public class WrkSplF extends JFrame {
         if (rightPathString.equals("/QSYS.LIB")) {
             row = "Comp: Retrieving spooled files completed.";
             mainWindow.msgVector.add(row);
-            mainWindow.reloadLeftSideAndShowMessages(noNodes);
+            mainWindow.showMessages(noNodes);
             mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
         }
     }
@@ -762,7 +764,7 @@ public class WrkSplF extends JFrame {
             if (rightPathString.equals("/QSYS.LIB")) {
                 row = "Wait: Retrieving list of all spooled files . . .";
                 mainWindow.msgVector.add(row);
-                mainWindow.reloadLeftSideAndShowMessages(noNodes);
+                mainWindow.showMessages(noNodes);
                 mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
                 splfList.setUserFilter("*ALL");
                 splfList.setQueueFilter("/QSYS.LIB/%ALL%.LIB/%ALL%.OUTQ");
@@ -1289,7 +1291,7 @@ public class WrkSplF extends JFrame {
 
             row = "Info: Spooled file characters were converted using CCSID  " + ibmCcsid + ".";
             mainWindow.msgVector.add(row);
-            mainWindow.reloadLeftSideAndShowMessages(noNodes); // do not add child nodes
+            mainWindow.showMessages(noNodes); // do not add child nodes
             mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
 
             return "";
@@ -1303,10 +1305,68 @@ public class WrkSplF extends JFrame {
             mainWindow.msgVector.add(row);
             row = "Set \"IBM i CCSID\" to 65535 and press button \"Spooled file\" to display the spooled file again.";
             mainWindow.msgVector.add(row);
-            mainWindow.reloadLeftSideAndShowMessages(noNodes); // do not add child nodes
+            mainWindow.showMessages(noNodes); // do not add child nodes
             mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
             return "ERROR";
         }
+    }
+
+    /**
+     * Read and transform spooled file data using automatic conversion;
+     * 
+     * This method is not used because it does not give satisfying results:
+     * - Does not render non-ASCII characteres, they are replaced by a substitute character
+     * - Headings are sometimes incorrectly formatted (not on the next line)
+     *
+     * @param splf
+     * @return
+     */
+    protected String convertSpooledFile2(SpooledFile splf) {
+        try {
+            Integer numberParInt = new Integer(numberPar);
+
+            PrintParameterList printParameterList = new PrintParameterList();
+            printParameterList.setParameter(SpooledFile.ATTR_SPOOLFILE, namePar);
+            printParameterList.setParameter(SpooledFile.ATTR_SPLFNUM, numberParInt);
+            printParameterList.setParameter(SpooledFile.ATTR_JOBNAME, jobPar);
+            printParameterList.setParameter(SpooledFile.ATTR_JOBUSER, userPar);
+            printParameterList.setParameter(SpooledFile.ATTR_JOBNUMBER, jobNumberPar);
+            printParameterList.setParameter(SpooledFile.ATTR_DATE, datePar);
+            printParameterList.setParameter(SpooledFile.ATTR_TIME, timePar);
+            printParameterList.setParameter(PrintObject.ATTR_MFGTYPE, "*WSCST");
+            printParameterList.setParameter(PrintObject.ATTR_WORKSTATION_CUST_OBJECT, "/QSYS.LIB/QWPDEFAULT.WSCST");
+
+            //Read the spooled file attributes for determining if it is AFPDS or SCS type spool file
+            String stringAttribute = splf.getStringAttribute(PrintObject.ATTR_PRTDEVTYPE);
+            if ((stringAttribute != null) && (stringAttribute.equals("*AFPDS"))) {
+            // Not applicable
+            } else 
+            if ((stringAttribute != null) && (stringAttribute.equals("*SCS"))) {
+
+                PrintObjectTransformedInputStream inputStream = splf.getTransformedInputStream(printParameterList);
+
+                System.out.println(splf.getStringAttribute(PrintObject.ATTR_CODEPAGE));
+
+                // Read the input stream buffer and create a string buffer		
+                byte[] bytes = new byte[32767];
+                StringBuilder buffer = new StringBuilder();
+                //int bytesRead = 0;
+                int bytesRead = inputStream.read(bytes);
+                while (bytesRead >= 0) {
+                    bytesRead = inputStream.read(bytes);
+                    //System.out.println(bytesRead);
+                    if (bytesRead > 0) {
+                        buffer.append(new String(bytes, 0, bytesRead));
+                    }
+                }
+                //System.out.println(buffer);
+                spoolTextArea = new JTextArea(buffer.toString());
+            }
+        } catch (Exception exc) {
+            exc.printStackTrace();
+            return "ERROR";
+        }
+        return "";
     }
 
     /**

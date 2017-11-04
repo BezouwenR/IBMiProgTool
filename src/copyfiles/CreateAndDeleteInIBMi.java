@@ -30,6 +30,7 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
    String qsyslib;
    String libraryName;
    String fileName;
+   String saveFileName;
    String memberName;
 
    Path parPath = Paths.get(System.getProperty("user.dir"), "paramfiles", "Parameters.txt");
@@ -204,25 +205,25 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
                row = "Error: Change CCSID attribute with command CHGATR   -  "
                      + as400Message.getID() + " " + as400Message.getText();
                mainWindow.msgVector.add(row);
-               mainWindow.reloadRightSideAndShowMessages();
+               mainWindow.showMessages();
             } else {
                row = "Info: Change CCSID attribute with command CHGATR  -  " + as400Message.getID()
                      + " " + as400Message.getText();
                mainWindow.msgVector.add(row);
-               mainWindow.reloadRightSideAndShowMessages();
+               mainWindow.showMessages();
             }
          }
 
          row = "Comp: IFS directory  " + ifsFile.toString() + "  created in directory  "
                + mainWindow.rightPathString + "  -  CCSID " + ibmCcsid + ".";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
       } catch (Exception exc) {
          exc.printStackTrace();
 
          row = "Error:" + exc.toString();
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
       }
    }
 
@@ -255,13 +256,13 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
          row = "Comp: IFS file  " + ifsFile.toString() + "  created in directory  "
                + mainWindow.rightPathString + ".";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
       } catch (Exception exc) {
          exc.printStackTrace();
 
          row = "Error:" + exc.toString();
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
       }
    }
 
@@ -303,14 +304,14 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
                row = msgType + ": message from the ADDPFM command is " + as400Message.getID() + " "
                      + as400Message.getText();
                mainWindow.msgVector.add(row);
-               mainWindow.reloadRightSideAndShowMessages();
+               mainWindow.showMessages();
                return;
             } else {
                msgType = "Info";
                row = msgType + ": message from the ADDPFM command is " + as400Message.getID() + " "
                      + as400Message.getText();
                mainWindow.msgVector.add(row);
-               mainWindow.reloadRightSideAndShowMessages();
+               mainWindow.showMessages();
             }
          }
       } catch (Exception exc) {
@@ -319,7 +320,7 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
          row = "Error: Creating source member  " + ifsFile.toString() + " - " + exc.toString()
                + ".";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
          return;
       }
    }
@@ -366,14 +367,14 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
                row = msgType + ": message from the CRTSRCPF command is " + as400Message.getID()
                      + " " + as400Message.getText();
                mainWindow.msgVector.add(row);
-               mainWindow.reloadRightSideAndShowMessages();
+               mainWindow.showMessages();
                return;
             } else {
                msgType = "Info";
                row = msgType + ": message from the CRTSRCPF command is " + as400Message.getID()
                      + " " + as400Message.getText();
                mainWindow.msgVector.add(row);
-               mainWindow.reloadRightSideAndShowMessages();
+               mainWindow.showMessages();
             }
          }
       } catch (Exception exc) {
@@ -382,14 +383,14 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
          row = "Error: Creating source physical file  " + ifsFile.toString() + " - "
                + exc.toString() + ".";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
          return;
       }
 
       row = "Comp: Source physical file  " + sourceFileName + "  was created in  " + libraryName
             + ".";
       mainWindow.msgVector.add(row);
-      mainWindow.reloadRightSideAndShowMessages();
+      mainWindow.showMessages();
    }
 
    /**
@@ -397,9 +398,10 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
     */
    @SuppressWarnings("UseSpecificCatch")
    protected void createSaveFile() {
+       
       extractNamesFromIfsPath(mainWindow.rightPathString);
       // "true" stands for changing result to upper case
-      String saveFileName = new GetTextFromDialog("CREATE NEW SAVE FILE")
+      saveFileName = new GetTextFromDialog("CREATE NEW SAVE FILE")
             .getTextFromDialog("Library", "Save file name", libraryName, "", true, currentX, currentY);
       if (saveFileName == null) {
          return;
@@ -411,14 +413,14 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
          row = "Comp: Save file  " + saveFileName + "  was created in library  " + libraryName
                + ".";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
       } catch (Exception exc) {
          exc.printStackTrace();
 
          row = "Error at creating save file  " + libraryName + "/" + saveFileName
                + ".  System message is:  " + exc.toString() + ".";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
       }
    }
 
@@ -430,18 +432,18 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
 
       extractNamesFromIfsPath(mainWindow.rightPathString);
       try {
-         SaveFile saveFile = new SaveFile(remoteServer, libraryName, fileName);
+         SaveFile saveFile = new SaveFile(remoteServer, libraryName, saveFileName);
          saveFile.clear();
 
-         row = "Comp: Save file  " + libraryName + "/" + fileName + "  was cleared.";
+         row = "Comp: Save file  " + libraryName + "/" + saveFileName + "  was cleared.";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadLeftSideAndShowMessages(false);
+         mainWindow.showMessages(false);
       } catch (Exception exc) {
          exc.printStackTrace();
 
          row = "Error clearing save file  " + mainWindow.rightPathString + ".";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadLeftSideAndShowMessages(false);
+         mainWindow.showMessages(false);
       }
 
    }
@@ -463,20 +465,20 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
          row = "Comp: Source member " + libraryName + "/" + fileName + "(" + memberName
                + ")  was deleted.";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
 
          // PARENT NODE of deleted node will be reloaded and the deleted node will disappear from the tree.
          // Get parent path string
          //mainWindow.rightPathString = mainWindow.rightPathString.substring(0, mainWindow.rightPathString.lastIndexOf("/"));
          // Get parent node
          //mainWindow.rightNode = (DefaultMutableTreeNode) mainWindow.rightNode.getParent();
-         //mainWindow.reloadRightSideAndShowMessages();
+         //mainWindow.showMessages();
 
       } catch (Exception exc) {
          exc.printStackTrace();
          row = "Error: Source member  " + ifsFile.toString() + " - " + exc.toString() + ".";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
       }
    }
 
@@ -505,7 +507,7 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
                row = "Info: Source physical file member " + libraryName + "/" + fileName + "("
                      + memberName + ")  was deleted.";
                mainWindow.msgVector.add(row);
-               mainWindow.reloadRightSideAndShowMessages();
+               mainWindow.showMessages();
             }
 
             // Finally delete the directory (members' parent)
@@ -516,20 +518,20 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
 
             row = "Comp: Source physical file  " + libraryName + "/" + fileName + "  was deleted.";
             mainWindow.msgVector.add(row);
-            mainWindow.reloadRightSideAndShowMessages();
+            mainWindow.showMessages();
 
             // PARENT NODE of deleted node will be reloaded and the deleted node will disappear from the tree.
             // Get parent path string
             //mainWindow.rightPathString = mainWindow.rightPathString.substring(0, mainWindow.rightPathString.lastIndexOf("/"));
             // Get parent node
             //mainWindow.rightNode = (DefaultMutableTreeNode) mainWindow.rightNode.getParent();
-            //mainWindow.reloadRightSideAndShowMessages();
+            //mainWindow.showMessages();
          }
       } catch (Exception exc) {
          exc.printStackTrace();
          row = "Error: Source physical file  " + ifsFile.toString() + " - " + exc.toString() + ".";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
       }
    }
 
@@ -541,11 +543,11 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
 
       extractNamesFromIfsPath(mainWindow.rightPathString);
       try {
-         // Save file was recognized as type .FILE, subtype SAVF.
-         SaveFile saveFile = new SaveFile(remoteServer, libraryName, fileName);
+        // Save file was recognized as type .FILE, subtype SAVF.
+         SaveFile saveFile = new SaveFile(remoteServer, libraryName, saveFileName);
          saveFile.delete();
 
-         row = "Comp: Save file  " + libraryName + "/" + fileName + "  was deleted.";
+         row = "Comp: Save file  " + libraryName + "/" + saveFileName + "  was deleted.";
          mainWindow.msgVector.add(row);
 
          // PARENT NODE of deleted node will be reloaded and the deleted node will disappear from the tree.
@@ -553,13 +555,13 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
          mainWindow.rightPathString = mainWindow.rightPathString.substring(0, mainWindow.rightPathString.lastIndexOf("/"));
          // Get parent node
          mainWindow.rightNode = (DefaultMutableTreeNode) mainWindow.rightNode.getParent();
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
       } catch (Exception exc) {
          exc.printStackTrace();
 
          row = "Error deleting save file  " + mainWindow.rightPathString + ".";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
       }
    }
 
@@ -577,7 +579,7 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
 
             row = "Comp: IFS file " + ifsFile.toString() + "  was deleted.";
             mainWindow.msgVector.add(row);
-            mainWindow.reloadRightSideAndShowMessages();
+            mainWindow.showMessages();
          } else { //
             // Directory:
             // ----------
@@ -590,7 +592,7 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
             // PARENT NODE of deleted node will be reloaded and the deleted node will disappear from the tree.
             // Get parent node
             mainWindow.rightNode = (DefaultMutableTreeNode) mainWindow.rightNode.getParent();
-            mainWindow.reloadRightSideAndShowMessages();
+            mainWindow.showMessages();
 
             // Remove message scroll listener (cancel scrolling to the last message)
             mainWindow.scrollMessagePane.getVerticalScrollBar()
@@ -601,7 +603,7 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
 
          row = "Error: IFS object " + ifsFile.toString() + " - " + exc.toString();
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
       }
    }
 
@@ -629,7 +631,7 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
 
                      row = "Info: Deleting IFS file " + inObject + ".";
                      mainWindow.msgVector.add(row);
-                     mainWindow.reloadRightSideAndShowMessages();
+                     mainWindow.showMessages();
                      inObject.delete();
                   }
                }
@@ -647,7 +649,7 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
 
          row = "Info: Deleting IFS directory " + ifsDirectory + ".";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
          ifsDirectory.delete();
       } catch (Exception exc) {
          exc.printStackTrace();
@@ -683,14 +685,14 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
                row = msgType + ": message from the CPYLIB command is  " + as400Message.getID()
                      + " " + as400Message.getText();
                mainWindow.msgVector.add(row);
-               mainWindow.reloadRightSideAndShowMessages();
+               mainWindow.showMessages();
                return;
             } else {
                msgType = "Info";
                row = msgType + ": message from the CPYLIB command is  " + as400Message.getID()
                      + " " + as400Message.getText();
                mainWindow.msgVector.add(row);
-               mainWindow.reloadRightSideAndShowMessages();
+               mainWindow.showMessages();
             }
          }
       } catch (Exception exc) {
@@ -698,7 +700,7 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
 
          row = "Error: Copying library  " + libraryName + "  -  " + exc.toString() + ".";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
          return;
       }
 
@@ -711,7 +713,7 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
             .substring(0, mainWindow.rightPathString.lastIndexOf("/"));
       // Get parent node
       mainWindow.rightNode = (DefaultMutableTreeNode) mainWindow.rightNode.getParent();
-      mainWindow.reloadRightSideAndShowMessages();
+      mainWindow.showMessages();
 
    }
 
@@ -741,14 +743,14 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
                row = msgType + ": message from the CLRLIB command is  " + as400Message.getID()
                      + " " + as400Message.getText();
                mainWindow.msgVector.add(row);
-               mainWindow.reloadRightSideAndShowMessages();
+               mainWindow.showMessages();
                return;
             } else {
                msgType = "Info";
                row = msgType + ": message from the CLRLIB command is  " + as400Message.getID()
                      + " " + as400Message.getText();
                mainWindow.msgVector.add(row);
-               mainWindow.reloadRightSideAndShowMessages();
+               mainWindow.showMessages();
             }
          }
       } catch (Exception exc) {
@@ -756,13 +758,13 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
 
          row = "Error: Clearing library  " + libraryName + "  -  " + exc.toString() + ".";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
          return;
       }
 
       row = "Comp: Library  " + libraryName + "  was cleared.";
       mainWindow.msgVector.add(row);
-      mainWindow.reloadRightSideAndShowMessages();
+      mainWindow.showMessages();
    }
 
    /**
@@ -791,14 +793,14 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
                row = msgType + ": message from the DLTLIB command is  " + as400Message.getID()
                      + " " + as400Message.getText();
                mainWindow.msgVector.add(row);
-               mainWindow.reloadRightSideAndShowMessages();
+               mainWindow.showMessages();
                return;
             } else {
                msgType = "Info";
                row = msgType + ": message from the DLTLIB command is  " + as400Message.getID()
                      + " " + as400Message.getText();
                mainWindow.msgVector.add(row);
-               mainWindow.reloadRightSideAndShowMessages();
+               mainWindow.showMessages();
             }
          }
       } catch (Exception exc) {
@@ -806,34 +808,42 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
 
          row = "Error: Deleting library  " + libraryName + "  -  " + exc.toString() + ".";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadRightSideAndShowMessages();
+         mainWindow.showMessages();
          return;
       }
 
       row = "Comp: Library  " + libraryName + "  was deleted.";
       mainWindow.msgVector.add(row);
-      mainWindow.reloadRightSideAndShowMessages();
+      mainWindow.showMessages();
    }
 
    /**
-    * Extract individual names (libraryName, fileName, memberName) from the
+    * Extract individual names (libraryName, fileName, saveFileName, memberName) from the
     * AS400 IFS path.
     * 
     * @param as400PathString
     */
    protected void extractNamesFromIfsPath(String as400PathString) {
-
-      qsyslib = "/QSYS.LIB/";
-      if (as400PathString.startsWith(qsyslib) && as400PathString.length() > qsyslib.length()) {
-         libraryName = as400PathString.substring(as400PathString.indexOf("/QSYS.LIB/") + 10, as400PathString.lastIndexOf(".LIB"));
-         if (as400PathString.length() > qsyslib.length() + libraryName.length() + 5) {
-            fileName = as400PathString.substring(qsyslib.length() + libraryName.length() + 5, as400PathString.lastIndexOf(".FILE"));
-            if (as400PathString.length() > qsyslib.length() + libraryName.length() + 5
-                  + fileName.length() + 6) {
-               memberName = as400PathString.substring(qsyslib.length() + libraryName.length() + 5 + fileName.length() + 6, as400PathString
-                     .lastIndexOf(".MBR"));
+        try {
+            qsyslib = "/QSYS.LIB/";
+            if (as400PathString.startsWith(qsyslib) && as400PathString.length() > qsyslib.length()) {
+                libraryName = as400PathString.substring(as400PathString.indexOf("/QSYS.LIB/") + 10, as400PathString.lastIndexOf(".LIB"));
+                if (as400PathString.length() > qsyslib.length() + libraryName.length() + 5) {
+                    if (as400PathString.contains(".FILE")) {
+                        fileName = as400PathString.substring(qsyslib.length() + libraryName.length() + 5, as400PathString.lastIndexOf(".FILE"));
+                        if (as400PathString.endsWith(".MBR")) {
+                            memberName = as400PathString.substring(as400PathString.lastIndexOf("/") + 1, as400PathString.lastIndexOf(".MBR"));
+                        }
+                    } else if (as400PathString.endsWith(".SAVF")) {
+                        saveFileName = as400PathString.substring(as400PathString.lastIndexOf("/") + 1, as400PathString.lastIndexOf(".SAVF"));
+                    }
+                }
             }
-         }
-      }
-   }
+        } catch (Exception exc) {
+            fileName = "";
+            saveFileName = "";
+            System.out.println("as400PathString: " + as400PathString);
+            exc.printStackTrace();
+        }
+    }
 }

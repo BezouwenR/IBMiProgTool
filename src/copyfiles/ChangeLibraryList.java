@@ -38,11 +38,11 @@ import javax.swing.ListSelectionModel;
 import javax.swing.TransferHandler;
 
 /**
- Select table libraries to a (reduced) resulting library list
- and save it to the .lib file
-
- @author vzupka
-
+ * Select table libraries to a (reduced) resulting library list
+ * and save it to the .lib file
+ *
+ * @author vzupka
+ *
  */
 public class ChangeLibraryList extends JFrame {
 
@@ -55,8 +55,8 @@ public class ChangeLibraryList extends JFrame {
     String encoding = System.getProperty("file.encoding", "UTF-8");
 
     String libraries = "";
-    
-    
+
+
     // Path to UserLibraryList.lib file
     Path libraryListPath = Paths.get(System.getProperty("user.dir"), "workfiles", "UserLibraryList.lib");
     // Path to CurrentLibrary.lib file
@@ -86,14 +86,16 @@ public class ChangeLibraryList extends JFrame {
     JLabel title = new JLabel("Change library list");
     JLabel prompt1 = new JLabel("Build user library list on the right.");
     JLabel currentLibraryLabel = new JLabel("Current library:");
-    JLabel libraryPrefixLabel = new JLabel("Library prefix:");
+    JLabel libraryPatternLabel = new JLabel("Library pattern:");
 
     JComboBox<String> curentLibraryComboBox;
     String[] librariesForCurlib;
 
-    JTextField libraryPrefix;
-    String libraryPrefixString;
-    
+    JTextField libraryPatternTextField;
+    String libraryPattern;
+    String libraryField;
+    String libraryWildCard;
+
     JButton copyButton = new JButton("Copy ➔");
     JButton removeButton = new JButton("Remove");
     JButton clearButton = new JButton("Clear");
@@ -102,7 +104,7 @@ public class ChangeLibraryList extends JFrame {
     GroupLayout layout = new GroupLayout(globalPanel);
 
     /**
-     Constructor.
+     * Constructor.
      */
     ChangeLibraryList(AS400 remoteServer, int compileWindowX, int compileWindowY) {
         this.remoteServer = remoteServer;
@@ -120,15 +122,15 @@ public class ChangeLibraryList extends JFrame {
         Font titleFont = new Font("Helvetica", Font.PLAIN, 20);
         title.setFont(titleFont);
         prompt1.setForeground(new Color(50, 60, 160)); // Dim blue
-        libraryPrefixLabel.setForeground(new Color(50, 60, 160)); // Dim blue
+        libraryPatternLabel.setForeground(new Color(50, 60, 160)); // Dim blue
         currentLibraryLabel.setForeground(new Color(50, 60, 160)); // Dim blue
 
-        libraryPrefix = new JTextField();
-        libraryPrefixString = ((String) properties.get("LIBRARY_PREFIX")).toUpperCase();
-        libraryPrefix.setText(libraryPrefixString);
-        libraryPrefix.setPreferredSize(new Dimension(100, 20));
-        libraryPrefix.setMinimumSize(new Dimension(100, 20));
-        libraryPrefix.setMaximumSize(new Dimension(100, 20));
+        libraryPatternTextField = new JTextField();
+        libraryPattern = ((String) properties.get("LIBRARY_PATTERN")).toUpperCase();
+        libraryPatternTextField.setText(libraryPattern);
+        libraryPatternTextField.setPreferredSize(new Dimension(100, 20));
+        libraryPatternTextField.setMinimumSize(new Dimension(100, 20));
+        libraryPatternTextField.setMaximumSize(new Dimension(100, 20));
 
         curentLibraryComboBox = new JComboBox<>();
         curentLibraryComboBox.setPreferredSize(new Dimension(120, 20));
@@ -138,7 +140,7 @@ public class ChangeLibraryList extends JFrame {
         curentLibraryComboBox.setSelectedItem("*CRTDFT");
 
         // Retrieve library names beginning with a prefix    
-        librariesForCurlib = getListOfLibraries(libraryPrefixString);
+        librariesForCurlib = getListOfLibraries(libraryPattern);
 
         // Fill combo box list with library names preceded by *CRTDFT
         curentLibraryComboBox.removeAllItems();
@@ -208,8 +210,8 @@ public class ChangeLibraryList extends JFrame {
                         .addComponent(title)
                         .addComponent(prompt1)
                         .addGroup(layout.createSequentialGroup()
-                                .addComponent(libraryPrefixLabel)
-                                .addComponent(libraryPrefix)
+                                .addComponent(libraryPatternLabel)
+                                .addComponent(libraryPatternTextField)
                                 .addComponent(currentLibraryLabel)
                                 .addComponent(curentLibraryComboBox)
                         )
@@ -229,8 +231,8 @@ public class ChangeLibraryList extends JFrame {
                         .addComponent(title)
                         .addComponent(prompt1)
                         .addGroup(layout.createParallelGroup(GroupLayout.Alignment.TRAILING)
-                                .addComponent(libraryPrefixLabel)
-                                .addComponent(libraryPrefix)
+                                .addComponent(libraryPatternLabel)
+                                .addComponent(libraryPatternTextField)
                                 .addComponent(currentLibraryLabel)
                                 .addComponent(curentLibraryComboBox)
                         )
@@ -246,18 +248,18 @@ public class ChangeLibraryList extends JFrame {
                         )
         );
 
-        // Library prefix listener
-        // -----------------------
-        libraryPrefix.addActionListener(ae -> {
+        // Library pattern text field listener
+        // -----------------------------------
+        libraryPatternTextField.addActionListener(ae -> {
             // Translate text to upper case letters (object names are always in upper case)
-            libraryPrefixString = libraryPrefix.getText().toUpperCase();
-            libraryPrefix.setText(libraryPrefixString);
+            libraryPattern = libraryPatternTextField.getText().toUpperCase();
+            libraryPatternTextField.setText(libraryPattern);
             // Get list of all libraries whose names start with this string
-           // getListOfLibraries(libraryPrefixString);
-            
-            // Retrieve library names beginning with a prefix 
+            // getListOfLibraries(libraryPatternString);
+
+            // Retrieve library names conforming to the pattern
             // for  both left list and Current library combo box  
-            librariesForCurlib = getListOfLibraries(libraryPrefixString);
+            librariesForCurlib = getListOfLibraries(libraryPattern);
 
             // Fill combo box list with library names preceded by *CRTDFT
             curentLibraryComboBox.removeAllItems();
@@ -273,7 +275,7 @@ public class ChangeLibraryList extends JFrame {
         // ----------------------------------
         curentLibraryComboBox.addActionListener(ae -> {
         });
-        
+
         // Left list listener
         // ------------------
         listLeft.addListSelectionListener(lse -> {
@@ -372,24 +374,24 @@ public class ChangeLibraryList extends JFrame {
     }
 
     /**
-
-     @return
+     *
+     * @return
      */
     protected String getUserLibraryList() {
         return userLibraryListString;
     }
 
     /**
-
-     @return
+     *
+     * @return
      */
     protected String getCurrentLibrary() {
         return currentLibrary;
     }
 
     /**
-
-     @return
+     *
+     * @return
      */
     protected String[] getUserLibraryList2() {
 
@@ -411,12 +413,19 @@ public class ChangeLibraryList extends JFrame {
     }
 
     /**
-     Get list of all libraries whose names start with a prefix defined in the input field
-
-     @param libraryPrefix
-     * @return 
+     * Get list of all libraries whose names conform to the pattern defined in the input field
+     *
+     * @param libraryPattern
+     * @return
      */
-    protected String[] getListOfLibraries(String libraryPrefix) {
+    protected String[] getListOfLibraries(String libraryPattern) {
+
+        libraryField = libraryPattern;
+        if (libraryField.isEmpty()) {
+            libraryPattern = "*";
+        }
+        libraryWildCard = libraryPattern.replace("*", ".*");
+        libraryWildCard = libraryWildCard.replace("?", ".");
 
         IFSFile ifsFile = new IFSFile(remoteServer, "/QSYS.LIB");
         if (ifsFile.getName().equals("QSYS.LIB")) {
@@ -426,10 +435,9 @@ public class ChangeLibraryList extends JFrame {
                 vectorLeft.removeAllElements();
                 for (IFSFile ifsFileLevel2 : ifsFiles2) {
                     if (ifsFileLevel2.toString().endsWith(".LIB")) {
-                        // Select only libraries whose name starts with a string
-                        if (ifsFileLevel2.getName().startsWith(libraryPrefix)) {
-                            String libName = ifsFileLevel2.getName().substring(0, ifsFileLevel2.getName().indexOf("."));
-                            vectorLeft.addElement(libName);
+                        String bareLibraryName = ifsFileLevel2.getName().substring(0, ifsFileLevel2.getName().indexOf("."));
+                        if (bareLibraryName.matches(libraryWildCard)) {
+                            vectorLeft.addElement(bareLibraryName);
                         }
                     }
                 }
@@ -437,8 +445,6 @@ public class ChangeLibraryList extends JFrame {
                 listLeft.setListData(vectorLeft);
                 // Set the left list as enabled for dragging from.
                 listLeft.setDragEnabled(true);
-
-                
             } catch (Exception exc) {
                 exc.printStackTrace();
             }
@@ -508,7 +514,7 @@ public class ChangeLibraryList extends JFrame {
     }
 
     /**
-
+     *
      */
     class ListLeftRightTransfHdlr extends TransferHandler {
 
@@ -550,7 +556,7 @@ public class ChangeLibraryList extends JFrame {
     }
 
     /**
-
+     *
      */
     class ListRightRightTransfHdlr extends TransferHandler {
 

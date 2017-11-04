@@ -34,12 +34,12 @@ public class RenamePcObject {
     * @param oldPathString
     */
    protected void renamePcObject(String oldPathString) {
-      GetTextFromDialog getText = new GetTextFromDialog("");
+      GetTextFromDialog getText = new GetTextFromDialog("RENAME");
       String oldFilePrefix = oldPathString.substring(0, oldPathString.lastIndexOf(pcFileSep));
       String oldFileName = oldPathString.substring(oldPathString.lastIndexOf(pcFileSep) + 1);
 
       // "false" stands for not changing result to upper case
-      String newFileName = getText.getTextFromDialog("Parent directory", "Object name", oldFilePrefix + pcFileSep, oldFileName, false, currentX, currentY);
+      String newFileName = getText.getTextFromDialog("Parent directory", "New name", oldFilePrefix, oldFileName, false, currentX, currentY);
       if (newFileName == null) {
          return;
       }
@@ -55,7 +55,7 @@ public class RenamePcObject {
          exc.printStackTrace();
          String row = "Error: Renaming PC object -  " + exc.toString();
          mainWindow.msgVector.add(row);
-         mainWindow.reloadLeftSideAndShowMessages(true);
+         mainWindow.showMessages(true);
       }
       // Change left node (source node selected by mouse click)
       mainWindow.leftNode.setUserObject(newFileName);
@@ -64,7 +64,7 @@ public class RenamePcObject {
       // Send completion message
       String row = "Comp: PC object  " + oldPathString + "  was renamed to  " + renamedPathString + ".";
       mainWindow.msgVector.add(row);
-      mainWindow.reloadLeftSideAndShowMessages(false);
+      mainWindow.showMessages(false);
       mainWindow.scrollMessagePane.getVerticalScrollBar()
                .removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
 

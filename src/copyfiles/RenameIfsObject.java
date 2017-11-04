@@ -35,13 +35,13 @@ public class RenameIfsObject {
      @param oldPathString
      */
     protected void renameIfsObject(String oldPathString) {
-        GetTextFromDialog getText = new GetTextFromDialog("");
+        GetTextFromDialog getText = new GetTextFromDialog("RENAME");
         String oldFilePrefix = oldPathString.substring(0, oldPathString.lastIndexOf("/"));
         String oldFileName = oldPathString.substring(oldPathString.lastIndexOf("/") + 1);
         
         // "false" stands for not changing result to upper case
         String newFileName = getText.getTextFromDialog("Parent directory",
-                "File name:", oldFilePrefix + "/", oldFileName, false, currentX, currentY);
+                "New name:", oldFilePrefix, oldFileName, false, currentX, currentY);
 
         if (newFileName == null) {
            return;
@@ -75,7 +75,7 @@ public class RenameIfsObject {
                 row = "Error: Renaming IFS file  " + oldPathString + "  to  " + renamedPathString + "  failed.";
                 mainWindow.msgVector.add(row);
                 // "false" stands for "no update of tree node"
-                mainWindow.reloadRightSideAndShowMessages();
+                mainWindow.showMessages();
                 return;
             }
         } catch (Exception exc) {
@@ -83,7 +83,7 @@ public class RenameIfsObject {
             row = "Error: Renaming IFS file  -  " + exc.toString();
             mainWindow.msgVector.add(row);
                 // "false" stands for "no update of tree node"
-                mainWindow.reloadRightSideAndShowMessages();
+                mainWindow.showMessages();
         }
 
         // Change left node (source node selected by mouse click)
@@ -92,6 +92,6 @@ public class RenameIfsObject {
         // Send completion message
         row = "Comp: IFS file  " + oldPathString + "  was renamed to  " + renamedPathString + ".";
         mainWindow.msgVector.add(row);
-                mainWindow.reloadRightSideAndShowMessages();
+                mainWindow.showMessages();
     }
 }

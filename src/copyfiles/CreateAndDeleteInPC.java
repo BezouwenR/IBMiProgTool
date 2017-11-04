@@ -95,14 +95,14 @@ public class CreateAndDeleteInPC {
          row = "Comp: PC directory " + mainWindow.leftPathString + mainWindow.pcFileSep + directoryName
                   + " was created.";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadLeftSideAndShowMessages(nodes);
+         mainWindow.showMessages(nodes);
       } catch (Exception exc) {
          exc.printStackTrace();
 
          row = "Error: PC directory " + mainWindow.leftPathString + mainWindow.pcFileSep + directoryName
                   + " was NOT created.  -  " + exc.toString();
          mainWindow.msgVector.add(row);
-         mainWindow.reloadLeftSideAndShowMessages(nodes);
+         mainWindow.showMessages(nodes);
       }
    }
 
@@ -130,13 +130,13 @@ public class CreateAndDeleteInPC {
          row = "Comp: Empty PC file " + mainWindow.leftPathString + mainWindow.pcFileSep + fileName
                   + " was created.";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadLeftSideAndShowMessages(nodes);
+         mainWindow.showMessages(nodes);
       } catch (Exception exc) {
          exc.printStackTrace();
          row = "Error: PC file " + mainWindow.leftPathString + mainWindow.pcFileSep + fileName
                   + " was NOT created.  -  " + exc.toString();
          mainWindow.msgVector.add(row);
-         mainWindow.reloadLeftSideAndShowMessages(nodes);
+         mainWindow.showMessages(nodes);
       }
    }
 
@@ -155,7 +155,7 @@ public class CreateAndDeleteInPC {
 
                row = "Comp: PC file  " + mainWindow.leftPathString + "  was moved to trash.";
                mainWindow.msgVector.add(row);
-               mainWindow.reloadLeftSideAndShowMessages(nodes);
+               mainWindow.showMessages(nodes);
             } else { 
                // Directory:
                // ----------
@@ -170,7 +170,7 @@ public class CreateAndDeleteInPC {
                // PARENT NODE of deleted node will be reloaded  and the deleted node will disappear from the tree.
                // Get parent node
                mainWindow.leftNode = (DefaultMutableTreeNode) mainWindow.leftNode.getParent();
-               mainWindow.reloadLeftSideAndShowMessages(nodes);
+               mainWindow.showMessages(nodes);
                
                // Remove message scroll listener (cancel scrolling to the last message)
                mainWindow.scrollMessagePane.getVerticalScrollBar()
@@ -180,13 +180,13 @@ public class CreateAndDeleteInPC {
             ioe.printStackTrace();
             row = "Error: Moving PC object  " + mainWindow.leftPathString + "  to trash  -  " + ioe.toString();
             mainWindow.msgVector.add(row);
-            mainWindow.reloadLeftSideAndShowMessages(nodes);
+            mainWindow.showMessages(nodes);
          }
       } else {
          System.out.println("Error: Trash is not available.");
          row = "Error: Trash is not available.";
          mainWindow.msgVector.add(row);
-         mainWindow.reloadLeftSideAndShowMessages(nodes);
+         mainWindow.showMessages(nodes);
       }
    }
 
@@ -209,7 +209,7 @@ public class CreateAndDeleteInPC {
                
                row = "Info: Moving PC file  " + file + "  to trash.";
                mainWindow.msgVector.add(row);
-               //mainWindow.reloadLeftSideAndShowMessages(nodes);
+               //mainWindow.showMessages(nodes);
             }
             return FileVisitResult.CONTINUE;
          }
@@ -226,7 +226,7 @@ public class CreateAndDeleteInPC {
                
                row = "Info: Moving PC directory  " + dir + "  to trash.";
                mainWindow.msgVector.add(row);
-               //mainWindow.reloadLeftSideAndShowMessages(nodes);
+               //mainWindow.showMessages(nodes);
             }
             return FileVisitResult.CONTINUE;
          }

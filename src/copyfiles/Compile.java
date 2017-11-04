@@ -53,7 +53,7 @@ public class Compile extends JFrame {
 
     MainWindow mainWindow;
 
-    int windowWidth = 900;
+    int windowWidth = 800;
     int windowHeight = 500;
 
     final Color DIM_BLUE = new Color(50, 60, 160);
@@ -129,9 +129,11 @@ public class Compile extends JFrame {
     String commandText;
     ActionListener commandsComboBoxListener;
 
-    JLabel libraryPrefixLabel = new JLabel("Library prefix:");
-    JTextField libraryPrefix;
-    String libraryPrefixString;
+    JLabel libraryPatternLabel = new JLabel("Library pattern:");
+    JTextField libraryPatternTextField;
+    String libraryPattern;
+    String libraryField;
+    String libraryWildCard;
 
     String libraries = "";
 
@@ -205,20 +207,20 @@ public class Compile extends JFrame {
         paramLayout = new GroupLayout(parameterPanel);
 
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.LINE_AXIS));
-        titlePanel.setPreferredSize(new Dimension(windowWidth - 20, 70));
-        titlePanel.setMinimumSize(new Dimension(windowWidth - 20, 70));
+        titlePanel.setPreferredSize(new Dimension(windowWidth, 70));
+        titlePanel.setMinimumSize(new Dimension(windowWidth, 70));
 
         commandSelectionPanel.setLayout(new BoxLayout(commandSelectionPanel, BoxLayout.LINE_AXIS));
-        commandSelectionPanel.setPreferredSize(new Dimension(windowWidth - 20, 50));
-        commandSelectionPanel.setMinimumSize(new Dimension(windowWidth - 20, 50));
+        commandSelectionPanel.setPreferredSize(new Dimension(windowWidth, 50));
+        commandSelectionPanel.setMinimumSize(new Dimension(windowWidth, 50));
 
         commandPanel.setLayout(new BoxLayout(commandPanel, BoxLayout.LINE_AXIS));
-        commandPanel.setPreferredSize(new Dimension(windowWidth - 20, 70));
-        commandPanel.setMinimumSize(new Dimension(windowWidth - 20, 70));
+        commandPanel.setPreferredSize(new Dimension(windowWidth, 70));
+        commandPanel.setMinimumSize(new Dimension(windowWidth, 70));
 
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
-        buttonPanel.setPreferredSize(new Dimension(windowWidth - 20, 30));
-        buttonPanel.setMinimumSize(new Dimension(windowWidth - 20, 30));
+        buttonPanel.setPreferredSize(new Dimension(windowWidth, 30));
+        buttonPanel.setMinimumSize(new Dimension(windowWidth, 30));
 
         // Table of Standard Source Physical File Names (keys) and default Source Types (values)
         sourceFilesAndTypes.put("QCLSRC", "CLLE");
@@ -354,21 +356,33 @@ public class Compile extends JFrame {
         // Set and create the panel layout
         commandSelectionPanel.setLayout(cmdSelLayout);
         cmdSelLayout.setHorizontalGroup(cmdSelLayout.createSequentialGroup()
-                .addGroup(cmdSelLayout.createSequentialGroup().addComponent(sourceTypeLabel)
-                        .addComponent(sourceTypeComboBox).addComponent(compileCommandLabel)
-                        .addComponent(compileCommandsComboBox).addComponent(changeLibraryListButton)));
+                .addGroup(cmdSelLayout.createSequentialGroup()
+                        .addComponent(sourceTypeLabel)
+                        .addComponent(sourceTypeComboBox)
+                        .addGap(5)
+                        .addComponent(compileCommandLabel)
+                        .addComponent(compileCommandsComboBox)
+                        .addGap(10)
+                        .addComponent(changeLibraryListButton)));
         cmdSelLayout.setVerticalGroup(cmdSelLayout.createSequentialGroup()
                 .addGroup(cmdSelLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                        .addComponent(sourceTypeLabel).addComponent(sourceTypeComboBox)
-                        .addComponent(compileCommandLabel).addComponent(compileCommandsComboBox)
+                        .addComponent(sourceTypeLabel)
+                        .addComponent(sourceTypeComboBox)
+                        .addGap(5)
+                        .addComponent(compileCommandLabel)
+                        .addComponent(compileCommandsComboBox)
+                        .addGap(10)
                         .addComponent(changeLibraryListButton)));
 
-        libraryPrefix = new JTextField();
-        libraryPrefix.setPreferredSize(new Dimension(100, 20));
-        libraryPrefix.setMinimumSize(new Dimension(100, 20));
-        libraryPrefix.setMaximumSize(new Dimension(100, 20));
+        libraryPatternTextField = new JTextField();
+        libraryPattern = ((String) properties.get("LIBRARY_PATTERN")).toUpperCase();
+        libraryPatternTextField.setText(libraryPattern);
+        libraryPatternTextField.setPreferredSize(new Dimension(100, 20));
+        libraryPatternTextField.setMinimumSize(new Dimension(100, 20));
+        libraryPatternTextField.setMaximumSize(new Dimension(100, 20));
 
-        String[] selectedLibraries = getListOfLibraries(libraryPrefixString);
+        String[] selectedLibraries = getListOfLibraries(libraryPattern);
+
         // Source types combo box - fill with data
         librariesArrayList = new ArrayList<>();
         librariesArrayList.addAll(Arrays.asList(selectedLibraries));
@@ -389,16 +403,27 @@ public class Compile extends JFrame {
         // Set and create the panel layout
         parameterPanel.setLayout(paramLayout);
         paramLayout.setHorizontalGroup(paramLayout.createSequentialGroup()
-                .addGroup(paramLayout.createSequentialGroup().addComponent(librariesLabel)
-                        .addComponent(librariesComboBox).addComponent(objectNameLabel)
-                        .addComponent(objectNameFld).addComponent(libraryPrefixLabel)
-                        .addComponent(libraryPrefix)));
+                .addGroup(paramLayout.createSequentialGroup()
+                        .addComponent(librariesLabel)
+                        .addComponent(librariesComboBox)
+                        .addGap(5)
+                        .addComponent(objectNameLabel)
+                        .addComponent(objectNameFld)
+                        .addGap(5)
+                        .addComponent(libraryPatternLabel)
+                        .addComponent(libraryPatternTextField)));
         paramLayout.setVerticalGroup(paramLayout.createSequentialGroup()
                 .addGroup(paramLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                        .addComponent(libraryPrefixLabel).addComponent(libraryPrefix)
-                        .addComponent(librariesLabel).addComponent(librariesComboBox)
-                        .addComponent(objectNameLabel).addComponent(objectNameFld)
-                        .addComponent(libraryPrefixLabel).addComponent(libraryPrefix)));
+                        .addComponent(libraryPatternLabel)
+                        .addComponent(libraryPatternTextField)
+                        .addComponent(librariesLabel)
+                        .addComponent(librariesComboBox)
+                        .addGap(5)
+                        .addComponent(objectNameLabel)
+                        .addComponent(objectNameFld)
+                        .addGap(5)
+                        .addComponent(libraryPatternLabel)
+                        .addComponent(libraryPatternTextField)));
 
         commandPanel.add(commandTextLabel);
 
@@ -448,7 +473,7 @@ public class Compile extends JFrame {
         // Create scroll pane adjustment listener
         messageScrollPaneAdjustmentListenerMax = new MessageScrollPaneAdjustmentListenerMax();
 
-        createPanelLayout();
+        createGlobalPanelLayout();
 
         // Listeners for command selection panel
         // -------------------------------------
@@ -483,15 +508,17 @@ public class Compile extends JFrame {
         // Listeners for parameter panel
         // -----------------------------
         //
-        // Library prefix listener
-        libraryPrefix.addActionListener(en -> {
-            libraryPrefixString = libraryPrefix.getText().toUpperCase();
-            libraryPrefix.setText(libraryPrefixString);
-            String[] librariesArr = getListOfLibraries(libraryPrefixString);
+        // Library pattern listener
+        libraryPatternTextField.addActionListener(en -> {
+            libraryPattern = libraryPatternTextField.getText().toUpperCase();
+            libraryPatternTextField.setText(libraryPattern);
+            String[] librariesArr = getListOfLibraries(libraryPattern);
             librariesComboBox.removeAllItems();
+//            librariesComboBox.addItem(libraryName);
             for (int idx = 0; idx < librariesArr.length; idx++) {
                 librariesComboBox.addItem(librariesArr[idx]);
             }
+//            librariesComboBox.addItem("*CURLIB");
         });
 
         // Libraries combo box listener
@@ -561,9 +588,8 @@ public class Compile extends JFrame {
         editButton.addActionListener(en -> {
             scrollMessagePane.getVerticalScrollBar()
                     .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-            // Editing begins with display of the file (or member) which is edited by the user.
-            // Then the new data is written back to the file (or member).
-            // by the user pressing a button.
+            // Editing begins with displaying of the file (or member) which is edited by the user.
+            // Then the new data is written back to the file (or member) by the user pressing a button.
             if (this.pathString.startsWith("/QSYS.LIB")) {
                 // Source member
                 EditFile edtf = new EditFile(remoteServer, mainWindow, this.pathString, "rewriteSourceMember");
@@ -580,7 +606,7 @@ public class Compile extends JFrame {
             msgVector.clear();
             messageList.removeAll();
             scrollMessagePane = new JScrollPane(messageList);
-            createPanelLayout();
+            createGlobalPanelLayout();
         });
 
         cont = getContentPane();
@@ -612,7 +638,8 @@ public class Compile extends JFrame {
         getObjectNames();
 
         // Set the window visible again if it was closed (by click on close icon) or canceled by Cancel button.
-        this.setVisible(true);
+        setVisible(true);
+        pack();
     }
 
     /**
@@ -1024,40 +1051,43 @@ public class Compile extends JFrame {
     }
 
     /**
-     * Get list of all libraries whose names start with a prefix defined in the
-     * input field
+     * Get list of all libraries whose names conform to the pattern defined in the input field
      *
-     * @param libraryPrefix
+     * @param libraryPattern
+     * @return
      */
-    protected String[] getListOfLibraries(String libraryPrefix) {
+    protected String[] getListOfLibraries(String libraryPattern) {
+
+        libraryField = libraryPattern;
+        if (libraryField.isEmpty()) {
+            libraryPattern = "*";
+        }
+        libraryWildCard = libraryPattern.replace("*", ".*");
+        libraryWildCard = libraryWildCard.replace("?", ".");
 
         IFSFile ifsFile = new IFSFile(remoteServer, "/QSYS.LIB");
         if (ifsFile.getName().equals("QSYS.LIB")) {
             try {
-                // Get list of subfiles/subdirectories
-                IFSFile[] ifsFiles2 = ifsFile.listFiles();
+                // Get list of selected libraries
+                IFSFile[] ifsFiles2 = ifsFile.listFiles(libraryPattern + ".LIB");
                 libraryNameVector.removeAllElements();
-                libraryNameVector.addElement("*CURLIB");
-
+                // Add the selected library names to the vector
                 for (IFSFile ifsFileLevel2 : ifsFiles2) {
-                    if (ifsFileLevel2.toString().endsWith(".LIB")) {
-                        // Select only libraries whose name starts with a string
-                        if (ifsFileLevel2.getName().startsWith(libraryPrefix)) {
-                            String libName = ifsFileLevel2.getName().substring(0,
-                                    ifsFileLevel2.getName().indexOf("."));
-                            libraryNameVector.addElement(libName);
-                        }
-                    }
+                    String bareLibraryName = ifsFileLevel2.getName().substring(0, ifsFileLevel2.getName().indexOf("."));
+                    libraryNameVector.addElement(bareLibraryName);
                 }
+                // Add "current library" at the end of the vector
+                libraryNameVector.addElement("*CURLIB");
             } catch (Exception exc) {
                 exc.printStackTrace();
             }
         }
-
         String[] strArr = new String[libraryNameVector.size()];
         strArr = libraryNameVector.toArray(strArr);
         return strArr;
     }
+
+
 
     /**
      * Reload messages
@@ -1087,25 +1117,31 @@ public class Compile extends JFrame {
     /**
      *
      */
-    protected void createPanelLayout() {
+    protected void createGlobalPanelLayout() {
 
         globalPanelLayout = new GroupLayout(globalPanel);
-        globalPanelLayout.setAutoCreateGaps(true);
-        globalPanelLayout.setAutoCreateContainerGaps(true);
+        globalPanelLayout.setAutoCreateGaps(false);
+        globalPanelLayout.setAutoCreateContainerGaps(false);
 
         // Set and create the global panel layout
         globalPanel.setLayout(globalPanelLayout);
         globalPanelLayout.setHorizontalGroup(globalPanelLayout.createSequentialGroup()
                 .addGroup(globalPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addComponent(titlePanel).addComponent(commandSelectionPanel)
-                        .addComponent(parameterPanel).addComponent(commandPanel).addComponent(buttonPanel)
+                        .addComponent(titlePanel)
+                        .addComponent(commandSelectionPanel)
+                        .addComponent(parameterPanel)
+                        .addComponent(commandPanel)
+                        .addComponent(buttonPanel)
                         .addComponent(scrollMessagePane)));
         globalPanelLayout.setVerticalGroup(globalPanelLayout.createSequentialGroup()
-                .addGroup(globalPanelLayout.createSequentialGroup().addComponent(titlePanel)
-                        .addComponent(commandSelectionPanel).addComponent(parameterPanel)
-                        .addComponent(commandPanel).addComponent(buttonPanel)
+                .addGroup(globalPanelLayout.createSequentialGroup()
+                        .addComponent(titlePanel)
+                        .addComponent(commandSelectionPanel)
+                        .addComponent(parameterPanel)
+                        .addComponent(commandPanel)
+                        .addComponent(buttonPanel)
                         .addComponent(scrollMessagePane)));
-
+        globalPanel.setBorder(BorderFactory.createLineBorder(globalPanel.getBackground(), 5));
     }
 
     /**
@@ -1227,7 +1263,7 @@ public class Compile extends JFrame {
         compileWindowYString = properties.getProperty("COMPILE_WINDOW_Y");
         compileWindowX = new Integer(compileWindowXString);
         compileWindowY = new Integer(compileWindowYString);
-        libraryPrefixString = properties.getProperty("LIBRARY_PREFIX");
+        libraryPattern = properties.getProperty("LIBRARY_PATTERN");
         sourceType = properties.getProperty("SOURCE_TYPE");
 
         // Path label differs for IFS file and source member
@@ -1290,15 +1326,15 @@ public class Compile extends JFrame {
      */
     protected void getObjectNames() {
 
-        libraryPrefixString = libraryPrefix.getText().toUpperCase();
-        libraryPrefix.setText(libraryPrefixString);
-        String[] librariesArr = getListOfLibraries(libraryPrefixString);
+        libraryPattern = libraryPatternTextField.getText().toUpperCase();
+        libraryPatternTextField.setText(libraryPattern);
+        String[] librariesArr = getListOfLibraries(libraryPattern);
         librariesComboBox.removeAllItems();
         for (int idx = 0; idx < librariesArr.length; idx++) {
             librariesComboBox.addItem(librariesArr[idx]);
         }
 
-        libraryPrefix.setText(libraryPrefixString);
+        libraryPatternTextField.setText(libraryPattern);
 
         librariesComboBox.setSelectedItem(libNamePar);
         objectNameFld.setText(objNamePar);

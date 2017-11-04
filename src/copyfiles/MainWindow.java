@@ -64,6 +64,7 @@ import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -132,6 +133,9 @@ public class MainWindow extends JFrame {
     JMenu helpMenu;
     JMenuItem helpMenuItemEN;
     JMenuItem helpMenuItemCZ;
+    JMenuItem helpMenuItemRPGIII;
+    JMenuItem helpMenuItemRPGIV;
+    JMenuItem helpMenuItemCOBOL;
 
     JPanel panelTop;
     JPanel panelPathLeft;
@@ -178,7 +182,6 @@ public class MainWindow extends JFrame {
     DefaultMutableTreeNode leftNode;
     TransferHandler.TransferSupport leftInfo;
 
-    IFSFile[] ifsFiles;
     IFSFile ifsFile;
 
     DefaultMutableTreeNode rightNode;
@@ -288,7 +291,7 @@ public class MainWindow extends JFrame {
     ArrayList<String> sourceTypes;
     String sourceType;
     JComboBox<String> sourceTypeComboBox;
-    JLabel sourceTypeLabel = new JLabel("IBM i source type:");
+    JLabel sourceTypeLabel = new JLabel("Source type:");
     String[] sourceFileTypes = {"*DEFAULT", "C", "CBL", "CBLLE", "CLLE", "CLP", "CMD", "CPP",
         "DSPF", "LF", "MNU", "MNUCMD", "MNUDDS", "PF", "PLI", "PRTF", "REXX", "RPG", "RPGLE",
         "SQLC", "SQLCPP", "SQLCBL", "SQLCBLLE", "SQLPLI", "SQLRPG", "SQLRPGLE", "TBL", "TXT",};
@@ -302,8 +305,14 @@ public class MainWindow extends JFrame {
     JLabel overwriteOutputFileLabel = new JLabel("Overwrite data:");
     JCheckBox overwriteOutputFileCheckBox = new JCheckBox();
 
-    JLabel libraryPrefixLabel = new JLabel("IBM i library prefix:");
-    JTextField libraryPrefixTextField = new JTextField();
+    JLabel libraryPatternLabel = new JLabel("LIB:");
+    JTextField libraryPatternTextField = new JTextField();
+
+    JLabel filePatternLabel = new JLabel("FILE:");
+    JTextField filePatternTextField = new JTextField();
+
+    JLabel memberPatternLabel = new JLabel("MBR:");
+    JTextField memberPatternTextField = new JTextField();
 
     JLabel leftPathLabel = new JLabel("Local Path:");
     JComboBox<String> leftPathComboBox = new JComboBox<>();
@@ -343,7 +352,7 @@ public class MainWindow extends JFrame {
     JMenuItem displaySourceMember = new JMenuItem("Display");
     JMenuItem editSourceMember = new JMenuItem("Edit");
 
-    JMenuItem compileSourceMember = new JMenuItem("Compile Source Member");
+    JMenuItem compileSourceMember = new JMenuItem("Compile source member");
     Compile compile;
 
     JMenuItem copyLibrary = new JMenuItem("Copy library");
@@ -374,6 +383,11 @@ public class MainWindow extends JFrame {
 
     String rightPathString;
     String[] rightPathStrings;
+    String qsyslib;
+    String libraryName;
+    String fileName;
+    String memberName;
+
     RowMapper rightRowMapper;
 
     String sourcePathString;
@@ -381,13 +395,17 @@ public class MainWindow extends JFrame {
     String clipboardPathString;
     String[] clipboardPathStrings;
 
-    String ifsPathStringPrefix;
-    String pcPathStringPrefix;
+    String ifsPathStringPattern;
+    String pcPathStringPattern;
 
     MouseListener leftTreeMouseListener;
     TreeSelectionListener leftTreeSelectionListener;
 
     MouseListener rightTreeMouseListener;
+
+    // Tree expansion listener for right tree
+    TreeExpansionListener rightTreeExpansionListener = new RightTreeExpansionListener();
+
 
     // Current coordinates from mouse click
     static int currentX;
@@ -467,7 +485,7 @@ public class MainWindow extends JFrame {
         }
         // Menu bar in Mac operating system will be in the system menu bar
         if (sysProp.get("os.name").toString().toUpperCase().contains("MAC")) {
-            System.setProperty("apple.laf.useScreenMenuBar", "false");
+            System.setProperty("apple.laf.useScreenMenuBar", "true");
         }
 
         // Get values from application properties from Parameters.txt file
@@ -486,7 +504,9 @@ public class MainWindow extends JFrame {
                 properties.setProperty("PC_CHARSET", "*DEFAULT");
                 properties.setProperty("SOURCE_RECORD_PREFIX", ""); // or "Y"
                 properties.setProperty("OVERWRITE_FILE", ""); // or "Y"
-                properties.setProperty("LIBRARY_PREFIX", "");
+                properties.setProperty("LIBRARY_PATTERN", "");
+                properties.setProperty("FILE_PATTERN", "");
+                properties.setProperty("MEMBER_PATTERN", "");
                 properties.setProperty("SOURCE_RECORD_LENGTH", "100");
                 properties.setProperty("LEFT_PATH", firstLeftRootSymbol);
                 properties.setProperty("RIGHT_PATH", "/");
@@ -494,6 +514,7 @@ public class MainWindow extends JFrame {
                 properties.setProperty("MAIN_WINDOW_Y", "40");
                 properties.setProperty("COMPILE_WINDOW_X", "240");
                 properties.setProperty("COMPILE_WINDOW_Y", "40");
+                properties.setProperty("EDITOR_FONT", "Monospaced");
                 properties.setProperty("FONT_SIZE", "12");
                 properties.setProperty("CARET", "Short caret"); // or "Long caret"
                 properties.setProperty("SELECTION_MODE", "Horizontal selection"); // or "Vertical selection"
@@ -562,10 +583,20 @@ public class MainWindow extends JFrame {
             overwriteOutputFileCheckBox
                     .setSelected(properties.getProperty("OVERWRITE_FILE").isEmpty() ? false : true);
 
-            libraryPrefixTextField.setText(properties.getProperty("LIBRARY_PREFIX"));
-            libraryPrefixTextField.setPreferredSize(new Dimension(110, 20));
-            libraryPrefixTextField.setMinimumSize(new Dimension(110, 20));
-            libraryPrefixTextField.setMaximumSize(new Dimension(110, 20));
+            libraryPatternTextField.setText(properties.getProperty("LIBRARY_PATTERN"));
+            libraryPatternTextField.setPreferredSize(new Dimension(110, 20));
+            libraryPatternTextField.setMinimumSize(new Dimension(110, 20));
+            libraryPatternTextField.setMaximumSize(new Dimension(110, 20));
+
+            filePatternTextField.setText(properties.getProperty("FILE_PATTERN"));
+            filePatternTextField.setPreferredSize(new Dimension(110, 20));
+            filePatternTextField.setMinimumSize(new Dimension(110, 20));
+            filePatternTextField.setMaximumSize(new Dimension(110, 20));
+
+            memberPatternTextField.setText(properties.getProperty("MEMBER_PATTERN"));
+            memberPatternTextField.setPreferredSize(new Dimension(110, 20));
+            memberPatternTextField.setMinimumSize(new Dimension(110, 20));
+            memberPatternTextField.setMaximumSize(new Dimension(110, 20));
 
             sourceRecordLengthTextField.setText(properties.getProperty("SOURCE_RECORD_LENGTH"));
             sourceRecordLengthTextField.setPreferredSize(new Dimension(60, 20));
@@ -600,13 +631,19 @@ public class MainWindow extends JFrame {
         helpMenu = new JMenu("Help");
         helpMenuItemEN = new JMenuItem("Help English");
         helpMenuItemCZ = new JMenuItem("Nápověda česky");
+        helpMenuItemRPGIII = new JMenuItem("RPG III forms");
+        helpMenuItemRPGIV = new JMenuItem("RPG IV forms");
+        helpMenuItemCOBOL = new JMenuItem("COBOL form");
 
         helpMenu.add(helpMenuItemEN);
         helpMenu.add(helpMenuItemCZ);
+        helpMenu.add(helpMenuItemRPGIII);
+        helpMenu.add(helpMenuItemRPGIV);
+        helpMenu.add(helpMenuItemCOBOL);
         menuBar.add(helpMenu);
 
-        setJMenuBar(menuBar);
-
+        setJMenuBar(menuBar); // In macOS on the main system menu bar above, in Windows on the window menu bar
+ 
         panelTop = new JPanel();
 
         panelTopLayout = new GroupLayout(panelTop);
@@ -646,11 +683,20 @@ public class MainWindow extends JFrame {
                         .addComponent(userNameTextField)
                         .addComponent(hostLabel)
                         .addComponent(hostTextField)
-                        .addComponent(libraryPrefixLabel)
-                        .addComponent(libraryPrefixTextField)
+                        .addComponent(connectReconnectButton)
+                        .addGap(5)
+                        .addComponent(libraryPatternLabel)
+                        .addComponent(libraryPatternTextField)
+                        .addGap(5)
+                        .addComponent(filePatternLabel)
+                        .addComponent(filePatternTextField)
+                        .addGap(5)
+                        .addComponent(memberPatternLabel)
+                        .addComponent(memberPatternTextField)
+                        .addGap(5)
                         .addComponent(sourceTypeLabel)
                         .addComponent(sourceTypeComboBox)
-                        .addComponent(connectReconnectButton))
+                )
                 .addGroup(panelTopLayout.createSequentialGroup()
                         .addComponent(pcCharsetLabel)
                         .addComponent(pcCharComboBox)
@@ -664,31 +710,39 @@ public class MainWindow extends JFrame {
                         .addComponent(overwriteOutputFileCheckBox)
                         .addComponent(diskLabelWin)
                         .addComponent(disksComboBoxWin)));
-        panelTopLayout
-                .setVerticalGroup(panelTopLayout.createSequentialGroup()
-                        .addGroup(panelTopLayout.createParallelGroup(Alignment.CENTER)
-                                .addComponent(userNameLabel)
-                                .addComponent(userNameTextField)
-                                .addComponent(hostLabel)
-                                .addComponent(hostTextField)
-                                .addComponent(libraryPrefixLabel)
-                                .addComponent(libraryPrefixTextField)
-                                .addComponent(sourceTypeLabel)
-                                .addComponent(sourceTypeComboBox)
-                                .addComponent(connectReconnectButton))
-                        .addGroup(panelTopLayout.createParallelGroup(Alignment.CENTER)
-                                .addComponent(pcCharsetLabel)
-                                .addComponent(pcCharComboBox)
-                                .addComponent(ibmCcsidLabel)
-                                .addComponent(ibmCcsidComboBox)
-                                .addComponent(sourceRecordLengthLabel)
-                                .addComponent(sourceRecordLengthTextField)
-                                .addComponent(sourceRecordPrefixLabel)
-                                .addComponent(sourceRecordPrefixCheckBox)
-                                .addComponent(overwriteOutputFileLabel)
-                                .addComponent(overwriteOutputFileCheckBox)
-                                .addComponent(diskLabelWin)
-                                .addComponent(disksComboBoxWin)));
+        panelTopLayout.setVerticalGroup(panelTopLayout.createSequentialGroup()
+                .addGroup(panelTopLayout.createParallelGroup(Alignment.CENTER)
+                        .addComponent(userNameLabel)
+                        .addComponent(userNameTextField)
+                        .addComponent(hostLabel)
+                        .addComponent(hostTextField)
+                        .addComponent(connectReconnectButton)
+                        .addGap(5)
+                        .addComponent(libraryPatternLabel)
+                        .addComponent(libraryPatternTextField)
+                        .addGap(5)
+                        .addComponent(filePatternLabel)
+                        .addComponent(filePatternTextField)
+                        .addGap(5)
+                        .addComponent(memberPatternLabel)
+                        .addComponent(memberPatternTextField)
+                        .addGap(5)
+                        .addComponent(sourceTypeLabel)
+                        .addComponent(sourceTypeComboBox)
+                )
+                .addGroup(panelTopLayout.createParallelGroup(Alignment.CENTER)
+                        .addComponent(pcCharsetLabel)
+                        .addComponent(pcCharComboBox)
+                        .addComponent(ibmCcsidLabel)
+                        .addComponent(ibmCcsidComboBox)
+                        .addComponent(sourceRecordLengthLabel)
+                        .addComponent(sourceRecordLengthTextField)
+                        .addComponent(sourceRecordPrefixLabel)
+                        .addComponent(sourceRecordPrefixCheckBox)
+                        .addComponent(overwriteOutputFileLabel)
+                        .addComponent(overwriteOutputFileCheckBox)
+                        .addComponent(diskLabelWin)
+                        .addComponent(disksComboBoxWin)));
         panelTop.setLayout(panelTopLayout);
 
         panelPathLeft.add(leftPathLabel);
@@ -761,9 +815,9 @@ public class MainWindow extends JFrame {
         leftRoot = properties.getProperty("LEFT_PATH");
 
         // Set left path string as selected in the left combo box
-        leftPathComboBox.setSelectedItem(leftPathString);
+//        leftPathComboBox.setSelectedItem(leftPathString);
         // Set ALSO RIGHT PATH string in the right combo box
-        rightPathComboBox.setSelectedItem(rightPathString);
+//        rightPathComboBox.setSelectedItem(rightPathString);
 
         // ----------------------------------------------
         // Create new left side
@@ -843,6 +897,64 @@ public class MainWindow extends JFrame {
                 }
             }
         });
+        // Register HelpWindow menu item listener
+        helpMenuItemRPGIII.addActionListener(ae -> {
+            String command = ae.getActionCommand();
+            if (command.equals("RPG III forms")) {
+                if (Desktop.isDesktopSupported()) {
+                    String uri = Paths
+                            .get(System.getProperty("user.dir"), "helpfiles", "RPG_III_forms.pdf")
+                            .toString();
+                    // Replace backslashes by forward slashes in Windows
+                    uri = uri.replace('\\', '/');
+                    try {
+                        // Invoke the standard browser in the operating system
+                        Desktop.getDesktop().browse(new URI("file://" + uri));
+                    } catch (Exception exc) {
+                        exc.printStackTrace();
+                    }
+                }
+            }
+        });
+        // Register HelpWindow menu item listener
+        helpMenuItemRPGIV.addActionListener(ae -> {
+            String command = ae.getActionCommand();
+            if (command.equals("RPG IV forms")) {
+                if (Desktop.isDesktopSupported()) {
+                    String uri = Paths
+                            .get(System.getProperty("user.dir"), "helpfiles", "RPG_IV_forms.pdf")
+                            .toString();
+                    // Replace backslashes by forward slashes in Windows
+                    uri = uri.replace('\\', '/');
+                    try {
+                        // Invoke the standard browser in the operating system
+                        Desktop.getDesktop().browse(new URI("file://" + uri));
+                    } catch (Exception exc) {
+                        exc.printStackTrace();
+                    }
+                }
+            }
+        });
+        // Register HelpWindow menu item listener
+        helpMenuItemCOBOL.addActionListener(ae -> {
+            String command = ae.getActionCommand();
+            if (command.equals("COBOL form")) {
+                if (Desktop.isDesktopSupported()) {
+                    String uri = Paths
+                            .get(System.getProperty("user.dir"), "helpfiles", "COBOL_form.pdf")
+                            .toString();
+                    // Replace backslashes by forward slashes in Windows
+                    uri = uri.replace('\\', '/');
+                    try {
+                        // Invoke the standard browser in the operating system
+                        Desktop.getDesktop().browse(new URI("file://" + uri));
+                    } catch (Exception exc) {
+                        exc.printStackTrace();
+                    }
+                }
+            }
+        });
+
 
         // Set left path string as selected in the left combo box
         leftPathComboBox.setSelectedItem(leftPathString);
@@ -873,19 +985,8 @@ public class MainWindow extends JFrame {
         // ----------------------
         hostTextField.addActionListener(ae -> {
             hostTextField.setText(hostTextField.getText());
-            // Create the updated text file in directory "paramfiles"
-            try {
-                infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
-                properties.load(infile);
-                infile.close();
-                outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-                properties.setProperty("HOST", hostTextField.getText());
-                properties.store(outfile, PROP_COMMENT);
-                outfile.close();
-                refreshWindow();
-            } catch (Exception exc) {
-                exc.printStackTrace();
-            }
+            // Connect or reconnect the server
+            connectReconnectRefresh();
         });
         //
         // Source Type combo box item listener
@@ -909,19 +1010,64 @@ public class MainWindow extends JFrame {
             }
         });
         //
-        // Library prefix text field action
+        // Library pattern text field action
         // -------------------------
-        libraryPrefixTextField.addActionListener(ae -> {
-            libraryPrefixTextField.setText(libraryPrefixTextField.getText().toUpperCase());
+        libraryPatternTextField.addActionListener(ae -> {
+            libraryPatternTextField.setText(libraryPatternTextField.getText().toUpperCase());
             // Create the updated text file in directory "paramfiles"
             try {
                 infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
                 properties.load(infile);
                 infile.close();
-                properties.setProperty("LIBRARY_PREFIX", libraryPrefixTextField.getText());
+                properties.setProperty("LIBRARY_PATTERN", libraryPatternTextField.getText());
                 outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
                 properties.store(outfile, PROP_COMMENT);
                 outfile.close();
+
+                connectReconnectRefresh();
+
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+        });
+        //
+        // Source file pattern text field action
+        // ------------------------------------
+        filePatternTextField.addActionListener(ae -> {
+            filePatternTextField.setText(filePatternTextField.getText().toUpperCase());
+            // Create the updated text file in directory "paramfiles"
+            try {
+                infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+                properties.load(infile);
+                infile.close();
+                properties.setProperty("FILE_PATTERN", filePatternTextField.getText());
+                outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+
+                connectReconnectRefresh();
+
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+        });
+        //
+        // Member pattern text field action
+        // -------------------------------
+        memberPatternTextField.addActionListener(ae -> {
+            memberPatternTextField.setText(memberPatternTextField.getText().toUpperCase());
+            // Create the updated text file in directory "paramfiles"
+            try {
+                infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+                properties.load(infile);
+                infile.close();
+                properties.setProperty("MEMBER_PATTERN", memberPatternTextField.getText());
+                outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+
+                connectReconnectRefresh();
+
             } catch (Exception exc) {
                 exc.printStackTrace();
             }
@@ -956,9 +1102,7 @@ public class MainWindow extends JFrame {
         // Connect/Reconnect button action
         // -------------------------------
         connectReconnectButton.addActionListener(ae -> {
-            if (connectReconnect()) {
-                refreshWindow();
-            }
+            connectReconnectRefresh();
         });
         //
         // PC charset combo box
@@ -1021,7 +1165,7 @@ public class MainWindow extends JFrame {
             }
         });
         //
-        // Source record prefix check box - Yes = "Y", No = ""
+        // Source record pattern check box - Yes = "Y", No = ""
         // ---------------------------------------------------
         sourceRecordPrefixCheckBox.addItemListener(il -> {
             Object source = il.getSource();
@@ -1093,14 +1237,14 @@ public class MainWindow extends JFrame {
             if (copySourceTree == rightTree) {
                 row = "Wait: Copying from IBM i to PC . . .";
                 msgVector.add(row);
-                reloadRightSideAndShowMessages();
+                showMessages();
                 // Paste from IBM i to PC
                 ParallelCopy_IBMi_PC parallelCopy_IMBI_PC = new ParallelCopy_IBMi_PC(remoteServer, clipboardPathStrings, leftPathStrings[0], null, this);
                 parallelCopy_IMBI_PC.execute();
             } else if (copySourceTree == leftTree) {
                 row = "Wait: Copying from PC to PC . . .";
                 msgVector.add(row);
-                reloadLeftSideAndShowMessages(nodes);
+                showMessages(nodes);
                 // Paste from PC to PC
                 ParallelCopy_PC_PC parallelCopy_PC_PC = new ParallelCopy_PC_PC(clipboardPathStrings, leftPathStrings[0], null, this);
                 parallelCopy_PC_PC.execute();
@@ -1218,7 +1362,7 @@ public class MainWindow extends JFrame {
                 // Paste from IBM i to IBM i
                 row = "Wait: Copying from IBM i to IBM i . . .";
                 msgVector.add(row);
-                reloadRightSideAndShowMessages();
+                showMessages();
 
                 ParallelCopy_IBMi_IBMi parallelCopy_IMBI_IBMI = new ParallelCopy_IBMi_IBMi(remoteServer, clipboardPathStrings, targetPathString, null, this);
                 parallelCopy_IMBI_IBMI.execute();
@@ -1227,7 +1371,7 @@ public class MainWindow extends JFrame {
                 // Paste from PC to IBM i
                 row = "Wait: Copying from PC to IBM i . . .";
                 msgVector.add(row);
-                reloadRightSideAndShowMessages();
+                showMessages();
 
                 ParallelCopy_PC_IBMi parallelCopy_PC_IBMI = new ParallelCopy_PC_IBMi(remoteServer, clipboardPathStrings, targetPathString, null, this);
                 parallelCopy_PC_IBMI.execute();
@@ -1616,8 +1760,7 @@ public class MainWindow extends JFrame {
         // Set wait-cursor (rotating wheel?)
         //      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         // Keeps the scroll pane at the LAST MESSAGE.
-        scrollMessagePane.getVerticalScrollBar()
-                .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+        scrollMessagePane.getVerticalScrollBar().addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
 
         // *****
         // ========
@@ -1627,7 +1770,7 @@ public class MainWindow extends JFrame {
         row = "Wait: Connecting to server  " + properties.getProperty("HOST") + " . . .";
         msgVector.add(row);
         // Reload LEFT side. Do not use Right side! It would enter a loop.
-        reloadLeftSideAndShowMessages(noNodes);
+        showMessages(noNodes);
 
         // Get connection to the IBM i SERVER.
         // The third parameter (password) should NOT be specified. The user must sign on.
@@ -1638,17 +1781,28 @@ public class MainWindow extends JFrame {
         try {
             remoteServer.disconnectAllServices();
             remoteServer.connectService(AS400.FILE);
+            try {
+                infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+                properties.load(infile);
+                infile.close();
+                properties.setProperty("LIBRARY_PATTERN", libraryPatternTextField.getText());
+                properties.setProperty("FILE_PATTERN", filePatternTextField.getText());
+                properties.setProperty("MEMBER_PATTERN", memberPatternTextField.getText());
+                outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
         } catch (Exception exc) {
             exc.printStackTrace();
-            row = "Error: Connection to server  " + properties.getProperty("HOST") + "  failed.  -  "
-                    + exc.toString();
+            row = "Error: Connection to server  " + properties.getProperty("HOST") + "  failed.  -  " + exc.toString();
             msgVector.add(row);
-            reloadLeftSideAndShowMessages(noNodes);
+            showMessages(noNodes);
             // Change cursor to default
             setCursor(Cursor.getDefaultCursor());
             // Remove setting last element of messages
-            scrollMessagePane.getVerticalScrollBar()
-                    .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
             return false;
         }
         //
@@ -1657,18 +1811,37 @@ public class MainWindow extends JFrame {
         // *****
 
         // Show completion message when connection to IBM i server connected.
-        row = "Comp: Server IBM i  " + properties.getProperty("HOST") + "  was conneted to user  "
-                + remoteServer.getUserId() + ".";
+        row = "Comp: Server IBM i  " + properties.getProperty("HOST") + "  was conneted to user  " + remoteServer.getUserId() + ".";
         msgVector.add(row);
-        reloadLeftSideAndShowMessages(noNodes);
-
+        showMessages(noNodes);
         // Change cursor to default
         setCursor(Cursor.getDefaultCursor());
         // Remove setting last element of messages
-        scrollMessagePane.getVerticalScrollBar()
-                .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+        scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
         //refreshWindow();
         return true;
+    }
+
+    /**
+     *
+     */
+    protected void connectReconnectRefresh() {
+        boolean OK = connectReconnect();
+        if (OK) {
+            // Search for MEMBERS without defining a library or a file. This operation is long-lasting.
+            // ------------------
+            if ((libraryPatternTextField.getText().isEmpty() || libraryPatternTextField.getText().equals("*"))
+                    && (filePatternTextField.getText().isEmpty() || filePatternTextField.getText().equals("*"))
+                    && (!memberPatternTextField.getText().isEmpty() && !memberPatternTextField.getText().equals("*"))) {
+                int n = JOptionPane.showConfirmDialog(this, "Searching for members in ALL libraries and ALL files "
+                        + " \ntakes longer time. \nWould you still like to continue?",
+                        "Warning!", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE);
+                if (n == JOptionPane.NO_OPTION) {
+                    return;
+                }
+            }
+            refreshWindow();
+        }
     }
 
     /**
@@ -1685,7 +1858,7 @@ public class MainWindow extends JFrame {
         }
 
         // Level 1
-
+        // -------
         // Add child nodes to the current node of the tree
         // First, remove all children in order to create all new child nodes
         nodeParam.removeAllChildren();
@@ -1708,6 +1881,7 @@ public class MainWindow extends JFrame {
                         nodeParam.add(nodeLevel2);
 
                         // Level 2
+                        // -------
                         nodeLevel2.removeAllChildren();
                         if (Files.isDirectory(pathLevel2)) {
                             try {
@@ -1742,8 +1916,7 @@ public class MainWindow extends JFrame {
                                                         // Eliminate directories whose names begin with a dot
                                                         if (!pathLevel4.toString().contains(pcFileSep + ".")) {
                                                             if (pathLevel4.getParent() != null) {
-                                                                relativePathLevel4 = pathLevel4.getParent()
-                                                                        .relativize(pathLevel4);
+                                                                relativePathLevel4 = pathLevel4.getParent().relativize(pathLevel4);
                                                             } else {
                                                                 relativePathLevel4 = pathLevel4;
                                                             }
@@ -1756,9 +1929,8 @@ public class MainWindow extends JFrame {
                                                     exc.printStackTrace();
                                                     row = "Info:  " + exc.toString();
                                                     msgVector.add(row);
-                                                    // no nodes - important not to
-                                                    // recurse
-                                                    reloadLeftSideAndShowMessages(noNodes);
+                                                    // no nodes - important not to recurse
+                                                    showMessages(noNodes);
                                                 }
                                             } // End Level 3
                                         }
@@ -1773,7 +1945,7 @@ public class MainWindow extends JFrame {
                                 row = "Info:  " + exc.toString();
                                 msgVector.add(row);
                                 // no nodes - important not to recurse
-                                reloadLeftSideAndShowMessages(noNodes);
+                                showMessages(noNodes);
                             }
                         } // End Level 2
 
@@ -1784,192 +1956,9 @@ public class MainWindow extends JFrame {
                 exc.printStackTrace();
                 row = "Error:  " + exc.toString();
                 msgVector.add(row);
-                reloadLeftSideAndShowMessages(noNodes); // no nodes - important not to recurse
+                showMessages(noNodes); // no nodes - important not to recurse
             }
         } // End Level 1
-    }
-
-    /**
-     * Add child nodes to the RIGHT side node along with the path to the AS400
-     * directory given in parameters; AS400 directory can be an ordinary IFS
-     * directory or a library (.LIB), source physical file (.FILE PF-SRC), save
-     * file (.FILE SAVF).
-     *
-     * @param ifsFileParam
-     * @param nodeParam
-     */
-    protected void addAS400Nodes(IFSFile ifsFileParam, DefaultMutableTreeNode nodeParam) {
-
-        // Set wait-cursor (rotating wheel?)
-        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        scrollMessagePane.getVerticalScrollBar()
-                .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-
-        // First, remove all children in order to create all new child nodes
-        nodeParam.removeAllChildren();
-        // Add child nodes to the current node of the tree
-        try {
-            // IFSFile list of directories/files
-            ifsFiles = ifsFileParam.listFiles();
-
-            // For each directory add a new node - IFS directory or file
-            for (IFSFile ifsFile : ifsFiles) {
-                try {
-                    // Get parent file
-                    IFSFile parent = ifsFile.getParentFile();
-
-                    // Non-library system - all IFS objects
-                    // ------------------
-                    // IFS path does not start with /QSYS.LIB and it is not QSYS.LIB (without a leading slash)
-                    if (!ifsFile.toString().toUpperCase().startsWith("/QSYS.LIB")
-                            && !ifsFile.toString().toUpperCase().equals("QSYS.LIB")) {
-
-                        // Level 1
-                        nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
-                        nodeParam.add(nodeLevel2);
-
-                        // Level 2
-                        IFSFile[] ifsFiles2;
-                        nodeLevel2.removeAllChildren();
-                        if (ifsFile.isDirectory()) {
-                            try {
-                                // Get list of sub-files/sub-directories.
-                                // Some objects may be secured (e. g /QDLS directory).
-                                ifsFiles2 = ifsFile.listFiles();
-                                for (IFSFile ifsFileLevel2 : ifsFiles2) {
-                                    nodeLevel3 = new DefaultMutableTreeNode(ifsFileLevel2.getName());
-                                    nodeLevel2.add(nodeLevel3);
-
-                                    //// No other levels are necessary
-                                    //// -----------------------------
-                                    if (false) {
-                                        // Level 3
-                                        IFSFile[] ifsFiles3;
-                                        nodeLevel3.removeAllChildren();
-                                        // Get list of sub-files/sub-directories.
-                                        if (ifsFileLevel2.isDirectory()) {
-                                            ifsFiles3 = ifsFileLevel2.listFiles();
-                                            for (IFSFile ifsFileLevel3 : ifsFiles3) {
-                                                DefaultMutableTreeNode nodeLevel4 = new DefaultMutableTreeNode(ifsFileLevel3.getName());
-                                                nodeLevel3.add(nodeLevel4);
-
-                                                // Level 4
-                                                IFSFile[] ifsFiles4;
-                                                nodeLevel4.removeAllChildren();
-
-                                                if (ifsFileLevel3.isDirectory()) {
-                                                    ifsFiles4 = ifsFileLevel3.listFiles();
-                                                    for (IFSFile ifsFileLevel4 : ifsFiles4) {
-                                                        DefaultMutableTreeNode nodeLevel5 = new DefaultMutableTreeNode(ifsFileLevel4.getName());
-                                                        nodeLevel4.add(nodeLevel5);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        //// ----------------
-                                        //// Other levels end
-                                    }
-                                }
-                            } catch (Exception exc) {
-                                System.out.println(exc.getLocalizedMessage());
-                                exc.printStackTrace();
-                                row = "Info: Object  " + ifsFile.toString() + "  -  " + exc.toString();
-                                msgVector.add(row);
-                                reloadLeftSideAndShowMessages(noNodes);
-                                continue;
-                            }
-                        }
-                    } // End of IFS objects
-
-                    // System library QSYS
-                    // -------------------
-                    // System library is processed individually in order to select libraries
-                    // starting with a prefix and add them as secondary nodes
-                    if (ifsFile.toString().toUpperCase().equals("/QSYS.LIB")) {
-                        nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
-                        nodeParam.add(nodeLevel2);
-
-                        nodeLevel2.removeAllChildren();
-                        // Get list of libraries - Level 2
-                        // Select only libraries whose name starts with
-                        // a prefix (LIBRARY_PREFIX) specified in the text field
-                        IFSFile[] ifsFiles2 = ifsFile.listFiles(libraryPrefixTextField.getText().toUpperCase() + "*.LIB");
-                        for (IFSFile ifsFileLevel2 : ifsFiles2) {
-                            nodeLevel3 = new DefaultMutableTreeNode(ifsFileLevel2.getName());
-                            nodeLevel2.add(nodeLevel3);
-                        }
-                    } // Library system
-                    // --------------
-                    // Secondary nodes of Source files (level3) are added.
-                    //
-                    // Libraries (other than QSYS) - select those starting with a PREFIX.
-                    else if (ifsFile.toString().toUpperCase().startsWith("/QSYS.LIB/")
-                            && ifsFile.toString().toUpperCase().endsWith(".LIB")) {
-                        if (ifsFile.getName().startsWith(libraryPrefixTextField.getText().toUpperCase())) {
-                            nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
-                            nodeParam.add(nodeLevel2);
-
-                            // Source files are added
-                            nodeLevel2.removeAllChildren();
-                            IFSFile[] ifsFiles2 = ifsFile.listFiles("*.FILE");
-                            for (IFSFile ifsFileLevel2 : ifsFiles2) {
-                                nodeLevel3 = new DefaultMutableTreeNode(ifsFileLevel2.getName());
-                                nodeLevel2.add(nodeLevel3);
-                            }
-                        }
-                    }
-
-                    // Source Physical Files
-                    if (ifsFile.toString().contains(".LIB") && ifsFile.toString().contains(".FILE")
-                            && ifsFile.isSourcePhysicalFile()) {
-                        nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
-                        nodeParam.add(nodeLevel2);
-
-                        nodeLevel2.removeAllChildren();
-                        IFSFile[] ifsFiles2 = ifsFile.listFiles();
-                        for (IFSFile ifsFileLevel2 : ifsFiles2) {
-                            nodeLevel3 = new DefaultMutableTreeNode(ifsFileLevel2.getName());
-                            nodeLevel2.add(nodeLevel3);
-                        }
-                    }
-
-                    // Source Members (their parents are Source Physical Files).
-                    if (ifsFile.toString().contains(".LIB") && ifsFile.toString().contains(".FILE")
-                            && parent.isSourcePhysicalFile() && ifsFile.toString().endsWith(".MBR")) {
-                        nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
-                        nodeParam.add(nodeLevel2);
-                    }
-
-                    // Save Files - files (.FILE) with subtype SAVF.
-                    if (ifsFile.toString().contains(".LIB") && ifsFile.toString().contains(".FILE")
-                            && ifsFile.getSubtype().equals("SAVF")) {
-                        nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
-                        nodeParam.add(nodeLevel2);
-                    }
-
-                    // Output queues.
-                    if (ifsFile.toString().contains(".LIB") && ifsFile.toString().contains(".OUTQ")) {
-                        nodeLevel2 = new DefaultMutableTreeNode(ifsFile.getName());
-                        nodeParam.add(nodeLevel2);
-                    }
-                } catch (Exception exc) {
-                    exc.printStackTrace();
-                    row = "Info: Object  " + ifsFile.toString() + "  -  " + exc.toString();
-                    msgVector.add(row);
-                    reloadLeftSideAndShowMessages(noNodes);
-                }
-            }
-        } catch (Exception exc) {
-            exc.printStackTrace();
-            row = "Info: Object  " + ifsFile.toString() + "  -  " + exc.toString();
-            msgVector.add(row);
-            reloadLeftSideAndShowMessages(noNodes);
-        }
-        // Change cursor to default
-        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-        // Remove setting last element of messages
-        scrollMessagePane.getVerticalScrollBar()
-                .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
     }
 
     /**
@@ -2027,9 +2016,11 @@ public class MainWindow extends JFrame {
     }
 
     /**
-     * Create split panes containing the IBM i file tree and table on the right
-     * side of the window; IBM i files are objects and differ conceptually from
-     * PC files, therefore they are processed differently.
+     * Create the IBM i file tree on the right side of the window;
+     * IBM i files are objects and differ conceptually from PC files,
+     * therefore they are processed differently.
+     *
+     * @param currentRightRoot
      */
     protected void createNewRightSide(String currentRightRoot) {
         // Set wait-cursor (rotating wheel?)
@@ -2058,10 +2049,6 @@ public class MainWindow extends JFrame {
         rightTreeMouseListener = new RightTreeMouseAdapter();
         rightTree.addMouseListener(rightTreeMouseListener);
 
-        // Tree expansion listener for left tree
-        TreeExpansionListener rightTreeExpansionListener = new RightTreeExpansionListener();
-        rightTree.addTreeExpansionListener(rightTreeExpansionListener);
-
         rightTree.setDragEnabled(true);
         rightTree.setDropMode(DropMode.USE_SELECTION);
         rightTree.setTransferHandler(new RightTreeTransferHandler(this));
@@ -2074,13 +2061,15 @@ public class MainWindow extends JFrame {
         rightTree.setShowsRootHandles(true);
         rightTree.setSelectionRow(0);
 
+        rightPathString = correctRightPathString(rightPathString);
+
         // Right root must start with a slash
         if (!rightPathString.startsWith("/")) {
             // Show error message when the path string does not start with a slash.
             row = "Error: Right path string   " + rightPathString + "   does not start with a slash. "
                     + "Correct the path string and try again.";
             msgVector.add(row);
-            reloadLeftSideAndShowMessages(noNodes);
+            showMessages(noNodes);
 
             // Change cursor to default
             setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -2090,41 +2079,25 @@ public class MainWindow extends JFrame {
             return;
         }
 
-        // Create an object of IFSFile from the path string for adding nodes
-        ifsFile = new IFSFile(remoteServer, rightPathString);
+        if (remoteServer == null) {
+            row = "Error: Connection to server  " + properties.getProperty("HOST") + "  failed!!!!!!.";
+            msgVector.add(row);
+            showMessages(noNodes);
+            // Change cursor to default
+            setCursor(Cursor.getDefaultCursor());
+            // Remove setting last element of messages
+            scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+        } else {
 
-        // Add IFS nodes for the right tree
-        addAS400Nodes(ifsFile, rightTopNode);
-        rightTree.expandRow(0);
+            // Create an object of IFSFile from the path string for adding nodes
+            ifsFile = new IFSFile(remoteServer, rightPathString);
 
-        // Place the right tree in scroll pane
-        scrollPaneRight.setViewportView(rightTree);
-        splitPaneInner.setRightComponent(panelRight);
-
-        // Action listener for Library Prefix text field
-        libraryPrefixTextField.addActionListener(al -> {
-            // Translate text to upper case letters (object names are always in upper case)
-            libraryPrefixTextField.setText(libraryPrefixTextField.getText().toUpperCase());
-        });
-
-        // Set actual user name to the text field
-        userNameTextField.setText(remoteServer.getUserId());
-        properties.setProperty("USERNAME", remoteServer.getUserId());
-
-        // Create the updated text file in directory "paramfiles"
-        try {
-            outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-            properties.store(outfile, PROP_COMMENT);
-            outfile.close();
-        } catch (Exception exc) {
-            exc.printStackTrace();
+            // Add IFS nodes for the right tree in parallel background process
+            // -------------
+            AddAS400Nodes an = new AddAS400Nodes(ifsFile, rightTopNode, this);
+            an.execute();
+            // No statements may be here!
         }
-
-        // Change cursor to default
-        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-        // Remove setting last element of messages
-        scrollMessagePane.getVerticalScrollBar()
-                .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
     }
 
     /**
@@ -2137,7 +2110,7 @@ public class MainWindow extends JFrame {
     protected String correctLeftPathString(String pathString) {
 
         if (pathString.lastIndexOf(pcFileSep) > 0 && !pathString.equals(firstLeftRootSymbol)) {
-            // Get path prefix (parent)
+            // Get path pattern (parent)
             pathString = pathString.substring(0, pathString.lastIndexOf(pcFileSep));
         }
         return pathString;
@@ -2151,7 +2124,10 @@ public class MainWindow extends JFrame {
      * @return
      */
     protected String correctRightPathString(String rightString) {
-
+        // Right path may not be empty
+        if (rightString.isEmpty()) {
+            rightString = "/";
+        }
         // Remove ending slash from non-root right path
         if (!rightString.equals("/") && rightString.endsWith("/")) {
             rightString = rightString.substring(0, rightString.lastIndexOf("/"));
@@ -2160,8 +2136,7 @@ public class MainWindow extends JFrame {
     }
 
     /**
-     * Refresh data in the window according to input fields in the top panel, and
-     * path panels.
+     * Refresh data in the window according to input fields in the top panel, and path panels.
      */
     @SuppressWarnings({"UseSpecificCatch", "CallToPrintStackTrace"})
     protected void refreshWindow() {
@@ -2207,9 +2182,17 @@ public class MainWindow extends JFrame {
         }
         sourceRecordLengthTextField.setText(srcRecLen);
         properties.setProperty("SOURCE_RECORD_LENGTH", srcRecLen);
+
         properties.setProperty("SOURCE_TYPE", sourceType);
-        libraryPrefixTextField.setText(libraryPrefixTextField.getText().toUpperCase());
-        properties.setProperty("LIBRARY_PREFIX", libraryPrefixTextField.getText());
+
+        libraryPatternTextField.setText(libraryPatternTextField.getText().toUpperCase());
+        properties.setProperty("LIBRARY_PATTERN", libraryPatternTextField.getText());
+
+        filePatternTextField.setText(filePatternTextField.getText().toUpperCase());
+        properties.setProperty("FILE_PATTERN", filePatternTextField.getText());
+
+        memberPatternTextField.setText(memberPatternTextField.getText().toUpperCase());
+        properties.setProperty("MEMBER_PATTERN", memberPatternTextField.getText());
 
         // Create the updated text file in directory "paramfiles"
         try {
@@ -2222,16 +2205,15 @@ public class MainWindow extends JFrame {
 
         // Create right side of the window split panes (tree and table of IBM i).
         // The left side was created before.
-        rightRoot = properties.getProperty("RIGHT_PATH");
+        // rightRoot = properties.getProperty("RIGHT_PATH");
+        rightRoot = (String) rightPathComboBox.getSelectedItem();
 
-        // Register Action listener for RIGHT ComboBox which reacts on text change
-        // in its input field
+        // Register Action listener for RIGHT ComboBox which reacts on text change in its input field
         rightPathComboBox.addActionListener(new RightPathActionListener());
 
         createNewRightSide(rightRoot);
 
-        // Unregister Action listener for RIGHT ComboBox 
-        // which reacts on text change in its input field
+        // Unregister Action listener for RIGHT ComboBox which reacts on text change in its input field
         rightPathComboBox.removeActionListener(new RightPathActionListener());
 
     }
@@ -2241,7 +2223,7 @@ public class MainWindow extends JFrame {
      *
      * @param addChildNodes
      */
-    protected void reloadLeftSideAndShowMessages(boolean addChildNodes) {
+    protected void showMessages(boolean addChildNodes) {
         scrollMessagePane.getVerticalScrollBar()
                 .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
 
@@ -2279,7 +2261,8 @@ public class MainWindow extends JFrame {
     /**
      * Reload node structure in the right side of the window and show messages.
      */
-    protected void reloadRightSideAndShowMessages() {
+
+    protected void showMessages() {
         scrollMessagePane.getVerticalScrollBar()
                 .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
 
@@ -2299,18 +2282,13 @@ public class MainWindow extends JFrame {
      * Reload node structure in the right side of the window.
      */
     protected void reloadRightSide() {
+        System.out.println("reloadRightSide");
 
         ifsFile = new IFSFile(remoteServer, rightPathString);
 
-        if (rightNode != null) {
-            // Add children to the node
-            addAS400Nodes(ifsFile, rightNode);
-        }
-
-        // Note that the structure of the node (children) changed
-        rightTreeModel.nodeStructureChanged(rightNode);
-        // Reload that node only (the other nodes remain unchanged)
-        rightTreeModel.reload(rightNode);
+        // Add IFS nodes (children) for the right tree in parallel background process
+        AddAS400Nodes an = new AddAS400Nodes(ifsFile, rightNode, this);
+        an.execute();
     }
 
     /**
@@ -2373,13 +2351,13 @@ public class MainWindow extends JFrame {
             row = "Comp: PC file  " + newFileName + "  was inserted to directory  " + targetPathString
                     + ".";
             msgVector.add(row);
-            reloadLeftSideAndShowMessages(nodes);
+            showMessages(nodes);
         } catch (Exception exc) {
             exc.printStackTrace();
             row = "Error: PC file  " + newFileName + "  was NOT inserted to directory  "
                     + targetPathString + ".  -  " + exc.toString();
             msgVector.add(row);
-            reloadLeftSideAndShowMessages(nodes);
+            showMessages(nodes);
         }
         scrollMessagePane.getVerticalScrollBar()
                 .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
@@ -2516,7 +2494,7 @@ public class MainWindow extends JFrame {
 
             // Change tree root
             rightRoot = rightPathString;
-
+            System.out.println("RightTreeExpansionListener");
             // Reload children of the node
             reloadRightSide();
         }
@@ -2617,7 +2595,7 @@ public class MainWindow extends JFrame {
                 // Single PC file
                 leftTreePopupMenu.removeAll();
                 leftTreePopupMenu.add(displayPcFile);
-                if (!leftPathString.endsWith(".savf")) {
+                if (!leftPathString.endsWith(".savf") || mouseEvent.getClickCount() == 2) {
                     // PC files regarded as save files are not allowed to be edited.
                     // This prevents unwanted editing.
                     leftTreePopupMenu.add(editPcFile);
@@ -2627,6 +2605,19 @@ public class MainWindow extends JFrame {
                 leftTreePopupMenu.add(pasteToLeft);
                 leftTreePopupMenu.add("");
                 leftTreePopupMenu.add(movePcObjectToTrash);
+            }
+            // On double click run "editPcFile"
+            if (mouseEvent.getClickCount() == 2
+                    && (mouseEvent.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK) == MouseEvent.BUTTON1_DOWN_MASK) {
+                clipboardPathStrings = leftPathStrings;
+                for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
+                    sourcePathString = clipboardPathStrings[idx];
+                    // Get values from properties and set variables and text fields
+                    // "true" stands for "IFS file"
+                    EditFile edtf = new EditFile(remoteServer, MainWindow.this, leftPathString, "rewritePcFile");
+                    // "true" stands for "edit"
+                    edtf.displayPcFile(true);
+                }
             }
 
             // On right click pop up the menu
@@ -2683,7 +2674,17 @@ public class MainWindow extends JFrame {
             rightPathString = getStringFromRightPath(rightSelectedPath);
             // Remove trailing file separator from the path string
             rightPathString = correctRightPathString(rightPathString);
-
+            IFSFile ifsFile = new IFSFile(remoteServer, rightPathString);
+            try {
+                fileName = ifsFile.getName();
+                if (rightPathString.endsWith(".FILE") && ifsFile.getSubtype().equals("SAVF")) {
+                    String bareFileName = fileName.substring(0, fileName.indexOf(".FILE"));
+                    String saveFileName = bareFileName + ".SAVF";
+                    rightPathString = saveFileName;
+                }
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
             // Change right root to selected path
             rightRoot = rightPathString;
 
@@ -2712,8 +2713,7 @@ public class MainWindow extends JFrame {
                 rightPathComboBox.addItem(pathStrings[idx]);
             }
 
-            // Set row number to the map (path string, row number) for possible
-            // later scrolling to the path node
+            // Set row number to the map (path string, row number) for possible later scrolling to the path node
             rightTreeMap.put(rightPathString, rightRow);
 
             try {
@@ -2773,9 +2773,23 @@ public class MainWindow extends JFrame {
                     rightTreePopupMenu.add("");
 
                     rightTreePopupMenu.add(deleteSourceMember);
+
+                    // On double click run "editSourceMember"
+                    // Source member
+                    if (rightPathString.contains(".FILE") && rightPathString.endsWith(".MBR")
+                            && mouseEvent.getClickCount() == 2
+                            && (mouseEvent.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK) == MouseEvent.BUTTON1_DOWN_MASK) {
+                        scrollMessagePane.getVerticalScrollBar()
+                                .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+                        // "false" stands for "not IFS file"
+                        EditFile edtf = new EditFile(remoteServer, MainWindow.this, rightPathString, "rewriteSourceMember");
+                        // "true" stands for "edit"
+                        edtf.displaySourceMember(true);
+                    }
+
                 } //
                 // Save file
-                else if (rightPathString.endsWith(".FILE") && ifsFile.getSubtype().equals("SAVF")) {
+                else if (rightPathString.startsWith("/QSYS.LIB") && rightPathString.endsWith(".SAVF")) {
                     rightTreePopupMenu.removeAll();
                     rightTreePopupMenu.add(copyFromRight);
                     rightTreePopupMenu.add(pasteToRight);
@@ -2793,8 +2807,7 @@ public class MainWindow extends JFrame {
                     rightTreePopupMenu.removeAll();
                     rightTreePopupMenu.add(displayIfsFile);
                     if (!rightPathString.endsWith(".savf")) {
-                        // IFS files regarded as save files are not allowed to be
-                        // edited.
+                        // IFS files regarded as save files are not allowed to be edited.
                         // This is a prevention from unwanted editing.
                         rightTreePopupMenu.add(editIfsFile);
                     }
@@ -2817,6 +2830,20 @@ public class MainWindow extends JFrame {
                             || rightPathString.toUpperCase().endsWith(".SQLRPGLE")) {
                         rightTreePopupMenu.add(compileIfsFile);
                     }
+
+                    // On double click run "editIfsFile" 
+                    // Ordinary IFS file, not Save File
+                    if (!rightPathString.startsWith("/QSYS.LIB") && !rightPathString.endsWith(".savf")
+                            && mouseEvent.getClickCount() == 2
+                            && (mouseEvent.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK) == MouseEvent.BUTTON1_DOWN_MASK) {
+                        scrollMessagePane.getVerticalScrollBar()
+                                .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+                        // "false" stands for "not IFS file"
+                        EditFile edtf = new EditFile(remoteServer, MainWindow.this, rightPathString, "rewriteIfsFile");
+                        // "true" stands for "edit"
+                        edtf.displayIfsFile(true);
+                    }
+
                     rightTreePopupMenu.add("");
                     rightTreePopupMenu.add(deleteIfsObject);
                 }
@@ -2922,6 +2949,7 @@ public class MainWindow extends JFrame {
             // Create new right side from the selected rightPathString
             createNewRightSide(rightPathString);
         }
+
     }
 
     /**
@@ -2991,7 +3019,7 @@ public class MainWindow extends JFrame {
 
                 row = "Wait: Copying from PC to PC . . .";
                 msgVector.add(row);
-                reloadRightSideAndShowMessages();
+                showMessages();
 
                 // Set clipboard path strings for paste operation
                 clipboardPathStrings = leftPathStrings;
@@ -3010,7 +3038,7 @@ public class MainWindow extends JFrame {
 
                 row = "Wait: Copying from IBM i to PC . . .";
                 msgVector.add(row);
-                reloadRightSideAndShowMessages();
+                showMessages();
 
                 // Set clipboard path strings for paste operation
                 clipboardPathStrings = rightPathStrings;
@@ -3048,6 +3076,8 @@ public class MainWindow extends JFrame {
         leftTree.expandRow(leftRow);
         // Note that the children were added
         leftTreeModel.nodeStructureChanged(targetNode);
+
+
     }
 
     /**
@@ -3107,7 +3137,7 @@ public class MainWindow extends JFrame {
 
                 row = "Wait: Copying from PC to IBM i . . .";
                 msgVector.add(row);
-                reloadRightSideAndShowMessages();
+                showMessages();
 
                 // Set clipboard path strings for paste operation
                 clipboardPathStrings = leftPathStrings;
@@ -3126,7 +3156,7 @@ public class MainWindow extends JFrame {
 
                 row = "Wait: Copying from IBM i to IBM i . . .";
                 msgVector.add(row);
-                reloadRightSideAndShowMessages();
+                showMessages();
 
                 // Set clipboard path strings for paste operation
                 clipboardPathStrings = rightPathStrings;
@@ -3154,8 +3184,10 @@ public class MainWindow extends JFrame {
         targetNode = (DefaultMutableTreeNode) rightTree.getLastSelectedPathComponent();
         // Add target node for inserted children
         if (targetNode != null) {
-            // Add newly received children to the node
-            addAS400Nodes(targetPath, targetNode);
+            System.out.println("expandRightTreeNode");
+            // Add IFS nodes (children) for the right tree in parallel background process
+            AddAS400Nodes an = new AddAS400Nodes(targetPath, targetNode, this);
+            an.execute();
         }
 
         // Get coordinates of target node

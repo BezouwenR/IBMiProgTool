@@ -80,14 +80,11 @@ public final class DisplayFile extends JFrame {
     final Color VERY_LIGHT_GREEN = Color.getHSBColor(0.52f, 0.020f, 0.99f);
     final Color VERY_LIGHT_PINK = Color.getHSBColor(0.025f, 0.008f, 0.99f);
 
-
     final Color WARNING_COLOR = new Color(255, 200, 200);
     final Color VERY_LIGHT_GRAY = Color.getHSBColor(0.50f, 0.01f, 0.90f);
 
-    Highlighter.HighlightPainter currentPainter = new DefaultHighlighter.DefaultHighlightPainter(
-            Color.ORANGE);
-    Highlighter.HighlightPainter highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(
-            Color.YELLOW);
+    Highlighter.HighlightPainter currentPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.ORANGE);
+    Highlighter.HighlightPainter highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
 
     JLabel characterSetLabel = new JLabel();
 
@@ -206,11 +203,11 @@ public final class DisplayFile extends JFrame {
         Dimension screenSize = kit.getScreenSize();
         screenWidth = screenSize.width;
         screenHeight = screenSize.height;
-        windowWidth = 980;
+        windowWidth = 920;
         windowHeight = screenHeight;
 
         windowX = screenWidth / 2 - windowWidth / 2;
-        windowY = 10;
+        windowY = 0;
 
         prevButton.setPreferredSize(new Dimension(40, 20));
         prevButton.setMinimumSize(new Dimension(40, 20));
@@ -231,11 +228,10 @@ public final class DisplayFile extends JFrame {
         searchField.getDocument().addDocumentListener(highlightHandler);
 
         // Set action listener for buttons and check boxes
-        Arrays.asList(nextButton, prevButton, checkCaseBox).stream()
-                .map((abstractButton) -> {
-                    abstractButton.setFocusable(false);
-                    return abstractButton;
-                }).forEachOrdered((abstractButton) -> {
+        Arrays.asList(nextButton, prevButton, checkCaseBox).stream().map((abstractButton) -> {
+            abstractButton.setFocusable(false);
+            return abstractButton;
+        }).forEachOrdered((abstractButton) -> {
             abstractButton.addActionListener(highlightHandler);
         });
 
@@ -245,34 +241,18 @@ public final class DisplayFile extends JFrame {
         fieldLayer = new JLayer<>(searchField, layerUI);
 
         globalPanel = new JPanel();
+        globalPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
         // Lay out components in globalPanel
         globalPanelLayout = new GroupLayout(globalPanel);
-        globalPanelLayout.setAutoCreateGaps(true);
-        globalPanelLayout.setAutoCreateContainerGaps(true);
-        GroupLayout.SequentialGroup sg1 = globalPanelLayout.createSequentialGroup()
-                .addComponent(characterSetLabel);
-
-        GroupLayout.SequentialGroup sg2 = globalPanelLayout.createSequentialGroup()
-                .addComponent(searchLabel).addComponent(fieldLayer).addComponent(prevButton)
-                .addComponent(nextButton).addComponent(checkCaseBox).addComponent(fontSizeLabel)
-                .addComponent(fontSizeField);
-
-        globalPanelLayout.setHorizontalGroup(globalPanelLayout
-                .createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(sg1).addGroup(sg2)
-                .addGroup(globalPanelLayout.createSequentialGroup().addComponent(scrollPane)));
-
-        GroupLayout.ParallelGroup pg1 = globalPanelLayout
-                .createParallelGroup(GroupLayout.Alignment.CENTER).addComponent(characterSetLabel);
-
-        GroupLayout.ParallelGroup pg2 = globalPanelLayout
-                .createParallelGroup(GroupLayout.Alignment.CENTER).addComponent(searchLabel)
-                .addComponent(fieldLayer).addComponent(prevButton).addComponent(nextButton)
-                .addComponent(checkCaseBox).addComponent(fontSizeLabel).addComponent(fontSizeField);
-
-        globalPanelLayout
-                .setVerticalGroup(globalPanelLayout.createSequentialGroup().addGroup(pg1).addGroup(pg2)
-                        .addGroup(globalPanelLayout.createParallelGroup().addComponent(scrollPane)));
-
+        globalPanelLayout.setAutoCreateGaps(false);
+        globalPanelLayout.setAutoCreateContainerGaps(false);
+        GroupLayout.SequentialGroup sg
+                = globalPanelLayout.createSequentialGroup().addComponent(searchLabel).addComponent(fieldLayer).addComponent(prevButton).addComponent(nextButton).addComponent(checkCaseBox).addComponent(fontSizeLabel).addComponent(fontSizeField).addComponent(characterSetLabel);
+        GroupLayout.ParallelGroup pg
+                = globalPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER).addComponent(searchLabel).addComponent(fieldLayer).addComponent(prevButton).addComponent(nextButton).addComponent(checkCaseBox).addComponent(fontSizeLabel).addComponent(fontSizeField).addComponent(characterSetLabel);
+        globalPanelLayout.setHorizontalGroup(globalPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(sg).addGroup(globalPanelLayout.createSequentialGroup().addComponent(scrollPane)));
+        globalPanelLayout.setVerticalGroup(globalPanelLayout.createSequentialGroup().addGroup(pg).addGroup(globalPanelLayout.createParallelGroup().addComponent(scrollPane)));
         globalPanel.setLayout(globalPanelLayout);
         globalPanel.setBackground(VERY_LIGHT_GRAY);
 
@@ -280,13 +260,11 @@ public final class DisplayFile extends JFrame {
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
         // Enable processing of function keyCtrl + Arrow UP = Find next hit upwards
-        searchField.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_UP,
-                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "arrowUp");
+        searchField.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "arrowUp");
         searchField.getActionMap().put("arrowUp", new ArrowUp());
 
-        // Enable processing of function key Ctrl + Arrow DOWN =  Find next hit downwards
-        searchField.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN,
-                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "arrowDown");
+        // Enable processing of function key Ctrl + Arrow DOWN = Find next hit downwards
+        searchField.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "arrowDown");
         searchField.getActionMap().put("arrowDown", new ArrowDown());
 
         // "Font size" field listener
@@ -355,8 +333,7 @@ public final class DisplayFile extends JFrame {
             byte[] inputBuffer = new byte[100000];
             byte[] workBuffer = new byte[100000];
 
-            try (IFSFileInputStream inputStream = new IFSFileInputStream(remoteServer,
-                    ifsFilePathString)) {
+            try (IFSFileInputStream inputStream = new IFSFileInputStream(remoteServer, ifsFilePathString)) {
                 int bytesRead = inputStream.read(inputBuffer);
                 while (bytesRead != -1) {
                     for (int idx = 0; idx < bytesRead; idx++) {
@@ -386,17 +363,16 @@ public final class DisplayFile extends JFrame {
                 setVisible(true);
                 row = "Info: IFS file  " + ifsFilePathString + "  has CCSID  " + attributeCCSID + ".";
                 mainWindow.msgVector.add(row);
-                mainWindow.reloadLeftSideAndShowMessages(nodes);
+                mainWindow.showMessages(nodes);
             }
         } catch (Exception exc) {
             exc.printStackTrace();
             row = "Error: " + exc.toString();
             mainWindow.msgVector.add(row);
-            mainWindow.reloadLeftSideAndShowMessages(nodes);
+            mainWindow.showMessages(nodes);
         }
         // Remove message scroll listener (cancel scrolling to the last message)
-        mainWindow.scrollMessagePane.getVerticalScrollBar()
-                .removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
+        mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
     }
 
     /**
@@ -409,7 +385,7 @@ public final class DisplayFile extends JFrame {
         characterSetLabel.setText("CCSID " + ibmCcsid + " was used for display.");
 
         // Copy text area from parameter to instance text area
-        textArea.append(aTextArea.getText());
+        textArea.setText(aTextArea.getText());
 
         scrollPane.setBackground(VERY_LIGHT_GREEN);
         textArea.setBackground(VERY_LIGHT_GREEN);
@@ -442,8 +418,13 @@ public final class DisplayFile extends JFrame {
                 List<String> list = Files.readAllLines(filePath, Charset.forName(pcCharset));
                 if (list != null) {
                     // Concatenate all text lines from the list obtained from the file
-                    String text = list.stream().reduce("", (a, b) -> a + b + NEW_LINE);
-                    textArea.setText(text);
+                    //String text = list.stream().reduce("", (a, b) -> a + b + NEW_LINE);
+                    //textArea.setText(text);
+                    Object[] obj = (Object[]) list.stream().toArray();
+                    for (int idx = 0; idx < obj.length; idx++) {
+                        String text = obj[idx].toString();
+                        textArea.append(text + NEW_LINE);
+                    }
                 }
             }
 
@@ -457,30 +438,31 @@ public final class DisplayFile extends JFrame {
 
             // Display the window.
             setVisible(true);
-            row = "Info: PC file  " + pcPathString + "  is displayed using character set  " + pcCharset
+            row = "Info: PC file  " + pcPathString
+                    + "  is displayed using character set  "
+                    + pcCharset
                     + "  from the application parameter.";
             mainWindow.msgVector.add(row);
-            mainWindow.reloadLeftSideAndShowMessages(nodes);
+            mainWindow.showMessages(nodes);
             // Remove message scroll listener (cancel scrolling to the last
             // message)
-            mainWindow.scrollMessagePane.getVerticalScrollBar()
-                    .removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
+            mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
         } catch (Exception exc) {
             exc.printStackTrace();
             row = "Error: Displaying PC file:  " + pcPathString
-                    + "  is not a text file or has an unsuitable character set.  -  " + exc.toString();
+                    + "  is not a text file or has an unsuitable character set.  -  "
+                    + exc.toString();
             mainWindow.msgVector.add(row);
-            mainWindow.reloadLeftSideAndShowMessages(nodes); // do not add child nodes
+            mainWindow.showMessages(nodes); // do not add child nodes
             // Remove message scroll listener (cancel scrolling to the last message)
-            mainWindow.scrollMessagePane.getVerticalScrollBar()
-                    .removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
+            //mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
             return;
         }
     }
 
     /**
-     * Display source member using its CCSID attribute; Only data part of the
-     * source record is translated (to String - UTF-16).
+     * Display source member using its CCSID attribute; Only data part of the source record is translated (to String -
+     * UTF-16).
      *
      * @param remoteServer
      * @param as400PathString
@@ -491,8 +473,7 @@ public final class DisplayFile extends JFrame {
 
         IFSFile ifsFile = new IFSFile(remoteServer, as400PathString);
         // Create an AS400FileRecordDescription object that represents the file
-        AS400FileRecordDescription inRecDesc = new AS400FileRecordDescription(remoteServer,
-                as400PathString);
+        AS400FileRecordDescription inRecDesc = new AS400FileRecordDescription(remoteServer, as400PathString);
 
         // Set editability
         textArea.setEditable(false);
@@ -561,16 +542,15 @@ public final class DisplayFile extends JFrame {
             setVisible(true);
             row = "Info: Source member  " + as400PathString + "  has CCSID  " + ccsidAttribute + ".";
             mainWindow.msgVector.add(row);
-            mainWindow.reloadLeftSideAndShowMessages(nodes);
+            mainWindow.showMessages(nodes);
         } catch (Exception exc) {
             exc.printStackTrace();
             row = "Error: " + exc.toString();
             mainWindow.msgVector.add(row);
-            mainWindow.reloadLeftSideAndShowMessages(nodes);
+            mainWindow.showMessages(nodes);
         }
         // Remove message scroll listener (cancel scrolling to the last message)
-        mainWindow.scrollMessagePane.getVerticalScrollBar()
-                .removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
+        mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
     }
 
     /**
@@ -648,6 +628,7 @@ public final class DisplayFile extends JFrame {
                     pos = end;
                 }
             }
+
             JLabel label = layerUI.hint;
             Highlighter.Highlight[] array = highlighter.getHighlights();
             int hits = array.length;
@@ -656,7 +637,7 @@ public final class DisplayFile extends JFrame {
                 label.setOpaque(true);
             } else {
                 current = (current + hits) % hits;
-                label.setOpaque(false);
+                // label.setOpaque(false);
                 Highlighter.Highlight hh = highlighter.getHighlights()[current];
                 highlighter.removeHighlight(hh);
                 highlighter.addHighlight(hh.getStartOffset(), hh.getEndOffset(), currentPainter);
@@ -704,9 +685,8 @@ public final class DisplayFile extends JFrame {
     }
 
     /**
-     * Set indicator N/M that overlays the search field and is right adjusted N -
-     * the sequence number of the text that is just highlighted, M - how many
-     * matches were found.
+     * Set indicator N/M that overlays the search field and is right adjusted N - the sequence number of the text that is
+     * just highlighted, M - how many matches were found.
      */
     class PlaceholderLayerUI extends LayerUI<JTextComponent> {
 
@@ -716,9 +696,9 @@ public final class DisplayFile extends JFrame {
                 super.updateUI();
                 // setForeground(UIManager.getColor("TextField.inactiveForeground"));
 
-                // blue little saturated dim (gray)            
+                // blue little saturated dim (gray)
                 setForeground(Color.getHSBColor(0.60f, 0.2f, 0.5f));
-                // red little saturated bright            
+                // red little saturated bright
                 setBackground(Color.getHSBColor(0.00f, 0.2f, 0.98f));
             }
         };
