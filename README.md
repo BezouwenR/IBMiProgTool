@@ -22,6 +22,12 @@ The application has been created and tested in systems macOS and Windows 10. Rem
 
 Start the application by double click on the IBMiProgTool.jar file.
 
+Version 02.01:
+
+- Added pattern matching for libraries, files and members.
+- Expanding tree nodes runs in parallel.
+- Rectangular selection of text in the editor was added with shift, Copy, Cut, Paste and Delete.
+
 - - - - - - - - - - 
 
 Tento projekt se neinstaluje, je okamžitě k použití jako Java aplikace v adresáři projektu. Aplikace vyžaduje Javu SE 8 instalovanou v PC.
@@ -39,4 +45,10 @@ Aplikační programy jsou napsány v jazyku Java a vyžadují verzi Java SE 8. S
 Aplikace byla vytvořena a testována v systémech macOS a Windows 10. Bylo použito spojení se systémem IBM i verze 7.3.
 
 Aplikace se spouští poklepáním na soubor IBMiProgTool.jar.
+
+Verze 02.01:
+
+- Přidán výběr podle vzorku pro knihovny, soubory a členy.
+- Rozevírání uzlů stromu běží paralelně.
+- Přidán výběr obdélníkové oblasti textu v editoru s posuvem a operacemi Copy, Cut, Paste a Delete.
 
