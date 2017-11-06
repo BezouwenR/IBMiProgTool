@@ -1,8 +1,8 @@
 #Copy files between IBM i and PC, edit and compile.
-#Mon Nov 06 10:28:10 CET 2017
-OVERWRITE_FILE=Y
+#Mon Nov 06 11:50:46 CET 2017
+OVERWRITE_FILE=
 CARET=Short caret
-PC_CHARSET=UTF-8
+PC_CHARSET=*DEFAULT
 RIGHT_PATH=/QSYS.LIB/VZRPG72.LIB/QRPGLESRC.FILE/ONEXIT1.MBR
 LEFT_PATH=/Users/vzupka/Moje dokumenty/Zdroje z iASSIST
 AUTHOR=© Vladimír Župka, 2017 

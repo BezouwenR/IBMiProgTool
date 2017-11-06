@@ -323,8 +323,6 @@ public final class EditFile extends JFrame {
         this.filePathString = filePathString;
         this.methodName = methodName;
         
-        this.operatingSystem = operatingSystem;
-
         Properties sysProp = System.getProperties();
         if (sysProp.get("os.name").toString().toUpperCase().contains("MAC")) {
             operatingSystem = "MAC";

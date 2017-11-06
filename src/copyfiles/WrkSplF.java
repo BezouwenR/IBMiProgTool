@@ -1598,7 +1598,6 @@ public class WrkSplF extends JFrame {
             } //
             // Show context menu on right click
             else if (mouseEvent.getButton() == MouseEvent.BUTTON3) {
-                //if (leftButtonClicked) {
                 spoolPopupMenu.removeAll();
                 spoolPopupMenu.add(displaySpooledFiles);
                 spoolPopupMenu.add(copySpooledFile);
@@ -1606,8 +1605,6 @@ public class WrkSplF extends JFrame {
                 spoolPopupMenu.add(deleteSpooledFile);
                 // Show the context menu
                 spoolPopupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
-                //leftButtonClicked = false;
-                //}
             }
         }
     }
