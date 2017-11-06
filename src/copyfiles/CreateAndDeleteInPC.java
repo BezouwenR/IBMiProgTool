@@ -169,7 +169,7 @@ public class CreateAndDeleteInPC {
 
                // PARENT NODE of deleted node will be reloaded  and the deleted node will disappear from the tree.
                // Get parent node
-               mainWindow.leftNode = (DefaultMutableTreeNode) mainWindow.leftNode.getParent();
+               //mainWindow.leftNode = (DefaultMutableTreeNode) mainWindow.leftNode.getParent();
                mainWindow.showMessages(nodes);
                
                // Remove message scroll listener (cancel scrolling to the last message)

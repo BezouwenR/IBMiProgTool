@@ -84,7 +84,7 @@ public class Copy_IBMi_PC {
 
         // File separator for Windows (\) and unix (/)
         Properties sysProp = System.getProperties();
-        if (sysProp.get("os.name").toString().contains("Windows")) {
+        if (sysProp.get("os.name").toString().toUpperCase().contains("WINDOWS")) {
             pcFileSep = "\\";
         } else {
             pcFileSep = "/";

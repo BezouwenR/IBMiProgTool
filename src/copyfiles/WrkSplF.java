@@ -515,36 +515,8 @@ public class WrkSplF extends JFrame {
         // Display spooled files menu item (one or more rows can be selected)
         // -------------------------------
         displaySpooledFiles.addActionListener((ActionEvent ae) -> {
-            try {
-                BufferedReader infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
-                properties.load(infile);
-                infile.close();
-                ibmCcsid = properties.getProperty("IBM_CCSID");
-                try {
-                    ibmCcsidInt = Integer.parseInt(ibmCcsid);
-                } catch (Exception exc) {
-                    // If ibmCcsid is not numeric, take 65535
-                    exc.printStackTrace();
-                    ibmCcsid = "65535";
-                    ibmCcsidInt = 65535;
-                }
-            } catch (Exception exc) {
-                exc.printStackTrace();
-            }
-
-            // Display selected spooled files.
-            for (int idx = 0; idx < selIndexArrList.size(); idx++) {
-                rowIndex = selIndexArrList.get(idx);
-                // Read input stream and convert spooled file into text
-                String returnText = convertSpooledFileCall(rowIndex);
-                // If no error in character set is recognized - display the spooled file in a window
-                if (!returnText.equals("ERROR")) {
-                    // Display information in the text area obtained from the text file containing spooled file text.
-                    DisplayFile dpf = new DisplayFile(mainWindow);
-                    dpf.displayTextArea(spoolTextArea, ibmCcsid);
-                }
-            }
-            createSpoolTable();
+            // Read input stream and convert spooled file into text
+            displaySpooledFiles();
         });
 
         // Copy spooled file menu item
@@ -661,9 +633,6 @@ public class WrkSplF extends JFrame {
      * @param userPar
      */
     protected void refreshSpoolTable(String userPar) {
-
-        // Register mouse listener to the table again
-        spoolTable.addMouseListener(spoolTableMouseListener);
 
         // Get actual values from input fields
         // except for the User which is passed as a call parameter
@@ -1313,7 +1282,7 @@ public class WrkSplF extends JFrame {
 
     /**
      * Read and transform spooled file data using automatic conversion;
-     * 
+     *
      * This method is not used because it does not give satisfying results:
      * - Does not render non-ASCII characteres, they are replaced by a substitute character
      * - Headings are sometimes incorrectly formatted (not on the next line)
@@ -1339,9 +1308,8 @@ public class WrkSplF extends JFrame {
             //Read the spooled file attributes for determining if it is AFPDS or SCS type spool file
             String stringAttribute = splf.getStringAttribute(PrintObject.ATTR_PRTDEVTYPE);
             if ((stringAttribute != null) && (stringAttribute.equals("*AFPDS"))) {
-            // Not applicable
-            } else 
-            if ((stringAttribute != null) && (stringAttribute.equals("*SCS"))) {
+                // Not applicable
+            } else if ((stringAttribute != null) && (stringAttribute.equals("*SCS"))) {
 
                 PrintObjectTransformedInputStream inputStream = splf.getTransformedInputStream(printParameterList);
 
@@ -1394,6 +1362,42 @@ public class WrkSplF extends JFrame {
 
         // Convert the spooled file and returns empty string or "ERROR"
         return convertSpooledFile(splf);
+    }
+
+    /**
+     * Display spooled files.
+     */
+    protected void displaySpooledFiles() {
+        try {
+            BufferedReader infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+            properties.load(infile);
+            infile.close();
+            ibmCcsid = properties.getProperty("IBM_CCSID");
+            try {
+                ibmCcsidInt = Integer.parseInt(ibmCcsid);
+            } catch (Exception exc) {
+                // If ibmCcsid is not numeric, take 65535
+                exc.printStackTrace();
+                ibmCcsid = "65535";
+                ibmCcsidInt = 65535;
+            }
+        } catch (Exception exc) {
+            exc.printStackTrace();
+        }
+
+        // Display selected spooled files.
+        for (int idx = 0; idx < selIndexArrList.size(); idx++) {
+            rowIndex = selIndexArrList.get(idx);
+            // Read input stream and convert spooled file into text
+            String returnText = convertSpooledFileCall(rowIndex);
+            // If no error in character set is recognized - display the spooled file in a window
+            if (!returnText.equals("ERROR")) {
+                // Display information in the text area obtained from the text file containing spooled file text.
+                DisplayFile dpf = new DisplayFile(mainWindow);
+                dpf.displayTextArea(spoolTextArea, ibmCcsid);
+            }
+        }
+        createSpoolTable();
     }
 
     /**
@@ -1576,22 +1580,34 @@ public class WrkSplF extends JFrame {
 
         @Override
         public void mouseClicked(MouseEvent mouseEvent) {
-            // No operation on left click
+            // Display single spooled file directly 
             if (mouseEvent.getButton() == MouseEvent.BUTTON1) {
-                leftButtonClicked = true;
-            }
-            // Display context menu on right click
-            if (mouseEvent.getButton() == MouseEvent.BUTTON3) {
-                if (leftButtonClicked) {
-                    spoolPopupMenu.removeAll();
-                    spoolPopupMenu.add(displaySpooledFiles);
-                    spoolPopupMenu.add(copySpooledFile);
-                    spoolPopupMenu.add("");
-                    spoolPopupMenu.add(deleteSpooledFile);
-                    // Show the context menu
-                    spoolPopupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
-                    leftButtonClicked = false;
+                // Double left click on the table row displays the spooled file.
+                // Only one row can be double clicked.
+                if (mouseEvent.getClickCount() == 2) {
+                    rowIndex = selIndexArrList.get(0);
+                    // Read input stream and convert spooled file into text
+                    String returnText = convertSpooledFileCall(rowIndex);
+                    // If no error in character set is recognized - display the spooled file in a window
+                    if (!returnText.equals("ERROR")) {
+                        // Display information in the text area obtained from the text file containing spooled file text.
+                        DisplayFile dspf = new DisplayFile(mainWindow);
+                        dspf.displayTextArea(spoolTextArea, ibmCcsid);
+                    }
                 }
+            } //
+            // Show context menu on right click
+            else if (mouseEvent.getButton() == MouseEvent.BUTTON3) {
+                //if (leftButtonClicked) {
+                spoolPopupMenu.removeAll();
+                spoolPopupMenu.add(displaySpooledFiles);
+                spoolPopupMenu.add(copySpooledFile);
+                spoolPopupMenu.add("");
+                spoolPopupMenu.add(deleteSpooledFile);
+                // Show the context menu
+                spoolPopupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
+                //leftButtonClicked = false;
+                //}
             }
         }
     }

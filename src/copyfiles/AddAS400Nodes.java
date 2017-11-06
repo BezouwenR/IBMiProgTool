@@ -384,17 +384,17 @@ public class AddAS400Nodes extends SwingWorker<String, String> {
         mainWindow.splitPaneInner.setRightComponent(mainWindow.panelRight);
 
         // Set actual user name to the text field
-        mainWindow.userNameTextField.setText(mainWindow.remoteServer.getUserId());
-        mainWindow.properties.setProperty("USERNAME", mainWindow.remoteServer.getUserId());
+        //mainWindow.userNameTextField.setText(mainWindow.remoteServer.getUserId());
+        //mainWindow.properties.setProperty("USERNAME", mainWindow.remoteServer.getUserId());
 
         // Create the updated text file in directory "paramfiles"
-        try {
-            mainWindow.outfile = Files.newBufferedWriter(mainWindow.parPath, Charset.forName(mainWindow.encoding));
-            mainWindow.properties.store(mainWindow.outfile, mainWindow.PROP_COMMENT);
-            mainWindow.outfile.close();
-        } catch (Exception exc) {
-            exc.printStackTrace();
-        }
+        //try {
+        //    mainWindow.outfile = Files.newBufferedWriter(mainWindow.parPath, Charset.forName(mainWindow.encoding));
+        //    mainWindow.properties.store(mainWindow.outfile, mainWindow.PROP_COMMENT);
+        //    mainWindow.outfile.close();
+        //} catch (Exception exc) {
+        //    exc.printStackTrace();
+        //}
 
         // Note that the structure of the node (children) changed
         mainWindow.rightTreeModel.nodeStructureChanged(mainWindow.rightNode);

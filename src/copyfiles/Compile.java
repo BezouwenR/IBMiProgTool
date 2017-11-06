@@ -988,9 +988,11 @@ public class Compile extends JFrame {
             String commandChgLiblText = "CHGLIBL LIBL(" + liblParameter + ") CURLIB(" + curlibParameter + ")";
 
             // Perform the GHGLIBL command
+            //             -------
             cmdCall.run(commandChgLiblText);
 
-            // Run the compile command
+            // Perform the compile command
+            // -------------------
             cmdCall.run(compileCommandText);
 
             // Get messages from the command if any
@@ -1072,6 +1074,7 @@ public class Compile extends JFrame {
                 IFSFile[] ifsFiles2 = ifsFile.listFiles(libraryPattern + ".LIB");
                 libraryNameVector.removeAllElements();
                 // Add the selected library names to the vector
+                libraryNameVector.addElement(libraryName);                
                 for (IFSFile ifsFileLevel2 : ifsFiles2) {
                     String bareLibraryName = ifsFileLevel2.getName().substring(0, ifsFileLevel2.getName().indexOf("."));
                     libraryNameVector.addElement(bareLibraryName);

@@ -322,13 +322,22 @@ public final class EditFile extends JFrame {
         this.mainWindow = mainWindow;
         this.filePathString = filePathString;
         this.methodName = methodName;
+        
+        this.operatingSystem = operatingSystem;
 
         Properties sysProp = System.getProperties();
         if (sysProp.get("os.name").toString().toUpperCase().contains("MAC")) {
             operatingSystem = "MAC";
-        }
-        if (sysProp.get("os.name").toString().toUpperCase().contains("WINDOWS")) {
+            // Adds Mac items to combo box
+            for (String str : fontNamesMac) {
+                fontComboBox.addItem(str);
+            }
+        } else if (sysProp.get("os.name").toString().toUpperCase().contains("WINDOWS")) {
             operatingSystem = "WINDOWS";
+            // Adds Windows items to combo box
+            for (String str : fontNamesWin) {
+                fontComboBox.addItem(str);
+            }
         }
 
         createWindow();
@@ -474,18 +483,24 @@ public final class EditFile extends JFrame {
         // This class gives the corresponding fonts to the font names in the combo box list
         fontComboBox.setRenderer(new FontComboBoxRenderer());
 
-        // Set font combo box items items depending on OS
-        if (operatingSystem.equals("MAC")) {
-            // Adds Mac items to combo box
-            for (String str : fontNamesMac) {
-                fontComboBox.addItem(str);
-            }
-        }
-        if (operatingSystem.equals("WINDOWS")) {
-            // Adds Windows items to combo box
-            for (String str : fontNamesWin) {
-                fontComboBox.addItem(str);
-            }
+        // Activate custom deletion in vertical selection mode 
+        if (selectionMode.equals(VERTICAL_SELECTION)) {
+            // Enable custom processing of Delete key = Custom delete
+            textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                    .put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteDel");
+            textArea.getActionMap().put("deleteDel", new CustomDelete("DEL"));
+            // Enable custom processing of key <-- = Custom delete
+            textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                    .put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "deleteBcksp");
+            textArea.getActionMap().put("deleteBcksp", new CustomDelete("BACKSPACE"));
+        } else {
+            // Deactivate custom deletion in horizontal mode
+            textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                    .remove(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
+            textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                    .remove(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0));
+            textArea.getActionMap().remove("deleteDel");
+            textArea.getActionMap().remove("deleteBcksp");
         }
 
         // Sets the current editor font item into the input field of the combo box
@@ -844,6 +859,13 @@ public final class EditFile extends JFrame {
                         // Long caret
                         textArea.setCaret(longCaret);
                     }
+                    // Deactivate custom deletion in horizontal selection mode 
+                    textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                            .remove(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
+                    textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                            .remove(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0));
+                    textArea.getActionMap().remove("deleteDel");
+                    textArea.getActionMap().remove("deleteBckspc");
                 } else {
                     // Vertical selection will be active
                     // ------------------
@@ -855,6 +877,13 @@ public final class EditFile extends JFrame {
                     textArea.setSelectionEnd(end);
                     // Set special caret
                     textArea.setCaret(specialCaret);
+                    // Activate custom deletion in vertical selection mode 
+                    textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                            .put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteDel"); // Delete key
+                    textArea.getActionMap().put("deleteDel", new CustomDelete("DEL"));
+                    textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                            .put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "deleteBckspc"); // Backspace key
+                    textArea.getActionMap().put("deleteBckspc", new CustomDelete("BACKSPACE"));
                 }
                 prepareEditingAndShow();
                 textArea.requestFocusInWindow();
@@ -977,13 +1006,6 @@ public final class EditFile extends JFrame {
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_MASK), "paste");
         textArea.getActionMap().put("paste", new CustomPaste());
 
-        // Enable custom processing of Delete key = Custom delete
-        textArea.getInputMap(JComponent.WHEN_FOCUSED)
-                .put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "delete");
-        textArea.getActionMap().put("delete", new CustomDelete());
-        /* // Enable custom processing of key <-- = Custom delete
-       * textArea.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke. getKeyStroke(KeyEvent.VK_BACK_SPACE, 0),
-       * "delete"); textArea.getActionMap().put("delete", new CustomDelete()); */
         Container cont = getContentPane();
         cont.add(globalPanel);
 
@@ -3203,9 +3225,15 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Inner class for Custom delete Delete key or Back arrow key (horizontal selection)
+     * Inner class implementing Delete key and Backspace key actions in vertical selection mode.
      */
     class CustomDelete extends AbstractAction {
+
+        String key;
+
+        CustomDelete(String key) {
+            this.key = key;
+        }
 
         /**
          *
@@ -3213,7 +3241,8 @@ public final class EditFile extends JFrame {
          */
         @Override
         public void actionPerformed(ActionEvent ae) {
-            if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+            //if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+            /*
                 // Horiontal selection
                 selectedText = "";
                 int startSel = textArea.getSelectionStart();
@@ -3227,12 +3256,25 @@ public final class EditFile extends JFrame {
                 } catch (Exception exc) {
                     exc.printStackTrace();
                 }
+             */
+            //} else {
+            // Vertical selection
+
+            selections = textArea.getHighlighter().getHighlights();
+            int cnt = selections.length;
+            // When no selection is present, delete one position only (preceding or next)
+            if (cnt == 0) {
+                caretPosition = textArea.getCaretPosition();
+                if (key.equals("BACKSPACE")) {
+                    // BACKSPACE key
+                    textArea.replaceRange("", caretPosition - 1, caretPosition);
+                } else {
+                    // DEL key
+                    textArea.replaceRange("", caretPosition, caretPosition + 1);
+                }
             } else {
-                // Vertical selection
-                selections = textArea.getHighlighter().getHighlights();
-                String[] lines = textArea.getText().split("\n");
                 try {
-                    int cnt = selections.length;
+                    String[] lines = textArea.getText().split("\n");
                     int startSel0 = selections[0].getStartOffset();
                     int lineNbr0 = textArea.getLineOfOffset(startSel0);
                     int lineStartOffset0 = textArea.getLineStartOffset(lineNbr0);

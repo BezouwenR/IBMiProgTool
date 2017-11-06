@@ -119,6 +119,8 @@ public final class DisplayFile extends JFrame {
     String pcCharset;
     String ibmCcsid;
     int ibmCcsidInt;
+    
+    String editorFont;
     String fontSizeString;
     int fontSize;
 
@@ -174,6 +176,8 @@ public final class DisplayFile extends JFrame {
             }
         }
 
+        editorFont = properties.getProperty("EDITOR_FONT");
+        
         fontSizeString = properties.getProperty("FONT_SIZE");
         try {
             fontSize = Integer.parseInt(fontSizeString);
@@ -189,7 +193,7 @@ public final class DisplayFile extends JFrame {
 
         // Adjust the text area
         textArea.setEditable(false);
-        textArea.setFont(new Font("Monospaced", Font.PLAIN, fontSize));
+        textArea.setFont(new Font(editorFont, Font.PLAIN, fontSize));
 
         // Create scroll pane with the text area inside
         scrollPane = new JScrollPane(textArea);
