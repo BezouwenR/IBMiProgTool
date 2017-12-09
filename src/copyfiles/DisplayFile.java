@@ -44,8 +44,8 @@ import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -54,9 +54,9 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.JViewport;
 import javax.swing.KeyStroke;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -83,7 +83,7 @@ public final class DisplayFile extends JFrame {
     final Color WARNING_COLOR = new Color(255, 200, 200);
     final Color VERY_LIGHT_GRAY = Color.getHSBColor(0.50f, 0.01f, 0.90f);
 
-    Highlighter.HighlightPainter currentPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.ORANGE);
+    Highlighter.HighlightPainter currentPosPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.ORANGE);
     Highlighter.HighlightPainter highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
 
     JLabel characterSetLabel = new JLabel();
@@ -98,11 +98,13 @@ public final class DisplayFile extends JFrame {
     JButton prevButton = new JButton("<"); // character "arrow up"
     JButton nextButton = new JButton(">"); // character "arrow down"
 
-    JCheckBox checkCaseBox = new JCheckBox("Match case");
+    JToggleButton matchCaseButton;
+    ImageIcon matchCaseIconDark;
+    ImageIcon matchCaseIconDim;
 
     PlaceholderLayerUI layerUI = new PlaceholderLayerUI();
     transient HighlightHandler highlightHandler = new HighlightHandler();
-    int current; // current sequence number
+    int currentPos = 0; // currentPos sequence number
 
     MainWindow mainWindow;
     static int windowWidth;
@@ -112,6 +114,11 @@ public final class DisplayFile extends JFrame {
     int windowX;
     int windowY;
 
+    Path prevIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "prev.png");
+    Path nextIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "next.png");
+    Path matchCaseIconPathDark = Paths.get(System.getProperty("user.dir"), "workfiles", "matchCase1.png");
+    Path matchCaseIconPathDim = Paths.get(System.getProperty("user.dir"), "workfiles", "matchCase2.png");
+
     Path parPath = Paths.get(System.getProperty("user.dir"), "paramfiles", "Parameters.txt");
     String encoding = System.getProperty("file.encoding", "UTF-8");
     final String PROP_COMMENT = "Copy files between IBM i and PC, edit and compile.";
@@ -119,7 +126,7 @@ public final class DisplayFile extends JFrame {
     String pcCharset;
     String ibmCcsid;
     int ibmCcsidInt;
-    
+
     String editorFont;
     String fontSizeString;
     int fontSize;
@@ -138,11 +145,12 @@ public final class DisplayFile extends JFrame {
     /**
      * Constructor
      *
+     * @param textArea
      * @param mainWindow
      */
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    public DisplayFile(MainWindow mainWindow) {
-
+    public DisplayFile(JTextArea textArea, MainWindow mainWindow) {
+        this.textArea = textArea;
         this.mainWindow = mainWindow;
 
         properties = new Properties();
@@ -177,7 +185,7 @@ public final class DisplayFile extends JFrame {
         }
 
         editorFont = properties.getProperty("EDITOR_FONT");
-        
+
         fontSizeString = properties.getProperty("FONT_SIZE");
         try {
             fontSize = Integer.parseInt(fontSizeString);
@@ -213,17 +221,44 @@ public final class DisplayFile extends JFrame {
         windowX = screenWidth / 2 - windowWidth / 2;
         windowY = 0;
 
-        prevButton.setPreferredSize(new Dimension(40, 20));
-        prevButton.setMinimumSize(new Dimension(40, 20));
-        prevButton.setMaximumSize(new Dimension(40, 20));
+        // Create an icon (left arrow),
+        // then create the button and set the icon to it
+        ImageIcon prevImageIcon = new ImageIcon(prevIconPath.toString());
+        prevButton = new JButton(prevImageIcon);
+        prevButton.setToolTipText("Also Ctrl+⬆ (Cmd+⬆ in macOS).");
+        prevButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        prevButton.setContentAreaFilled(false);
+        prevButton.setPreferredSize(new Dimension(20, 20));
+        prevButton.setMinimumSize(new Dimension(20, 20));
+        prevButton.setMaximumSize(new Dimension(20, 20));
         prevButton.setActionCommand("prev");
 
-        nextButton.setPreferredSize(new Dimension(40, 20));
-        nextButton.setMinimumSize(new Dimension(40, 20));
-        nextButton.setMaximumSize(new Dimension(40, 20));
+        // Create an icon (right arrow),
+        // then create the button and set the icon to it
+        ImageIcon nextImageIcon = new ImageIcon(nextIconPath.toString());
+        nextButton = new JButton(nextImageIcon);
+        nextButton.setToolTipText("Also Ctrl+⬇ (Cmd+⬇ in macOS).");
+        nextButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        nextButton.setContentAreaFilled(false);
+        nextButton.setPreferredSize(new Dimension(20, 20));
+        nextButton.setMinimumSize(new Dimension(20, 20));
+        nextButton.setMaximumSize(new Dimension(20, 20));
         nextButton.setActionCommand("next");
 
-        checkCaseBox.setHorizontalTextPosition(SwingConstants.LEFT);
+        // Icon Aa will be dimmed or dark when clicked
+        matchCaseIconDark = new ImageIcon(matchCaseIconPathDark.toString());
+        matchCaseIconDim = new ImageIcon(matchCaseIconPathDim.toString());
+
+        matchCaseButton = new JToggleButton();
+        matchCaseButton.setIcon(matchCaseIconDim);
+        matchCaseButton.setSelectedIcon(matchCaseIconDim);
+        matchCaseButton.setToolTipText("Case insensitive.");
+        matchCaseButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        matchCaseButton.setContentAreaFilled(false);
+        matchCaseButton.setPreferredSize(new Dimension(20, 20));
+        matchCaseButton.setMinimumSize(new Dimension(20, 20));
+        matchCaseButton.setMaximumSize(new Dimension(20, 20));
+        matchCaseButton.setActionCommand("matchCase");
 
         searchField.setPreferredSize(new Dimension(300, 20));
         searchField.setMaximumSize(new Dimension(300, 20));
@@ -232,7 +267,7 @@ public final class DisplayFile extends JFrame {
         searchField.getDocument().addDocumentListener(highlightHandler);
 
         // Set action listener for buttons and check boxes
-        Arrays.asList(nextButton, prevButton, checkCaseBox).stream().map((abstractButton) -> {
+        Arrays.asList(nextButton, prevButton, matchCaseButton).stream().map((abstractButton) -> {
             abstractButton.setFocusable(false);
             return abstractButton;
         }).forEachOrdered((abstractButton) -> {
@@ -251,25 +286,40 @@ public final class DisplayFile extends JFrame {
         globalPanelLayout = new GroupLayout(globalPanel);
         globalPanelLayout.setAutoCreateGaps(false);
         globalPanelLayout.setAutoCreateContainerGaps(false);
-        GroupLayout.SequentialGroup sg
-                = globalPanelLayout.createSequentialGroup().addComponent(searchLabel).addComponent(fieldLayer).addComponent(prevButton).addComponent(nextButton).addComponent(checkCaseBox).addComponent(fontSizeLabel).addComponent(fontSizeField).addComponent(characterSetLabel);
-        GroupLayout.ParallelGroup pg
-                = globalPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER).addComponent(searchLabel).addComponent(fieldLayer).addComponent(prevButton).addComponent(nextButton).addComponent(checkCaseBox).addComponent(fontSizeLabel).addComponent(fontSizeField).addComponent(characterSetLabel);
-        globalPanelLayout.setHorizontalGroup(globalPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(sg).addGroup(globalPanelLayout.createSequentialGroup().addComponent(scrollPane)));
-        globalPanelLayout.setVerticalGroup(globalPanelLayout.createSequentialGroup().addGroup(pg).addGroup(globalPanelLayout.createParallelGroup().addComponent(scrollPane)));
+        GroupLayout.SequentialGroup sg = globalPanelLayout.createSequentialGroup()
+                .addComponent(searchLabel)
+                .addComponent(fieldLayer)
+                .addComponent(prevButton)
+                .addComponent(nextButton)
+                .addGap(10)
+                .addComponent(matchCaseButton)
+                .addGap(20)
+                .addComponent(fontSizeLabel)
+                .addComponent(fontSizeField)
+                .addGap(10)
+                .addComponent(characterSetLabel);
+        GroupLayout.ParallelGroup pg = globalPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                .addComponent(searchLabel)
+                .addComponent(fieldLayer)
+                .addComponent(prevButton)
+                .addComponent(nextButton)
+                .addComponent(matchCaseButton)
+                .addComponent(fontSizeLabel)
+                .addComponent(fontSizeField)
+                .addComponent(characterSetLabel);
+        globalPanelLayout.setHorizontalGroup(globalPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addGroup(sg)
+                .addGroup(globalPanelLayout.createSequentialGroup()
+                        .addComponent(scrollPane)));
+        globalPanelLayout.setVerticalGroup(globalPanelLayout.createSequentialGroup()
+                .addGroup(pg)
+                .addGroup(globalPanelLayout.createParallelGroup()
+                        .addComponent(scrollPane)));
         globalPanel.setLayout(globalPanelLayout);
         globalPanel.setBackground(VERY_LIGHT_GRAY);
 
         scrollPane.setPreferredSize(new Dimension(windowWidth, windowHeight - 140));
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
-
-        // Enable processing of function keyCtrl + Arrow UP = Find next hit upwards
-        searchField.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "arrowUp");
-        searchField.getActionMap().put("arrowUp", new ArrowUp());
-
-        // Enable processing of function key Ctrl + Arrow DOWN = Find next hit downwards
-        searchField.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "arrowDown");
-        searchField.getActionMap().put("arrowDown", new ArrowDown());
 
         // "Font size" field listener
         fontSizeField.addActionListener(al -> {
@@ -293,7 +343,23 @@ public final class DisplayFile extends JFrame {
             } catch (Exception exc) {
                 exc.printStackTrace();
             }
+        });
 
+        // Set input maps and actions for Ctrl + Arrow UP and Ctrl + Arrow DOWN on different buttons and text areas.
+        ArrowUp arrowUp = new ArrowUp();
+        ArrowDown arrowDown = new ArrowDown();
+        Arrays.asList(prevButton, nextButton, searchField).stream().map((object) -> {
+            return object;
+        }).forEachOrdered((object) -> {
+            // Enable processing of function key Ctrl + Arrow UP = Find next hit upwards
+            object.getInputMap(JComponent.WHEN_FOCUSED)
+                    .put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "arrowUp");
+            object.getActionMap().put("arrowUp", arrowUp);
+
+            // Enable processing of function key Ctrl + Arrow DOWN = Find next hit downwards
+            object.getInputMap(JComponent.WHEN_FOCUSED)
+                    .put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "arrowDown");
+            object.getActionMap().put("arrowDown", arrowDown);
         });
 
         // Enable ESCAPE key to escape from display
@@ -322,7 +388,7 @@ public final class DisplayFile extends JFrame {
      */
     protected void displayIfsFile(AS400 remoteServer, String ifsFilePathString) {
 
-        this.setTitle("Display IFS file " + ifsFilePathString);
+        this.setTitle("Display IFS file  '" + ifsFilePathString + "'");
 
         // Contents of the file are always decoded according to its attributed CCSID.
         // Characters may be displayed incorrectly if the "IBMi CCSID" parameter
@@ -380,16 +446,17 @@ public final class DisplayFile extends JFrame {
     }
 
     /**
-     * Display text area
+     * Display text area - for spooled files
      *
-     * @param aTextArea
+     * @param textAreaString
+     * @param ibmCcsid
      */
-    protected void displayTextArea(JTextArea aTextArea, String ibmCcsid) {
+    protected void displayTextArea(String textAreaString, String ibmCcsid) {
 
         characterSetLabel.setText("CCSID " + ibmCcsid + " was used for display.");
 
         // Copy text area from parameter to instance text area
-        textArea.setText(aTextArea.getText());
+        textArea.setText(textAreaString);
 
         scrollPane.setBackground(VERY_LIGHT_GREEN);
         textArea.setBackground(VERY_LIGHT_GREEN);
@@ -408,7 +475,7 @@ public final class DisplayFile extends JFrame {
      */
     protected void displayPcFile(String pcPathString) {
 
-        this.setTitle("Display PC file " + pcPathString);
+        this.setTitle("Display PC file  '" + pcPathString + "'");
 
         try {
             Path filePath = Paths.get(pcPathString);
@@ -448,8 +515,7 @@ public final class DisplayFile extends JFrame {
                     + "  from the application parameter.";
             mainWindow.msgVector.add(row);
             mainWindow.showMessages(nodes);
-            // Remove message scroll listener (cancel scrolling to the last
-            // message)
+            // Remove message scroll listener (cancel scrolling to the last message)
             mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
         } catch (Exception exc) {
             exc.printStackTrace();
@@ -473,14 +539,11 @@ public final class DisplayFile extends JFrame {
      */
     protected void displaySourceMember(AS400 remoteServer, String as400PathString) {
 
-        this.setTitle("Display member " + as400PathString);
+        this.setTitle("Display member  '" + as400PathString + "'");
 
         IFSFile ifsFile = new IFSFile(remoteServer, as400PathString);
         // Create an AS400FileRecordDescription object that represents the file
         AS400FileRecordDescription inRecDesc = new AS400FileRecordDescription(remoteServer, as400PathString);
-
-        // Set editability
-        textArea.setEditable(false);
 
         try {
             // Decide what CCSID is appropriate for displaying the member
@@ -579,7 +642,7 @@ public final class DisplayFile extends JFrame {
      *
      * @return
      */
-    private Pattern getPattern() {
+    protected Pattern getPattern() {
         String pattern = searchField.getText();
 
         if (Objects.isNull(pattern) || pattern.isEmpty()) {
@@ -603,7 +666,7 @@ public final class DisplayFile extends JFrame {
             pattern = pattern.replace("(", "\\(");
             pattern = pattern.replace(")", "\\)");
             pattern = pattern.replace("`", "\\`");
-            int flags = checkCaseBox.isSelected() ? 0
+            int flags = matchCaseButton.getSelectedIcon().equals(matchCaseIconDark) ? 0
                     : Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
             return Pattern.compile(pattern, flags);
         } catch (PatternSyntaxException ex) {
@@ -637,17 +700,17 @@ public final class DisplayFile extends JFrame {
             Highlighter.Highlight[] array = highlighter.getHighlights();
             int hits = array.length;
             if (hits == 0) {
-                current = -1;
+                currentPos = -1;
                 label.setOpaque(true);
             } else {
-                current = (current + hits) % hits;
+                currentPos = (currentPos + hits) % hits;
                 // label.setOpaque(false);
-                Highlighter.Highlight hh = highlighter.getHighlights()[current];
+                Highlighter.Highlight hh = highlighter.getHighlights()[currentPos];
                 highlighter.removeHighlight(hh);
-                highlighter.addHighlight(hh.getStartOffset(), hh.getEndOffset(), currentPainter);
+                highlighter.addHighlight(hh.getStartOffset(), hh.getEndOffset(), currentPosPainter);
                 scrollToCenter(textArea, hh.getStartOffset());
             }
-            label.setText(String.format("%02d / %02d%n", current + 1, hits));
+            label.setText(String.format("%02d / %02d%n", currentPos + 1, hits));
         } catch (BadLocationException ex) {
             ex.printStackTrace();
         }
@@ -679,9 +742,21 @@ public final class DisplayFile extends JFrame {
             if (obj instanceof AbstractButton) {
                 String cmd = ((AbstractButton) obj).getActionCommand();
                 if ("prev".equals(cmd)) {
-                    current--;
+                    currentPos--;
                 } else if ("next".equals(cmd)) {
-                    current++;
+                    currentPos++;
+                } else if ("matchCase".equals(cmd)) {
+                    if (matchCaseButton.getSelectedIcon().equals(matchCaseIconDark)) {
+                        matchCaseButton.setSelectedIcon(matchCaseIconDim);
+                        matchCaseButton.setToolTipText("Case insensitive.");
+                        currentPos = 0;
+                        changeHighlight();
+                    } else {
+                        matchCaseButton.setSelectedIcon(matchCaseIconDark);
+                        matchCaseButton.setToolTipText("Match case.");
+                        changeHighlight();
+                        currentPos = 0;
+                    }
                 }
             }
             changeHighlight();
@@ -746,7 +821,7 @@ public final class DisplayFile extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent de) {
-            current--;
+            currentPos--;
             changeHighlight();
         }
     }
@@ -758,7 +833,7 @@ public final class DisplayFile extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent de) {
-            current++;
+            currentPos++;
             changeHighlight();
         }
     }

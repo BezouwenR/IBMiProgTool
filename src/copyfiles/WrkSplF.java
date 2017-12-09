@@ -700,11 +700,12 @@ public class WrkSplF extends JFrame {
 
     /**
      * Select spooled files according to path string from the node selected from the right tree and to criteria given in
-     * parameters; The path string is a file of type .OUTQ or library QSYS.LIB; Information from the spooled files is
-     * written to array lists.
+     * parameters;
+     * The path string is a file of type .OUTQ or library QSYS.LIB; Information from the spooled files is written to array lists.
      *
      * @param namePar
      * @param numberPar
+     * @param pagesPar
      * @param jobPar
      * @param userPar
      * @param jobNumberPar
@@ -772,13 +773,16 @@ public class WrkSplF extends JFrame {
             // Select spooled files according to selection parameters
             while (spooledFiles.hasMoreElements()) {
                 // Get next spooled file
-                SpooledFile splf = (SpooledFile) spooledFiles.nextElement();
+                splf = (SpooledFile) spooledFiles.nextElement();
                 if (splf != null) {
+
                     String splfFileNumberChar = String.valueOf(splf.getNumber());
                     String splfFilePagesChar = String.valueOf(splf.getIntegerAttribute(SpooledFile.ATTR_PAGES));
 
                     // If selection parameters are satisfied, select the spooled file characteristics
                     // to the array lists for the table
+                    System.out.println("namePar 1: " + namePar);
+                    System.out.println("splf.getName() 1: " + splf.getName());
                     if (splf.getName().contains(namePar)
                             && splfFileNumberChar.contains(numberPar)
                             && splfFilePagesChar.contains(pagesPar)
@@ -787,11 +791,16 @@ public class WrkSplF extends JFrame {
                             && splf.getJobNumber().contains(jobNumberPar)
                             && splf.getCreateDate().contains(datePar)
                             && splf.getCreateTime().contains(timePar)) {
-                        /* System.out.print("File name selectSpoolFiles2: " + splf.getName());
-                   * System.out.print(" \tFile number: " + splfFileNumberChar); System.out.print(" \tJob name: " +
-                   * splf.getJobName()); System.out.print(" \tUser name: " + splf.getJobUser());
-                   * System.out.print(" \tJob number: " + splf.getJobNumber()); System.out.print(" \tDate: " +
-                   * splf.getCreateDate()); System.out.print(" \tTime: " + splf.getCreateTime()); System.out.println(); */
+                        System.out.println("namePar 2: " + namePar);
+                        System.out.println("splf.getName() 2: " + splf.getName());
+                        System.out.print("File name selectSpoolFiles2: " + splf.getName());
+                        System.out.print(" \tFile number: " + splfFileNumberChar);
+                        System.out.print(" \tJob name: " + splf.getJobName());
+                        System.out.print(" \tUser name: " + splf.getJobUser());
+                        System.out.print(" \tJob number: " + splf.getJobNumber());
+                        System.out.print(" \tDate: " + splf.getCreateDate());
+                        System.out.print(" \tTime: " + splf.getCreateTime());
+                        System.out.println();
                         nameArrList.add(splf.getName());
                         numberArrList.add(splfFileNumberChar);
                         pagesArrList.add(splfFilePagesChar);
@@ -821,7 +830,7 @@ public class WrkSplF extends JFrame {
                     }
                 }
             }
-            // Ensure uniqueness of user names in artay list (over linked hash set)
+            // Ensure uniqueness of user names in array list (over linked hash set)
             Set<String> linkedHashSet = new LinkedHashSet<>();
             linkedHashSet.addAll(spoolUsers);
             spoolUsers.clear();
@@ -829,8 +838,8 @@ public class WrkSplF extends JFrame {
 
             // System.out.println("Name FFF: " + this.splf.getName());
             // System.out.println("nbrOfRows: " + nbrOfRows);
-            // Last spooled file listed
-            return this.splf;
+            // Last spooled file selected
+            return splf;
 
         } catch (Exception exc) {
             System.out.println("Error: " + exc.toString());
@@ -853,7 +862,7 @@ public class WrkSplF extends JFrame {
        * System.out.print(" \tJob number: " + splf.getJobNumber()); System.out.print(" \tDate: " +
        * splf.getCreateDate()); System.out.print(" \tTime: " + splf.getCreateTime()); System.out.println(); */
         try {
-            Integer numberParInt = new Integer(numberPar);
+            Integer numberParInt = splf.getNumber();
 
             PrintParameterList printParameterList = new PrintParameterList();
             printParameterList.setParameter(SpooledFile.ATTR_SPOOLFILE, namePar);
@@ -1262,13 +1271,12 @@ public class WrkSplF extends JFrame {
             mainWindow.msgVector.add(row);
             mainWindow.showMessages(noNodes); // do not add child nodes
             mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
-
-            return "";
+            return spoolTextArea.getText();
+//            return "";
 
         } catch (Exception exc) {
             System.out.println("Error: " + exc.toString());
             exc.printStackTrace();
-            System.out.println(exc.toString());
             row = "Error: Spooled file CCSID   '" + ibmCcsid
                     + "'   or  text file character set   '" + pcCharset + "'   is not correct.  -  " + exc.toString();
             mainWindow.msgVector.add(row);
@@ -1393,8 +1401,9 @@ public class WrkSplF extends JFrame {
             // If no error in character set is recognized - display the spooled file in a window
             if (!returnText.equals("ERROR")) {
                 // Display information in the text area obtained from the text file containing spooled file text.
-                DisplayFile dpf = new DisplayFile(mainWindow);
-                dpf.displayTextArea(spoolTextArea, ibmCcsid);
+                JTextArea textArea = new JTextArea();
+                DisplayFile dspf = new DisplayFile(textArea, mainWindow);
+                dspf.displayTextArea(spoolTextArea.getText(), ibmCcsid);
             }
         }
         createSpoolTable();
@@ -1531,7 +1540,7 @@ public class WrkSplF extends JFrame {
         public Object getValueAt(int row, int col) {
             // System.out.println("getValueAt: (" + row + "," + col + "): " + rows[row][col]);
             // Return the value for display in the table
-            return spoolRows[row][col].toString(); // Ostatní sloupce
+            return spoolRows[row][col].toString();
         }
 
         // Write input data from the cell back to the data source for
@@ -1591,8 +1600,9 @@ public class WrkSplF extends JFrame {
                     // If no error in character set is recognized - display the spooled file in a window
                     if (!returnText.equals("ERROR")) {
                         // Display information in the text area obtained from the text file containing spooled file text.
-                        DisplayFile dspf = new DisplayFile(mainWindow);
-                        dspf.displayTextArea(spoolTextArea, ibmCcsid);
+                        JTextArea textArea = new JTextArea();
+                        DisplayFile dspf = new DisplayFile(textArea, mainWindow);
+                        dspf.displayTextArea(spoolTextArea.getText(), ibmCcsid);
                     }
                 }
             } //

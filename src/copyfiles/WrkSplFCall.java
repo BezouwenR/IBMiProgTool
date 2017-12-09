@@ -65,8 +65,8 @@ public class WrkSplFCall extends SwingWorker<String, String> {
         // Change cursor to wait cursor
         mainWindow.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-        WrkSplF csw = new WrkSplF(remoteServer, mainWindow, rightPathString, currentUser, compileWindowX, compileWindowY, className);
-        csw.createSpoolWindow(currentUser);
+        WrkSplF wrkSplf = new WrkSplF(remoteServer, mainWindow, rightPathString, currentUser, compileWindowX, compileWindowY, className);
+        wrkSplf.createSpoolWindow(currentUser);
         // Change cursor to default
         mainWindow.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         // Remove message scroll listener (cancel scrolling to the last message)

@@ -28,6 +28,14 @@ Version 02.01:
 - Expanding tree nodes runs in parallel.
 - Rectangular selection of text in the editor was added with shift, Copy, Cut, Paste and Delete.
 
+Version 02.02
+
+- Split editor area.
+- Find and replace text in separate window.
+- Button "Last spooled file" added to Compile window.
+- Different control elements redesigned in editor widnow.
+- Bugs fixed. 
+
 - - - - - - - - - - 
 
 Tento projekt se neinstaluje, je okamžitě k použití jako Java aplikace v adresáři projektu. Aplikace vyžaduje Javu SE 8 instalovanou v PC.
@@ -52,3 +60,10 @@ Verze 02.01:
 - Rozevírání uzlů stromu běží paralelně.
 - Přidán výběr obdélníkové oblasti textu v editoru s posuvem a operacemi Copy, Cut, Paste a Delete.
 
+Verze 02.02
+
+- Rozdělení oblasti editoru.
+- Hledání a náhrada textu v samostatném okně.
+- Do okna Compile přidáno tlačítko "Last spooled file".
+- Změněny a přemístěny ovládací prvky v okně editoru.
+- Opraveny chyby. 

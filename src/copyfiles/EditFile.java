@@ -15,12 +15,9 @@ import com.ibm.as400.access.SequentialFile;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -28,10 +25,12 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.math.BigDecimal;
@@ -50,38 +49,31 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 import javax.swing.AbstractAction;
-import javax.swing.AbstractButton;
 import javax.swing.Action;
-import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.ParallelGroup;
-import javax.swing.GroupLayout.SequentialGroup;
-import javax.swing.InputMap;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JLayer;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.JViewport;
 import javax.swing.KeyStroke;
 import javax.swing.ListCellRenderer;
-import javax.swing.SwingUtilities;
+import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.event.UndoableEditListener;
-import javax.swing.plaf.LayerUI;
 import javax.swing.plaf.basic.BasicTextUI;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
@@ -102,18 +94,26 @@ import javax.swing.undo.UndoManager;
 public final class EditFile extends JFrame {
 
     JTextArea textArea;
+    JTextArea textArea2;
+
+    boolean textAreaIsSplit = false;
+    boolean lowerHalfActive = false;
+
+    TextAreaDocListener textAreaDocListener = new TextAreaDocListener();
+    TextArea2DocListener textArea2DocListener = new TextArea2DocListener();
+
+    TextAreaMouseListener textAreaMouseListener;
+    TextArea2MouseListener textArea2MouseListener;
+
+    WindowEditFileAdapter windowEditFileListener;
 
     final Color VERY_LIGHT_BLUE = Color.getHSBColor(0.60f, 0.020f, 0.99f);
     final Color VERY_LIGHT_GREEN = Color.getHSBColor(0.52f, 0.020f, 0.99f);
     final Color VERY_LIGHT_PINK = Color.getHSBColor(0.025f, 0.008f, 0.99f);
 
     final Color WARNING_COLOR = new Color(255, 200, 200);
-    final Color DIM_BLUE = Color.getHSBColor(0.60f, 0.2f, 0.5f); // blue little
-    // saturated
-    // dim (gray)
-    final Color DIM_RED = Color.getHSBColor(0.00f, 0.2f, 0.98f); // red little
-    // saturated
-    // bright
+    final Color DIM_BLUE = Color.getHSBColor(0.60f, 0.2f, 0.5f); // blue little saturated dim (gray)
+    final Color DIM_RED = Color.getHSBColor(0.00f, 0.2f, 0.98f); // red little saturated bright
     final Color VERY_LIGHT_GRAY = Color.getHSBColor(0.50f, 0.01f, 0.90f);
 
     HighlightPainter currentPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.ORANGE);
@@ -160,63 +160,71 @@ public final class EditFile extends JFrame {
 
     String progLanguage; // Programming language to highlight (RPG **FREE, ...)
 
-    /**
-     * Listener for edits on the current document.
-     */
+    // Listener for edits on the current document.
     protected UndoableEditListener undoHandler = new UndoHandler();
-    /** UndoManager that we add edits to. */
+
+    // UndoManager that we add edits to. 
     protected UndoManager undo = new UndoManager();
 
     // --- action implementations -----------------------------------
     private UndoAction undoAction = new UndoAction();
     private RedoAction redoAction = new RedoAction();
 
-    CompileListener compileListener;
+    CompileButtonListener compileButtonListener;
+
+    FindWindow findWindow;
 
     JButton saveButton = new JButton("Save");
-
-    JButton compileButton = new JButton("Compile");
-    Compile compile; // Compile class object variable
 
     JButton undoButton = new JButton("Undo");
     JButton redoButton = new JButton("Redo");
 
-    JLabel characterSetLabel = new JLabel();
+    JLabel shiftLabel = new JLabel("Shift selection: ");
+    JButton leftShiftButton = new JButton("Left");
+    JButton rightShiftButton = new JButton("Right");
 
     JLabel fontLabel = new JLabel("Font:");
     JTextField fontSizeField = new JTextField();
 
     JButton caretButton = new JButton();
 
-    JLabel findLabel = new JLabel("Find what:");
-    JTextField findField = new JTextField();
-    JLayer fieldLayer;
+    JButton selectionModeButton = new JButton();
 
-    JButton prevButton = new JButton("Prior");
-    JButton nextButton = new JButton("Next");
+    JButton compileButton = new JButton("Compile");
+    Compile compile; // Compile class object variable
 
     JLabel highlightBlocksLabel = new JLabel("Blocks:");
 
     JComboBox<String> languageComboBox = new JComboBox<>();
     JComboBox<String> fontComboBox = new JComboBox<>();
 
-    JLabel replaceLabel = new JLabel("Replace with:");
-    JTextField replaceField = new JTextField();
-    JButton replaceButton = new JButton("Replace");
-    JButton replaceFindButton = new JButton("Replace/Find");
-    JButton replaceAllButton = new JButton("Replace all");
+    JButton splitUnsplitButton;
+    JButton findButton;
 
-    JLabel shiftLabel = new JLabel("Shift:");
-    JButton leftButton = new JButton("Left");
-    JButton rightButton = new JButton("Right");
+    JLabel characterSetLabel = new JLabel();
 
-    JButton selectionModeButton = new JButton();
+    JScrollPane scrollPaneUpper;
+    JScrollPane scrollPaneLower;
+    JSplitPane splitVerticalPane;
 
-    PlaceholderLayerUI layerUI = new PlaceholderLayerUI();
+    BoxLayout globalPanelBoxLayout;
+//    Container cont;
+    JPanel globalPanel;
+    JPanel rowPanel1;
+    JPanel colPanel1;
+    JPanel colPanel2;
+    JPanel colPanel21;
+    JPanel colPanel22;
+    JPanel rowPanel2;
+    JPanel topPanel;
+
     HighlightHandler highlightHandler = new HighlightHandler();
-    int currentPos; // current position in the text area
+    int currentPos = 0; // current highlighted position in the primary text area
+    int currentPos2 = 0; // current highlighted position in the secondary text area
     int startOffset; // start offset of found text
     int endOffset; // end offset of found text
+    int startOffset2; // start offset of found text
+    int endOffset2; // end offset of found text
 
     static int windowWidth;
     static int windowHeight;
@@ -226,6 +234,10 @@ public final class EditFile extends JFrame {
     int windowY;
 
     Path parPath = Paths.get(System.getProperty("user.dir"), "paramfiles", "Parameters.txt");
+    Path findIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "find.png");
+    Path splitIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "split.png");
+    Path undoIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "undo.png");
+    Path redoIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "redo.png");
 
     BufferedReader infile;
     final String PROP_COMMENT = "Copy files between IBM i and PC, edit and compile.";
@@ -242,7 +254,7 @@ public final class EditFile extends JFrame {
     String pcCharset;
     String ibmCcsid;
     int ibmCcsidInt;
-    int attributeCCSID;
+    int ccsidAttribute;
     String editorFont;
     String[] fontNamesMac = {
         "Monospaced",
@@ -268,10 +280,17 @@ public final class EditFile extends JFrame {
     String caretShape;
     String selectionMode;
     SpecialCaret specialCaret;
+    SpecialCaret2 specialCaret2;
     LongCaret longCaret;
+    LongCaret2 longCaret2;
     BasicTextUI.BasicCaret basicCaret;
-    Highlighter.Highlight[] selections;
-    Highlighter selectionHighlighter;
+    BasicTextUI.BasicCaret basicCaret2;
+
+    CaretListener caretListener;
+
+    ArrayList<Integer> selectionStarts = new ArrayList<>();
+    ArrayList<Integer> selectionEnds = new ArrayList<>();
+
     int startSel;
     int endSel;
     String selectedText;
@@ -314,15 +333,23 @@ public final class EditFile extends JFrame {
      *
      * @param remoteServer
      * @param mainWindow
+     * @param textArea
+     * @param textArea2
      * @param filePathString
      * @param methodName
      */
-    public EditFile(AS400 remoteServer, MainWindow mainWindow, String filePathString, String methodName) {
+    public EditFile(AS400 remoteServer, MainWindow mainWindow,
+            JTextArea textArea, JTextArea textArea2, String filePathString, String methodName) {
         this.remoteServer = remoteServer;
         this.mainWindow = mainWindow;
+        this.textArea = textArea;
+        this.textArea2 = textArea2;
         this.filePathString = filePathString;
         this.methodName = methodName;
-        
+
+        // Create object of FindWindow class 
+        findWindow = new FindWindow(this, filePathString);
+
         Properties sysProp = System.getProperties();
         if (sysProp.get("os.name").toString().toUpperCase().contains("MAC")) {
             operatingSystem = "MAC";
@@ -338,13 +365,6 @@ public final class EditFile extends JFrame {
             }
         }
 
-        createWindow();
-    }
-
-    /**
-     * Create window
-     */
-    protected void createWindow() {
         properties = new Properties();
         try {
             infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
@@ -376,55 +396,57 @@ public final class EditFile extends JFrame {
             exc.printStackTrace();
         }
 
-        textArea = new JTextArea();
-        textArea.setEditable(true);
-        textArea.setFont(new Font(editorFont, Font.PLAIN, fontSize));
-        textArea.setTabSize(TAB_SIZE);
-        // Set caret position (and scroll bar) to top
-        textArea.setCaretPosition(0);
-        selectionHighlighter = textArea.getHighlighter();
-
-        textArea.setDragEnabled(true);
-        // Create a scroll pane
-        scrollPane = new JScrollPane(textArea);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-
-        // Light sky blue
-        scrollPane.setBackground(VERY_LIGHT_BLUE);
-        textArea.setBackground(VERY_LIGHT_BLUE);
-
-        // Choose initial caret shape
-        // --------------------------
-        // Special caret for vertical (rectangular) selection mode
-        specialCaret = new SpecialCaret();
-        longCaret = new LongCaret();
-        basicCaret = new BasicTextUI.BasicCaret();
-        // Caret button with short or long caret
-        caretButton.setText(caretShape);
-        if (caretShape.equals(LONG_CARET)) {
-            if (selectionMode.equals(HORIZONTAL_SELECTION)) {
-                // currentCaret = longCaret;
-                // Set custom caret shape - long vertical gray line with a short red pointer
-                textArea.setCaret(longCaret);
-            } else {
-                // Vertical selection
-                // currentCaret = specialCaret;
-                textArea.setCaret(specialCaret);
-            }
-        } else {
-            // Short caret
-            if (selectionMode.equals(HORIZONTAL_SELECTION)) {
-                // currentCaret = basicCaret;
-                textArea.setCaret(basicCaret);
-            } else {
-                // Vertical selection
-                // currentCaret = specialCaret;
-                textArea.setCaret(specialCaret);
-            }
+        // Get text from the file and set it to the textArea
+        if (methodName.equals("rewritePcFile")) {
+            displayPcFile();
+        } else if (methodName.equals("rewriteIfsFile")) {
+            displayIfsFile();
+        } else if (methodName.equals("rewriteSourceMember")) {
+            displaySourceMember();
         }
 
-        // Set selection mode as the button text
-        selectionModeButton.setText(selectionMode);
+        // Create window
+        createWindow();
+
+        if (methodName.equals("rewritePcFile")) {
+
+            scrollPane.setBackground(VERY_LIGHT_PINK);
+            textArea.setBackground(VERY_LIGHT_PINK);
+
+            // Prepare editing and make editor visible
+            prepareEditingAndShow();
+
+            row = "Info: PC file  " + filePathString + "  is displayed using character set  "
+                    + pcCharset + "  from the application parameter.";
+            mainWindow.msgVector.add(row);
+            mainWindow.showMessages(nodes);
+            // Remove message scroll listener (cancel scrolling to the last message)
+            mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
+        } else if (methodName.equals("rewriteIfsFile")) {
+
+            // Prepare editing and make editor visible
+            prepareEditingAndShow();
+
+            row = "Info: IFS file  " + filePathString + "  has CCSID  " + ccsidAttribute + ".";
+            mainWindow.msgVector.add(row);
+            mainWindow.showMessages(nodes);
+
+        } else if (methodName.equals("rewriteSourceMember")) {
+
+            // Prepare editing and make editor visible
+            prepareEditingAndShow();
+
+            row = "Info: Source member  " + filePathString + "  has CCSID  " + ccsidAttribute + ".";
+            mainWindow.msgVector.add(row);
+            mainWindow.showMessages(nodes);
+        }
+
+    } // End of constructor
+
+    /**
+     * Create window
+     */
+    protected void createWindow() {
 
         Toolkit kit = Toolkit.getDefaultToolkit();
         Dimension screenSize = kit.getScreenSize();
@@ -437,13 +459,10 @@ public final class EditFile extends JFrame {
         windowX = screenWidth / 2 - windowWidth / 2;
         windowY = 0;
 
-        // Now the scroll pane may be sized because window height is defined
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.setPreferredSize(new Dimension(windowWidth, windowHeight));
-
         saveButton.setPreferredSize(new Dimension(60, 20));
         saveButton.setMinimumSize(new Dimension(60, 20));
         saveButton.setMaximumSize(new Dimension(60, 20));
+        saveButton.setToolTipText("Also Ctrl+S (Cmd+S in macOS).");
 
         undoButton.setPreferredSize(new Dimension(60, 20));
         undoButton.setMinimumSize(new Dimension(60, 20));
@@ -453,61 +472,57 @@ public final class EditFile extends JFrame {
         redoButton.setMinimumSize(new Dimension(60, 20));
         redoButton.setMaximumSize(new Dimension(60, 20));
 
-        compileButton.setPreferredSize(new Dimension(80, 20));
-        compileButton.setMinimumSize(new Dimension(80, 20));
-        compileButton.setMaximumSize(new Dimension(80, 20));
-        compileButton.setFont(new Font("SansSerif", Font.BOLD, 12));
+        leftShiftButton.setPreferredSize(new Dimension(60, 20));
+        leftShiftButton.setMinimumSize(new Dimension(60, 20));
+        leftShiftButton.setMaximumSize(new Dimension(60, 20));
+        leftShiftButton.setToolTipText("Also Ctrl+⬅ (Cmd+⬅ in macOS).");
 
-        prevButton.setPreferredSize(new Dimension(60, 20));
-        prevButton.setMinimumSize(new Dimension(60, 20));
-        prevButton.setMaximumSize(new Dimension(60, 20));
-        prevButton.setActionCommand("prev");
-
-        nextButton.setPreferredSize(new Dimension(60, 20));
-        nextButton.setMinimumSize(new Dimension(60, 20));
-        nextButton.setMaximumSize(new Dimension(60, 20));
-        nextButton.setActionCommand("next");
+        rightShiftButton.setPreferredSize(new Dimension(60, 20));
+        rightShiftButton.setMinimumSize(new Dimension(60, 20));
+        rightShiftButton.setMaximumSize(new Dimension(60, 20));
+        rightShiftButton.setToolTipText("Also Ctrl+➜(Cmd+➜ in macOS).");
 
         caretButton.setPreferredSize(new Dimension(90, 20));
         caretButton.setMinimumSize(new Dimension(90, 20));
         caretButton.setMaximumSize(new Dimension(90, 20));
+        caretButton.setToolTipText("Toggle short or long caret.");
+
+        selectionModeButton.setPreferredSize(new Dimension(150, 20));
+        selectionModeButton.setMinimumSize(new Dimension(150, 20));
+        selectionModeButton.setMaximumSize(new Dimension(150, 20));
+        selectionModeButton.setToolTipText("Toggle horizontal or vertical selection.");
+
+        // Set selection mode as the button text
+        selectionModeButton.setText(selectionMode);
+
+        compileButton.setPreferredSize(new Dimension(80, 20));
+        compileButton.setMinimumSize(new Dimension(80, 20));
+        compileButton.setMaximumSize(new Dimension(80, 20));
+        compileButton.setFont(new Font("SansSerif", Font.BOLD, 12));
+        compileButton.setToolTipText("Open window with compile settings.");
 
         fontComboBox.setPreferredSize(new Dimension(140, 20));
         fontComboBox.setMaximumSize(new Dimension(140, 20));
         fontComboBox.setMinimumSize(new Dimension(140, 20));
-
-        fontComboBox.setEditable(true);
-
-        // This class gives the corresponding fonts to the font names in the combo box list
-        fontComboBox.setRenderer(new FontComboBoxRenderer());
-
-        // Activate custom deletion in vertical selection mode 
-        if (selectionMode.equals(VERTICAL_SELECTION)) {
-            // Enable custom processing of Delete key = Custom delete
-            textArea.getInputMap(JComponent.WHEN_FOCUSED)
-                    .put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteDel");
-            textArea.getActionMap().put("deleteDel", new CustomDelete("DEL"));
-            // Enable custom processing of key <-- = Custom delete
-            textArea.getInputMap(JComponent.WHEN_FOCUSED)
-                    .put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "deleteBcksp");
-            textArea.getActionMap().put("deleteBcksp", new CustomDelete("BACKSPACE"));
-        } else {
-            // Deactivate custom deletion in horizontal mode
-            textArea.getInputMap(JComponent.WHEN_FOCUSED)
-                    .remove(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
-            textArea.getInputMap(JComponent.WHEN_FOCUSED)
-                    .remove(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0));
-            textArea.getActionMap().remove("deleteDel");
-            textArea.getActionMap().remove("deleteBcksp");
-        }
+        fontComboBox.setToolTipText("Choose font.");
 
         // Sets the current editor font item into the input field of the combo box
         fontComboBox.setSelectedItem(editorFont);
 
+        // This class gives the corresponding fonts to the font names in the combo box list
+        fontComboBox.setRenderer(new FontComboBoxRenderer());
+
+        fontSizeField.setText(fontSizeString);
+        fontSizeField.setPreferredSize(new Dimension(30, 20));
+        fontSizeField.setMaximumSize(new Dimension(30, 20));
+        fontSizeField.setToolTipText("Enter font size.");
+
+        highlightBlocksLabel.setToolTipText("Blocks are compound statements like IF - ENDIF, etc.");
+
         languageComboBox.setPreferredSize(new Dimension(130, 20));
         languageComboBox.setMaximumSize(new Dimension(130, 20));
         languageComboBox.setMinimumSize(new Dimension(130, 20));
-
+        languageComboBox.setToolTipText("Highlight blocks. Choose programming language. Blocks are compound statements like IF - ENDIF, etc.");
         languageComboBox.addItem("*NONE");
         languageComboBox.addItem("*ALL");
         languageComboBox.addItem("RPG **FREE");
@@ -521,187 +536,220 @@ public final class EditFile extends JFrame {
 
         languageComboBox.setSelectedItem(progLanguage);
 
-        replaceButton.setPreferredSize(new Dimension(70, 20));
-        replaceButton.setMinimumSize(new Dimension(70, 20));
-        replaceButton.setMaximumSize(new Dimension(70, 20));
+        // Magnifying glass icon and button
+        ImageIcon findImageIcon = new ImageIcon(findIconPath.toString());
+        findButton = new JButton(findImageIcon);
+        findButton.setToolTipText("Find text. Also Ctrl+F (Cmd+F in macOS).");
+        findButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        findButton.setContentAreaFilled(false);
+        findButton.setPreferredSize(new Dimension(20, 20));
+        findButton.setMinimumSize(new Dimension(20, 20));
+        findButton.setMaximumSize(new Dimension(20, 20));
 
-        replaceFindButton.setPreferredSize(new Dimension(100, 20));
-        replaceFindButton.setMinimumSize(new Dimension(100, 20));
-        replaceFindButton.setMaximumSize(new Dimension(100, 20));
+        // Split icon and button
+        ImageIcon splitImageIcon = new ImageIcon(splitIconPath.toString());
+        splitUnsplitButton = new JButton(splitImageIcon);
+        splitUnsplitButton.setToolTipText("Split/unsplit editor area.");
+        splitUnsplitButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        splitUnsplitButton.setContentAreaFilled(false);
+        splitUnsplitButton.setPreferredSize(new Dimension(20, 20));
+        splitUnsplitButton.setMinimumSize(new Dimension(20, 20));
+        splitUnsplitButton.setMaximumSize(new Dimension(20, 20));
 
-        replaceAllButton.setPreferredSize(new Dimension(90, 20));
-        replaceAllButton.setMinimumSize(new Dimension(90, 20));
-        replaceAllButton.setMaximumSize(new Dimension(90, 20));
+        // Undo icon and button
+        ImageIcon undoImageIcon = new ImageIcon(undoIconPath.toString());
+        undoButton = new JButton(undoImageIcon);
+        undoButton.setToolTipText("Undo.");
+        undoButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        undoButton.setContentAreaFilled(false);
+        undoButton.setPreferredSize(new Dimension(20, 20));
+        undoButton.setMinimumSize(new Dimension(20, 20));
+        undoButton.setMaximumSize(new Dimension(20, 20));
 
-        leftButton.setPreferredSize(new Dimension(60, 20));
-        leftButton.setMinimumSize(new Dimension(60, 20));
-        leftButton.setMaximumSize(new Dimension(60, 20));
+        // Undo icon and button
+        ImageIcon redoImageIcon = new ImageIcon(redoIconPath.toString());
+        redoButton = new JButton(redoImageIcon);
+        redoButton.setToolTipText("Redo.");
+        redoButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        redoButton.setContentAreaFilled(false);
+        redoButton.setPreferredSize(new Dimension(20, 20));
+        redoButton.setMinimumSize(new Dimension(20, 20));
+        redoButton.setMaximumSize(new Dimension(20, 20));
 
-        rightButton.setPreferredSize(new Dimension(60, 20));
-        rightButton.setMinimumSize(new Dimension(60, 20));
-        rightButton.setMaximumSize(new Dimension(60, 20));
+        // Split pane (divided by horizontal line) containing two scroll panes
+        splitVerticalPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
-        fontSizeField.setText(fontSizeString);
-        fontSizeField.setPreferredSize(new Dimension(30, 20));
-        fontSizeField.setMaximumSize(new Dimension(30, 20));
+        // Build editor area
+        // =================
 
-        findField.setPreferredSize(new Dimension(200, 20));
-        findField.setMaximumSize(new Dimension(200, 20));
-        // Set document listener for the search field
-        findField.getDocument().addDocumentListener(highlightHandler);
+        textArea.setEditable(true);
 
-        replaceField.setPreferredSize(new Dimension(200, 20));
-        replaceField.setMaximumSize(new Dimension(200, 20));
+        textArea.setFont(new Font(editorFont, Font.PLAIN, fontSize));
+        textArea.setTabSize(TAB_SIZE);
 
-        selectionModeButton.setPreferredSize(new Dimension(150, 20));
-        selectionModeButton.setMinimumSize(new Dimension(150, 20));
-        selectionModeButton.setMaximumSize(new Dimension(150, 20));
+        textArea2.setFont(new Font(editorFont, Font.PLAIN, fontSize));
+        textArea2.setTabSize(TAB_SIZE);
 
-        // Set a layer of counts that overlay the search field:
-        // - the sequence number of just highlighted text found
-        // - how many matches were found
-        fieldLayer = new JLayer<>(findField, layerUI);
+//        selectionHighlighter = textArea.getHighlighter();
+//        selectionHighlighter2 = textArea2.getHighlighter();
 
-        JPanel rowPanel1 = new JPanel();
+        textArea.setDragEnabled(true);
 
+        // Create a scroll pane
+        scrollPane = new JScrollPane(textArea);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+        // Light sky blue for IBM i (PC color is resolved in the constructor later).
+        scrollPane.setBackground(VERY_LIGHT_BLUE);
+        textArea.setBackground(VERY_LIGHT_BLUE);
+
+        // Now the scroll pane may be sized because window height is defined
+        scrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        scrollPane.setPreferredSize(new Dimension(windowWidth, windowHeight));
+
+        // Custom deletion will be active in VERTICAL selection mode only.
+        if (selectionMode.equals(VERTICAL_SELECTION)) {
+            // Activate custom deletion by Delete or Backspace key
+            textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                    .put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteDel");
+            textArea.getActionMap().put("deleteDel", new CustomDelete("DEL"));
+            textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                    .put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "deleteBcksp");
+            textArea.getActionMap().put("deleteBcksp", new CustomDelete("BACKSPACE"));
+            textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                    .put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteDel");
+            textArea2.getActionMap().put("deleteDel", new CustomDelete("DEL"));
+            textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                    .put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "deleteBcksp");
+            textArea2.getActionMap().put("deleteBcksp", new CustomDelete("BACKSPACE"));
+        } else {
+            // Deactivate custom deletion in horizontal mode
+            textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                    .remove(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
+            textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                    .remove(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0));
+            textArea.getActionMap().remove("deleteDel");
+            textArea.getActionMap().remove("deleteBcksp");
+            textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                    .remove(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
+            textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                    .remove(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0));
+            textArea2.getActionMap().remove("deleteDel");
+            textArea2.getActionMap().remove("deleteBcksp");
+        }
+
+        rowPanel1 = new JPanel();
         rowPanel1.setLayout(new BoxLayout(rowPanel1, BoxLayout.X_AXIS));
-        rowPanel1.add(saveButton);
-        rowPanel1.add(Box.createHorizontalStrut(5));
-        rowPanel1.add(undoButton);
-        rowPanel1.add(Box.createHorizontalStrut(5));
-        rowPanel1.add(redoButton);
-        rowPanel1.add(Box.createHorizontalStrut(5));
         rowPanel1.add(shiftLabel);
-        rowPanel1.add(leftButton);
-        rowPanel1.add(rightButton);
-        rowPanel1.add(Box.createHorizontalStrut(5));
+        rowPanel1.add(leftShiftButton);
+        rowPanel1.add(rightShiftButton);
+        rowPanel1.add(Box.createHorizontalStrut(10));
         rowPanel1.add(caretButton);
-        rowPanel1.add(Box.createHorizontalStrut(5));
+        rowPanel1.add(Box.createHorizontalStrut(10));
         rowPanel1.add(selectionModeButton);
         rowPanel1.add(Box.createHorizontalStrut(10));
-        rowPanel1.add(compileButton);
-        rowPanel1.add(Box.createHorizontalStrut(5));
-        rowPanel1.add(Box.createHorizontalGlue());
+//        rowPanel1.add(undoButton);
+//        rowPanel1.add(redoButton);
+        rowPanel1.add(Box.createHorizontalStrut(20));
+        rowPanel1.add(saveButton);
+        // Compile button is not available in PC. 
+        if (!methodName.equals("rewritePcFile")) {
+            rowPanel1.add(Box.createHorizontalStrut(20));
+            rowPanel1.add(compileButton);
+        }
 
-        JPanel colPanel1 = new JPanel();
-        JPanel colPanel2 = new JPanel();
-
-        GroupLayout colPanel1Layout = new GroupLayout(colPanel1);
-        SequentialGroup col1sg = colPanel1Layout.createSequentialGroup()
-                .addGap(5)
-                .addComponent(findLabel)
-                .addGap(10)
-                .addComponent(replaceLabel);
-        ParallelGroup col1pg = colPanel1Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addGap(5)
-                .addComponent(findLabel)
-                .addGap(10)
-                .addComponent(replaceLabel);
-        colPanel1Layout.setHorizontalGroup(colPanel1Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addGroup(col1pg));
-        colPanel1Layout.setVerticalGroup(colPanel1Layout.createSequentialGroup()
-                .addGroup(col1sg));
-        colPanel1.setLayout(colPanel1Layout);
-
-        colPanel2.setLayout(new BoxLayout(colPanel2, BoxLayout.Y_AXIS));
-
-        JPanel colPanel21 = new JPanel();
-        JPanel colPanel22 = new JPanel();
-
-        colPanel21.setLayout(new BoxLayout(colPanel21, BoxLayout.X_AXIS));
-        colPanel21.add(fieldLayer);
-        colPanel21.add(prevButton);
-        colPanel21.add(nextButton);
-        colPanel21.add(Box.createHorizontalStrut(5));
-        colPanel21.add(fontLabel);
-        colPanel21.add(fontComboBox);
-        colPanel21.add(fontSizeField);
-        // colPanel21.add(caretButton);
-        colPanel21.add(Box.createHorizontalStrut(5));
-        colPanel21.add(highlightBlocksLabel);
-        colPanel21.add(languageComboBox);
-        colPanel21.add(Box.createHorizontalGlue());
-
-        colPanel22.setLayout(new BoxLayout(colPanel22, BoxLayout.X_AXIS));
-        colPanel22.add(replaceField);
-        colPanel22.add(replaceButton);
-        colPanel22.add(replaceFindButton);
-        colPanel22.add(replaceAllButton);
-        colPanel22.add(Box.createHorizontalGlue());
-
-        colPanel2.add(colPanel21);
-        colPanel2.add(colPanel22);
-
-        JPanel rowPanel2 = new JPanel();
-
+        rowPanel2 = new JPanel();
         GroupLayout rowPanel2Layout = new GroupLayout(rowPanel2);
-        SequentialGroup sg2 = rowPanel2Layout.createSequentialGroup()
-                .addComponent(colPanel1)
-                .addComponent(colPanel2);
-        ParallelGroup pg2 = rowPanel2Layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                .addComponent(colPanel1)
-                .addComponent(colPanel2);
-
-        rowPanel2Layout.setHorizontalGroup(rowPanel2Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addGroup(sg2));
-        rowPanel2Layout.setVerticalGroup(rowPanel2Layout.createSequentialGroup()
-                .addGroup(pg2));
+        rowPanel2Layout.setHorizontalGroup(rowPanel2Layout.createSequentialGroup()
+                .addGap(0)
+                .addComponent(splitUnsplitButton)
+                .addGap(13)
+                .addComponent(undoButton)
+                .addGap(10)
+                .addComponent(redoButton)
+                .addGap(10)
+                //.addComponent(fontLabel)
+                .addComponent(fontComboBox)
+                .addComponent(fontSizeField)
+                .addGap(10)
+                //.addComponent(highlightBlocksLabel)
+                .addComponent(languageComboBox)
+                .addGap(10)
+                .addComponent(findButton)
+                .addGap(10)
+                .addComponent(characterSetLabel)
+        );
+        rowPanel2Layout.setVerticalGroup(rowPanel2Layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                .addComponent(splitUnsplitButton)
+                .addComponent(undoButton)
+                .addComponent(redoButton)
+                //.addComponent(fontLabel)
+                .addComponent(fontComboBox)
+                .addComponent(fontSizeField)
+                //.addComponent(highlightBlocksLabel)
+                .addComponent(languageComboBox)
+                .addComponent(findButton)
+                .addComponent(characterSetLabel)
+        );
         rowPanel2.setLayout(rowPanel2Layout);
 
-        JPanel topPanel = new JPanel();
-        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
-        topPanel.add(rowPanel1);
-        topPanel.add(rowPanel2);
-        topPanel.add(Box.createVerticalGlue());
+        globalPanel = new JPanel();
+        GroupLayout topPanelLayout = new GroupLayout(globalPanel);
+        topPanelLayout.setHorizontalGroup(topPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addComponent(rowPanel1)
+                .addComponent(rowPanel2)
+                .addComponent(scrollPane)
+        );
+        topPanelLayout.setVerticalGroup(topPanelLayout.createSequentialGroup()
+                .addComponent(rowPanel1)
+                .addComponent(rowPanel2)
+                .addComponent(scrollPane)
+        );
+        globalPanel.setLayout(topPanelLayout);
 
-        topPanel.setPreferredSize(new Dimension(windowWidth, 80));
-        topPanel.setMaximumSize(new Dimension(windowWidth, 80));
-        topPanel.setMinimumSize(new Dimension(windowWidth, 80));
+        globalPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        add(globalPanel);
 
-        JPanel globalPanel = new JPanel();
-        globalPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        // Display the window.
+        setSize(windowWidth, windowHeight);
+        setLocation(windowX, windowY);
+        //pack();
+        setVisible(true);
 
-        GroupLayout globalPanelLayout;
-        globalPanelLayout = new GroupLayout(globalPanel);
-        globalPanelLayout.setAutoCreateGaps(false);
-        globalPanelLayout.setAutoCreateContainerGaps(false);
-
-        globalPanelLayout.setHorizontalGroup(globalPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addComponent(topPanel)
-                .addGroup(globalPanelLayout.createSequentialGroup()
-                        .addComponent(scrollPane)));
-        globalPanelLayout.setVerticalGroup(globalPanelLayout.createSequentialGroup()
-                .addComponent(topPanel)
-                .addGroup(globalPanelLayout.createParallelGroup()
-                        .addComponent(scrollPane)));
-        globalPanel.setLayout(globalPanelLayout);
+        // Register listeners
+        // ==================
 
         // Save button listener
+        // --------------------
         saveButton.addActionListener(ae -> {
-            // Replace TAB characters with TAB_SIZE spaces in the text area
-            replaceTabsWithSpaces();
-            // Rewrite file or member
+            caretPosition = textArea.getCaretPosition();
             rewriteFile();
+            textArea.setCaretPosition(caretPosition);
+            textArea.requestFocus();
         });
 
-        // Enable ESCAPE key to escape from editing
-        // ----------------------------------------
-        globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "escape");
-        globalPanel.getActionMap().put("escape", new Escape());
+        // Left shift button listener
+        // --------------------------
+        leftShiftButton.addActionListener(ae -> {
+            textArea.requestFocusInWindow();
+            shiftLeft();
+            if (selectionMode.equals(HORIZONTAL_SELECTION) && !progLanguage.equals("*NONE")) {
+                highlightBlocks(textArea, progLanguage);
+            }
+        });
 
-        // Register Compile button listener
-        compileListener = new CompileListener();
-        compileButton.addActionListener(compileListener);
-
-        // Set action listener for buttons and check boxes
-        Arrays.asList(nextButton, prevButton, replaceButton, replaceFindButton).stream().map((abstractButton) -> {
-            abstractButton.setFocusable(false);
-            return abstractButton;
-        }).forEachOrdered((abstractButton) -> {
-            abstractButton.addActionListener(highlightHandler);
+        // Right shift button listener
+        // ---------------------------
+        rightShiftButton.addActionListener(ae -> {
+            textArea.requestFocusInWindow();
+            shiftRight();
+            if (selectionMode.equals(HORIZONTAL_SELECTION) && !progLanguage.equals("*NONE")) {
+                highlightBlocks(textArea, progLanguage);
+            }
         });
 
         // Select editor font from the list in combo box - listener
+        // --------------------------------------------------------
         fontComboBox.addItemListener(il -> {
             int currentCaretPos = textArea.getCaretPosition();
             JComboBox<String> source = (JComboBox) il.getSource();
@@ -715,6 +763,7 @@ public final class EditFile extends JFrame {
             }
             editorFont = (String) fontComboBox.getSelectedItem();
             textArea.setFont(new Font(editorFont, Font.PLAIN, fontSize));
+            textArea2.setFont(new Font(editorFont, Font.PLAIN, fontSize));
             try {
                 BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
                 // Save programming language into properties
@@ -732,6 +781,7 @@ public final class EditFile extends JFrame {
         });
 
         // "Font size" field listener
+        // --------------------------
         fontSizeField.addActionListener(al -> {
             int currentCaretPos = textArea.getCaretPosition();
             fontSizeString = fontSizeField.getText();
@@ -744,6 +794,7 @@ public final class EditFile extends JFrame {
             }
             fontSizeField.setText(fontSizeString);
             textArea.setFont(new Font(editorFont, Font.PLAIN, fontSize));
+            textArea2.setFont(new Font(editorFont, Font.PLAIN, fontSize));
             try {
                 BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
                 // Save font size into properties
@@ -762,6 +813,7 @@ public final class EditFile extends JFrame {
         });
 
         // Select programming language from the list in combo box - listener
+        // -----------------------------------------------------------------
         languageComboBox.addItemListener(il -> {
             int currentCaretPos = textArea.getCaretPosition();
             JComboBox<String> source = (JComboBox) il.getSource();
@@ -781,13 +833,8 @@ public final class EditFile extends JFrame {
             textArea.setCaretPosition(currentCaretPos);
         });
 
-        // "Replace button" listener
-        replaceButton.setActionCommand("replace");
-
-        // "Replace/Find" button listener
-        replaceFindButton.setActionCommand("replaceFind");
-
         // Caret button listener
+        // =====================
         caretButton.addActionListener(ae -> {
             try {
                 int currentCaretPos = textArea.getCaretPosition();
@@ -796,35 +843,24 @@ public final class EditFile extends JFrame {
                 infile.close();
                 caretShape = properties.getProperty("CARET");
                 if (caretButton.getText().equals(LONG_CARET)) {
-                    // Long caret button
+                    // Long caret button detected
                     caretShape = SHORT_CARET;
                     caretButton.setText(caretShape);
-                    if (selectionMode.equals(HORIZONTAL_SELECTION)) {
-                        // currentCaret = basicCaret;
-                        // Set custom caret shape - long vertical gray line with
-                        // a short red pointer
-                        textArea.setCaret(basicCaret);
-                    } else {
-                        // Vertical selection
-                        // currentCaret = specialCaret;
-                        textArea.setCaret(specialCaret);
-                    }
+                    // For horizontal selection set basic caret - a short vertical line
+                    textArea.setCaret(basicCaret);
+                    textArea2.setCaret(basicCaret2);
                 } else {
-                    // Short caret button
+                    // Short caret button detected
                     caretShape = LONG_CARET;
                     caretButton.setText(caretShape);
-                    if (selectionMode.equals(HORIZONTAL_SELECTION)) {
-                        // currentCaret = longCaret;
-                        textArea.setCaret(longCaret);
-                    } else {
-                        // Vertical selection
-                        // currentCaret = specialCaret;
-                        textArea.setCaret(specialCaret);
-                    }
+                    // For horizontal selection set long caret - long vertical gray line with a short red pointer
+                    textArea.setCaret(longCaret);
+                    textArea2.setCaret(longCaret2);
                 }
                 prepareEditingAndShow();
                 textArea.requestFocusInWindow();
                 textArea.setCaretPosition(currentCaretPos);
+
                 BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
                 // Save caret shape into properties
                 properties.setProperty("CARET", caretShape);
@@ -836,6 +872,7 @@ public final class EditFile extends JFrame {
         });
 
         // Selection mode button listener
+        // ==============================
         selectionModeButton.addActionListener(ae -> {
             try {
                 int currentCaretPos = textArea.getCaretPosition();
@@ -848,44 +885,43 @@ public final class EditFile extends JFrame {
                     // --------------------
                     selectionMode = HORIZONTAL_SELECTION;
                     selectionModeButton.setText(selectionMode);
-                    // Deselect all selected area
-                    textArea.getHighlighter().removeAllHighlights();
-                    if (caretShape.equals(SHORT_CARET)) {
-                        // Short caret
-                        textArea.setCaret(basicCaret);
-                    } else {
-                        // Long caret
-                        textArea.setCaret(longCaret);
-                    }
-                    // Deactivate custom deletion in horizontal selection mode 
+                    textArea.setCaret(basicCaret);
+                    textArea2.setCaret(basicCaret2);
+                    // Deactivate custom deletion in horizontal mode
                     textArea.getInputMap(JComponent.WHEN_FOCUSED)
                             .remove(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
                     textArea.getInputMap(JComponent.WHEN_FOCUSED)
                             .remove(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0));
                     textArea.getActionMap().remove("deleteDel");
-                    textArea.getActionMap().remove("deleteBckspc");
+                    textArea.getActionMap().remove("deleteBcksp");
+                    textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                            .remove(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
+                    textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                            .remove(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0));
+                    textArea2.getActionMap().remove("deleteDel");
+                    textArea2.getActionMap().remove("deleteBcksp");
                 } else {
                     // Vertical selection will be active
                     // ------------------
                     selectionMode = VERTICAL_SELECTION;
                     selectionModeButton.setText(selectionMode);
-                    // Deselect the selection
-                    int end = textArea.getSelectionEnd();
-                    textArea.setSelectionStart(end);
-                    textArea.setSelectionEnd(end);
-                    // Set special caret
+                    // Set special caret - same for both caret shapes
                     textArea.setCaret(specialCaret);
-                    // Activate custom deletion in vertical selection mode 
+                    textArea2.setCaret(specialCaret2);
+                    // Activate custom deletion by Delete or Backspace key
                     textArea.getInputMap(JComponent.WHEN_FOCUSED)
-                            .put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteDel"); // Delete key
+                            .put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteDel");
                     textArea.getActionMap().put("deleteDel", new CustomDelete("DEL"));
                     textArea.getInputMap(JComponent.WHEN_FOCUSED)
-                            .put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "deleteBckspc"); // Backspace key
-                    textArea.getActionMap().put("deleteBckspc", new CustomDelete("BACKSPACE"));
+                            .put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "deleteBcksp");
+                    textArea.getActionMap().put("deleteBcksp", new CustomDelete("BACKSPACE"));
+                    textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                            .put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteDel");
+                    textArea2.getActionMap().put("deleteDel", new CustomDelete("DEL"));
+                    textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                            .put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "deleteBcksp");
+                    textArea2.getActionMap().put("deleteBcksp", new CustomDelete("BACKSPACE"));
                 }
-                prepareEditingAndShow();
-                textArea.requestFocusInWindow();
-                textArea.setCaretPosition(currentCaretPos);
                 BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
                 // Save caret shape into properties
                 properties.setProperty("SELECTION_MODE", selectionMode);
@@ -896,136 +932,169 @@ public final class EditFile extends JFrame {
             }
         });
 
-        // "Replace all" button listener
-        replaceAllButton.addActionListener(ae -> {
-            String replacement = replaceField.getText();
-            ArrayList<String> arrListPattern = new ArrayList<>();
-            ArrayList<Integer> arrListStart = new ArrayList<>();
-            ArrayList<Integer> arrListEnd = new ArrayList<>();
-            Highlighter highlighter = textArea.getHighlighter();
-            highlighter.removeAllHighlights();
-            try {
-                String text = textArea.getText();
-                String pattern = findField.getText();
-                int patternLen = pattern.length();
-                int start = 1;
-                int end = 0;
-                while (start > 0 && end <= text.length()) {
-                    start = text.toUpperCase().indexOf(findField.getText().toUpperCase(), end);
-                    if (start < 0) {
-                        break;
-                    }
-                    end = text.toUpperCase().indexOf(findField.getText().toUpperCase(), start) + patternLen;
-                    // Fill array lists with: found text, start position, end position
-                    arrListPattern.add(textArea.getText(start, end - start));
-                    arrListStart.add(start);
-                    arrListEnd.add(end);
-                    highlighter.addHighlight(start, end, highlightPainter);
-                    start = end;
+        // Find button listener
+        // --------------------
+        findButton.addActionListener(ae -> {
+            if (findWindow != null) {
+                if (!textAreaIsSplit) {
+                    findWindow.createWindow(textArea.getSelectedText());
+                } else {
+                    findWindow.createWindow(textArea2.getSelectedText());
                 }
-                int hits = arrListPattern.size();
-                // Replace texts in intervals found by the replacement (= pattern)
-                int idx = 0;
-                for (idx = hits - 1; idx >= 0; --idx) {
-                    textArea.replaceRange(replacement, arrListStart.get(idx), arrListEnd.get(idx));
-                }
-                textArea.setCaretPosition(arrListEnd.get(hits - 1));
-                textArea.requestFocus();
-            } catch (BadLocationException ex) {
-                ex.printStackTrace();
             }
         });
 
-        // Left shift button listener
-        leftButton.addActionListener(ae -> {
-            textArea.requestFocusInWindow();
-            shiftLeft();
-            if (selectionMode.equals(HORIZONTAL_SELECTION) && !progLanguage.equals("*NONE")) {
-                highlightBlocks(progLanguage);
+        // Split/Unsplit button listener
+        // -----------------------------
+        splitUnsplitButton.addActionListener(ae -> {
+            if (!textAreaIsSplit) {
+                caretPosition = textArea.getCaretPosition();
+                splitTextArea();
+                textAreaIsSplit = true;
+            } else if (textAreaIsSplit) {
+                unsplitTextArea();
+                textAreaIsSplit = false;
             }
         });
 
-        // Right shift button listener
-        rightButton.addActionListener(ae -> {
-            textArea.requestFocusInWindow();
-            shiftRight();
-            if (selectionMode.equals(HORIZONTAL_SELECTION) && !progLanguage.equals("*NONE")) {
-                highlightBlocks(progLanguage);
-            }
-        });
+        // Keyboard key listeners
+        // ----------------------
+        // Enable ESCAPE key to escape from editing
+        globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "escapeCmd");
+        globalPanel.getActionMap().put("escapeCmd", new Escape());
 
-        // Enable processing of function key Ctrl + S = Save member
+        // Register Compile button listener
+        compileButtonListener = new CompileButtonListener();
+        compileButton.addActionListener(compileButtonListener);
+
+        // Enable processing of function key Ctrl + S = Save data
         globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "save");
         globalPanel.getActionMap().put("save", new SaveAction());
 
-        // Enable processing of function key Ctrl + Arrow UP = Find next hit upwards
-        findField.getInputMap(JComponent.WHEN_FOCUSED)
-                .put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "arrowUp");
-        findField.getActionMap().put("arrowUp", new ArrowUp());
+        // Enable processing of function key Ctrl + F = Focus in findField
+        globalPanel.getInputMap(JComponent.WHEN_FOCUSED)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "CreateFindWindow");
+        globalPanel.getActionMap().put("CreateFindWindow", new CreateFindWindow());
+        // Enable processing of function key Ctrl + F = Focus in findField
+        textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "CreateFindWindow");
+        textArea.getActionMap().put("CreateFindWindow", new CreateFindWindow());
+        // Enable processing of function key Ctrl + F = Focus in findField
+        textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "CreateFindWindow");
+        textArea2.getActionMap().put("CreateFindWindow", new CreateFindWindow());
 
-        // Enable processing of function key Ctrl + Arrow DOWN = Find next hit
-        // downwards
-        findField.getInputMap(JComponent.WHEN_FOCUSED)
-                .put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "arrowDown");
-        findField.getActionMap().put("arrowDown", new ArrowDown());
+        // Enable processing of Tab key
+        globalPanel.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("TAB"), "tab");
+        globalPanel.getActionMap().put("tab", new TabListener());
 
-        // Enable processing of function Enter key - refresh "Find what"
-//        findField.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("ENTER"), "enter");
-//        findField.getActionMap().put("enter", new EnterKey());
-
-        textArea.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("TAB"), "tab");
-        textArea.getActionMap().put("tab", new TabListener());
-
-        // Enable processing of function key Ctrl + Arrow Left = Shift lines
-        // left
+        // Enable processing of function key Ctrl + Arrow Left = Shift lines left
         textArea.getInputMap(JComponent.WHEN_FOCUSED)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "shiftLeft");
         textArea.getActionMap().put("shiftLeft", new ArrowLeft());
-
-        // Enable processing of function key Ctrl + Arrow Left = Shift lines
-        // left
+        // Enable processing of function key Ctrl + Arrow Left = Shift lines left
         textArea.getInputMap(JComponent.WHEN_FOCUSED)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "shiftRight");
         textArea.getActionMap().put("shiftRight", new ArrowRight());
+
+        // Enable processing of function key Ctrl + Arrow Left = Shift lines left
+        textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "shiftLeft");
+        textArea2.getActionMap().put("shiftLeft", new ArrowLeft());
+        // Enable processing of function key Ctrl + Arrow Left = Shift lines left
+        textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "shiftRight");
+        textArea2.getActionMap().put("shiftRight", new ArrowRight());
 
         // Enable custom processing of function key Ctrl C = Custom copy
         textArea.getInputMap(JComponent.WHEN_FOCUSED)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_MASK), "copy");
         textArea.getActionMap().put("copy", new CustomCopy());
-
         // Enable custom processing of function key Ctrl X = Custom cut
         textArea.getInputMap(JComponent.WHEN_FOCUSED)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.CTRL_MASK), "cut");
         textArea.getActionMap().put("cut", new CustomCut());
-
         // Enable custom processing of function key Ctrl V = Custom paste
         textArea.getInputMap(JComponent.WHEN_FOCUSED)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_MASK), "paste");
         textArea.getActionMap().put("paste", new CustomPaste());
 
-        Container cont = getContentPane();
-        cont.add(globalPanel);
+        // Enable custom processing of function key Ctrl C = Custom copy
+        textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_MASK), "copy");
+        textArea2.getActionMap().put("copy", new CustomCopy());
+        // Enable custom processing of function key Ctrl X = Custom cut
+        textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.CTRL_MASK), "cut");
+        textArea2.getActionMap().put("cut", new CustomCut());
+        // Enable custom processing of function key Ctrl V = Custom paste
+        textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_MASK), "paste");
+        textArea2.getActionMap().put("paste", new CustomPaste());
 
-        // Display the window.
-        setSize(windowWidth, windowHeight);
-        setLocation(windowX, windowY);
+        // Mouse listeners for text areas
+        // ------------------------------
+        textAreaMouseListener = new TextAreaMouseListener();
+        textArea.addMouseListener(textAreaMouseListener);
+        textArea2MouseListener = new TextArea2MouseListener();
+        textArea2.addMouseListener(textArea2MouseListener);
 
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        pack();
+        // Window listener
+        // ---------------
+        windowEditFileListener = new WindowEditFileAdapter();
+        this.addWindowListener(windowEditFileListener);
 
-        // Set caret to the beginning of the text area
-        textArea.requestFocusInWindow();
+        {
+            // IMPORTANT: This block must be run AFTER MOUSE LISTENER REGISTRATION
+            // so that double click select a word with the BASIC caret.
+
+            // Choose initial caret shape
+            // --------------------------
+            // Special caret for vertical (rectangular) selection mode
+            specialCaret = new SpecialCaret();
+            specialCaret2 = new SpecialCaret2();
+            // Long caret for horizontal selection mode
+            longCaret = new LongCaret();
+            longCaret2 = new LongCaret2();
+
+            basicCaret = new BasicTextUI.BasicCaret(); // Short catet for primary text area
+            basicCaret2 = new BasicTextUI.BasicCaret(); // Short caret for secondary text area
+
+            // Caret button with short or long caret
+            caretButton.setText(caretShape); // Caret shape from parameters
+            // The following settings for primary text area (textArea) will do. 
+            // The secondary textArea2 will be assigned the caret in the "splitUnsplitButton" listener.
+            if (caretShape.equals(LONG_CARET)) {
+                if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+                    // Horizontal selection
+                    // Set custom caret - long vertical gray line with a short red pointer
+                    textArea.setCaret(basicCaret);
+                } else {
+                    // Vertical selection
+                    // Set custom caret - long vertical gray line with a short red pointer
+                    textArea.setCaret(specialCaret);
+                }
+            } else {
+                if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+                    // Horizontal selection
+                    // For short caret set basic caret - a short vertical line
+                    textArea.setCaret(basicCaret);
+                } else {
+                    // Vertical selection
+                    // Set custom caret - long vertical gray line with a short red pointer
+                    textArea.setCaret(specialCaret);
+                }
+            }
+        } // end of block
     }
 
     /**
      * Display contents of the IFS file using its CCSID attribute
      *
-     * @param edit
      */
-    protected void displayIfsFile(boolean edit) {
-        this.setTitle("Edit IFS file " + filePathString);
-        caretPosition = textArea.getCaretPosition();
+    protected void displayIfsFile() {
+        this.setTitle("Edit IFS file  '" + filePathString + "'");
 
         // Contents of the file are always decoded according to its attributed CCSID.
         // Characters may be displayed incorrectly if the "IBMi CCSID" parameter
@@ -1034,8 +1103,8 @@ public final class EditFile extends JFrame {
         try {
             IFSFile ifsFile = new IFSFile(remoteServer, filePathString);
 
-            attributeCCSID = ifsFile.getCCSID();
-            characterSetLabel.setText("CCSID " + attributeCCSID + " was used for display.");
+            ccsidAttribute = ifsFile.getCCSID();
+            characterSetLabel.setText("CCSID " + ccsidAttribute + " was used for display.");
 
             byte[] inputBuffer = new byte[100000];
             byte[] workBuffer = new byte[100000];
@@ -1056,7 +1125,7 @@ public final class EditFile extends JFrame {
                         bufferToWrite[indx] = workBuffer[indx];
                     }
                     // Create object for conversion from bytes to characters
-                    AS400Text textConverter = new AS400Text(bytesRead, attributeCCSID, remoteServer);
+                    AS400Text textConverter = new AS400Text(bytesRead, ccsidAttribute, remoteServer);
                     // Convert byte array buffer to text line
                     String textLine = (String) textConverter.toObject(bufferToWrite);
                     // Append the line to text area
@@ -1065,16 +1134,9 @@ public final class EditFile extends JFrame {
                     // Read next input buffer
                     bytesRead = inputStream.read(inputBuffer);
                 }
-
-                // Prepare editing and make editor visible
-                prepareEditingAndShow();
-
-                row = "Info: IFS file  " + filePathString + "  has CCSID  " + attributeCCSID + ".";
-                mainWindow.msgVector.add(row);
-                mainWindow.showMessages(nodes);
             }
         } catch (Exception exc) {
-            row = "Error: " + exc.toString();
+            row = "Error in displaying IFS file: " + exc.toString();
             mainWindow.msgVector.add(row);
             mainWindow.showMessages(nodes);
         }
@@ -1083,35 +1145,16 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Display text area
-     *
-     * @param aTextArea
-     */
-    protected void displayTextArea(JTextArea aTextArea) {
-        // Copy text area from parameter to instance text area
-        textArea.setText(aTextArea.getText());
-        // Set scroll bar to top
-        textArea.setCaretPosition(0);
-        setLocation(windowX, windowY);
-        // Display the window.
-        setVisible(true);
-    }
-
-    /**
      * Display PC file using the application parameter "pcCharset".
      *
-     * @param edit
      */
-    protected void displayPcFile(boolean edit) {
+    protected void displayPcFile() {
 
-        this.setTitle("Edit PC file " + filePathString);
+        this.setTitle("Edit PC file  '" + filePathString + "'");
 
         // Disable Compile button - compilation is impossible in PC
-        compileButton.removeActionListener(compileListener);
+        compileButton.removeActionListener(compileButtonListener);
 
-        // Set editability
-        textArea.setEditable(edit);
-        caretPosition = textArea.getCaretPosition();
         try {
             Path filePath = Paths.get(filePathString);
             if (Files.exists(filePath)) {
@@ -1124,8 +1167,6 @@ public final class EditFile extends JFrame {
                 list = Files.readAllLines(filePath, Charset.forName(pcCharset));
                 if (list != null) {
                     // Concatenate all text lines from the list obtained from the file
-                    //String text = list.stream().reduce("", (a, b) -> a + b + NEW_LINE);
-                    //textArea.setText(text);
                     textArea.setText("");
                     Object[] obj = (Object[]) list.stream().toArray();
                     for (int idx = 0; idx < obj.length; idx++) {
@@ -1136,8 +1177,6 @@ public final class EditFile extends JFrame {
             }
             if (list != null) {
                 // Concatenate all text lines from the list obtained from the file
-                //String text = list.stream().reduce("", (a, b) -> a + b + NEW_LINE);
-                //textArea.setText(text);
                 textArea.setText("");
                 Object[] obj = (Object[]) list.stream().toArray();
                 for (int idx = 0; idx < obj.length; idx++) {
@@ -1145,64 +1184,41 @@ public final class EditFile extends JFrame {
                     textArea.append(text + NEW_LINE);
                 }
             }
-
-            scrollPane.setBackground(VERY_LIGHT_PINK);
-            textArea.setBackground(VERY_LIGHT_PINK);
-
-            // Prepare editing and make editor visible
-            prepareEditingAndShow();
-
-            row = "Info: PC file  " + filePathString
-                    + "  is displayed using character set  "
-                    + pcCharset
-                    + "  from the application parameter.";
-            mainWindow.msgVector.add(row);
-            mainWindow.showMessages(nodes);
-            // Remove message scroll listener (cancel scrolling to the last
-            // message)
-            mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
         } catch (Exception exc) {
             exc.printStackTrace();
-            // System.out.println(exc.toString());
             row = "Error: File  " + filePathString
-                    + "  is not a text file or has an unsuitable character set.  -  "
-                    + exc.toString();
+                    + "  is not a text file or has an unsuitable character set.  -  " + exc.toString();
             mainWindow.msgVector.add(row);
-            mainWindow.showMessages(nodes); // do not add child
-            // nodes
-            // Remove message scroll listener (cancel scrolling to the last
-            // message)
+            mainWindow.showMessages(nodes); // do not add child nodes
+            // Remove message scroll listener (cancel scrolling to the last message)
             mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
         }
+
     }
 
     /**
      * Display source member using its CCSID attribute; Only data part of the source record is translated (to String -
      * UTF-16).
      *
-     * @param edit
      */
     @SuppressWarnings("UseSpecificCatch")
     Path tmpFilePath;
 
-    protected void displaySourceMember(boolean edit) {
+    protected void displaySourceMember() {
 
-        this.setTitle("Edit member " + filePathString);
-        // Extract individual names (libraryName, fileName, memberName) from the
-        // AS400 IFS path
+        this.setTitle("Edit member  '" + filePathString + "'");
+        // Extract individual names (libraryName, fileName, memberName) from the AS400 IFS path
         extractNamesFromIfsPath(filePathString);
-
-        caretPosition = textArea.getCaretPosition();
 
         IFSFile ifsFile = new IFSFile(remoteServer, filePathString);
         // Create an AS400FileRecordDescription object that represents the file
         AS400FileRecordDescription inRecDesc = new AS400FileRecordDescription(remoteServer, filePathString);
 
         // Set editability
-        textArea.setEditable(edit);
+        textArea.setEditable(true);
         textArea.setText("");
         try {
-            int ccsidAttribute = ifsFile.getCCSID();
+            ccsidAttribute = ifsFile.getCCSID();
             characterSetLabel.setText("CCSID " + ccsidAttribute + " was used for display.");
 
             // Get list of record formats of the database file
@@ -1257,1076 +1273,15 @@ public final class EditFile extends JFrame {
 
             // Close the file
             as400seqFile.close();
-
-            // Prepare editing and make editor visible
-            prepareEditingAndShow();
-
-            row = "Info: Source member  " + filePathString + "  has CCSID  " + ccsidAttribute + ".";
-            mainWindow.msgVector.add(row);
-            mainWindow.showMessages(nodes);
         } catch (Exception exc) {
             exc.printStackTrace();
-            row = "Error: " + exc.toString();
+            row = "Error in rewriting source member: " + exc.toString();
             mainWindow.msgVector.add(row);
             mainWindow.showMessages(nodes);
         }
         // Remove message scroll listener (cancel scrolling to the last message)
         mainWindow.scrollMessagePane.getVerticalScrollBar()
                 .removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
-    }
-
-    /**
-     * Prepare text area and set location and visibility of the window.
-     */
-    private void prepareEditingAndShow() {
-
-        // Replace TAB characters with TAB_SIZE spaces in the text area
-        String text = textArea.getText();
-        text = text.replace("\t", fixedLengthSpaces(TAB_SIZE));
-        textArea.setText(text);
-
-        // Set scroll bar to top
-        textArea.setCaretPosition(0);
-        // Listener for undoable edits
-        textArea.getDocument().addUndoableEditListener(undoHandler);
-        // Undo button listener
-        undoButton.addActionListener(new UndoAction());
-        // Redo button listener
-        redoButton.addActionListener(new RedoAction());
-
-        // Get a highlighter for the text area
-        blockHighlighter = textArea.getHighlighter();
-        // Remove all preceding highlights
-        blockHighlighter.removeAllHighlights();
-        // Hightlight only if the option is not *NONE
-        if (!progLanguage.equals("*NONE")) {
-            highlightBlocks(progLanguage);
-        }
-
-        try {
-            BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-            // Save programming language into properties
-            properties.setProperty("HIGHLIGHT_BLOCKS", progLanguage);
-            properties.store(outfile, PROP_COMMENT);
-            outfile.close();
-        } catch (Exception exc) {
-            exc.printStackTrace();
-        }
-
-        // Show the window on the specified position
-        setLocation(windowX - 100, windowY);
-        setVisible(true);
-    }
-
-    /**
-     * Highlight compound statements (blocks) in a simplified parsing
-     */
-    private void highlightBlocks(String progLanguage) {
-        stmtsBeg.clear();
-        stmtsEnd.clear();
-
-        switch (progLanguage) {
-            case "*ALL": {
-                // Beginnings of block statements
-
-                // Declarations
-                stmtsBeg.add("DCL-DS");
-                stmtsBeg.add("DCL-PR");
-                stmtsBeg.add("DCL-PI");
-                stmtsBeg.add("DCL-PROC");
-                stmtsBeg.add("BEGSR");
-                stmtsBeg.add("SECTION");
-                // Loops
-                stmtsBeg.add("DOW");
-                stmtsBeg.add("DOW(");
-                stmtsBeg.add("DOU");
-                stmtsBeg.add("DOU(");
-                stmtsBeg.add("DOUNTIL");
-                stmtsBeg.add("DO");
-                stmtsBeg.add("WHILE");
-                stmtsBeg.add("DOWHILE");
-                stmtsBeg.add("UNTIL");
-                stmtsBeg.add("FOR");
-                stmtsBeg.add("FOR(");
-                stmtsBeg.add("DOFOR");
-                stmtsBeg.add("PERFORM");
-                // Conditions
-                stmtsBeg.add("IF");
-                stmtsBeg.add("IF(");
-                stmtsBeg.add("ELSEIF");
-                stmtsBeg.add("ELSEIF(");
-                stmtsBeg.add("THEN");
-                stmtsBeg.add("ELSE");
-                stmtsBeg.add("SELECT");
-                stmtsBeg.add("SWITCH");
-                stmtsBeg.add("CASE");
-                stmtsBeg.add("DEFAULT");
-                stmtsBeg.add("WHEN");
-                stmtsBeg.add("WHEN(");
-                stmtsBeg.add("OTHER");
-                stmtsBeg.add("OTHERWISE");
-                stmtsBeg.add("EVALUATE");
-                // Monitors
-                stmtsBeg.add("MONITOR");
-                stmtsBeg.add("ON-ERROR");
-                stmtsBeg.add("MONMSG");
-                stmtsBeg.add("TRY");
-                stmtsBeg.add("CATCH");
-                // C - style
-                stmtsBeg.add("{");
-
-                // Ends of block statements
-
-                // Declarations
-                stmtsEnd.add("END-DS");
-                stmtsEnd.add("END-PR");
-                stmtsEnd.add("END-PI");
-                stmtsEnd.add("END-PROC");
-                stmtsEnd.add("ENDSR");
-                // Loops
-                stmtsEnd.add("ENDDO");
-                stmtsEnd.add("ENDFOR");
-                stmtsEnd.add("END-PERFORM");
-                // Conditions
-                stmtsEnd.add("ENDIF");
-                stmtsEnd.add("END-IF");
-                stmtsEnd.add("ENDSL");
-                stmtsEnd.add("ENDSELECT");
-                stmtsEnd.add("END-EVALUATE");
-                // Monitor
-                stmtsEnd.add("ENDMON");
-                // C - style
-                stmtsEnd.add("}");
-                break;
-            } // End of case *ALL
-
-            case "RPG **FREE": {
-                // Beginnings of block statements
-
-                // Declarations
-                stmtsBeg.add("DCL-DS");
-                stmtsBeg.add("DCL-PR");
-                stmtsBeg.add("DCL-PI");
-                stmtsBeg.add("DCL-PROC");
-                stmtsBeg.add("BEGSR");
-                // Loops
-                stmtsBeg.add("DOW");
-                stmtsBeg.add("DOW(");
-                stmtsBeg.add("DOU");
-                stmtsBeg.add("DOU(");
-                stmtsBeg.add("FOR");
-                stmtsBeg.add("FOR(");
-                // Conditions
-                stmtsBeg.add("IF");
-                stmtsBeg.add("IF(");
-                stmtsBeg.add("ELSEIF");
-                stmtsBeg.add("ELSEIF(");
-                stmtsBeg.add("SELECT");
-                stmtsBeg.add("WHEN");
-                stmtsBeg.add("WHEN(");
-                stmtsBeg.add("OTHER");
-                // Monitors
-                stmtsBeg.add("MONITOR");
-                stmtsBeg.add("ON-ERROR");
-
-                // Ends of block statements
-
-                // Declarations
-                stmtsEnd.add("END-DS");
-                stmtsEnd.add("END-PR");
-                stmtsEnd.add("END-PI");
-                stmtsEnd.add("END-PROC");
-                stmtsEnd.add("ENDSR");
-                // Loops
-                stmtsEnd.add("ENDDO");
-                stmtsEnd.add("ENDFOR");
-                // Conditions
-                stmtsEnd.add("ENDIF");
-                stmtsEnd.add("ENDSL");
-                // Monitor
-                stmtsEnd.add("ENDMON");
-                break;
-            } // End of case RPG **FREE
-
-            case "RPG /FREE": {
-                // Beginnings of block statements
-
-                // Declarations
-                stmtsBeg.add("DCL-DS");
-                stmtsBeg.add("DCL-PR");
-                stmtsBeg.add("DCL-PI");
-                stmtsBeg.add("DCL-PROC");
-                stmtsBeg.add("BEGSR");
-                // Loops
-                stmtsBeg.add("DOW");
-                stmtsBeg.add("DOW(");
-                stmtsBeg.add("DOU");
-                stmtsBeg.add("DOU(");
-                stmtsBeg.add("FOR");
-                stmtsBeg.add("FOR(");
-                // Conditions
-                stmtsBeg.add("IF");
-                stmtsBeg.add("IF(");
-                stmtsBeg.add("ELSEIF");
-                stmtsBeg.add("ELSEIF(");
-                stmtsBeg.add("SELECT");
-                stmtsBeg.add("WHEN");
-                stmtsBeg.add("WHEN(");
-                stmtsBeg.add("OTHER");
-                // Monitors
-                stmtsBeg.add("MONITOR");
-                stmtsBeg.add("ON-ERROR");
-
-                // Ends of block statements
-
-                // Declarations
-                stmtsEnd.add("END-DS");
-                stmtsEnd.add("END-PR");
-                stmtsEnd.add("END-PI");
-                stmtsEnd.add("END-PROC");
-                stmtsEnd.add("ENDSR");
-                // Loops
-                stmtsEnd.add("ENDDO");
-                stmtsEnd.add("ENDFOR");
-                // Conditions
-                stmtsEnd.add("ENDIF");
-                stmtsEnd.add("ENDSL");
-                // Monitor
-                stmtsEnd.add("ENDMON");
-                break;
-            } // End of case RPG /FREE
-
-            case "RPG IV fixed": {
-                // Beginnings of block statements
-
-                // Declarations
-                stmtsBeg.add("BEGSR");
-                // Loops
-                stmtsBeg.add("DO");
-                stmtsBeg.add("DOW");
-                stmtsBeg.add("DOW(");
-                stmtsBeg.add("DOU");
-                stmtsBeg.add("DOU(");
-                // Conditions
-                stmtsBeg.add("IF");
-                stmtsBeg.add("IF(");
-                stmtsBeg.add("ELSEIF");
-                stmtsBeg.add("SELECT");
-                stmtsBeg.add("WHEN");
-                stmtsBeg.add("WHEN(");
-                stmtsBeg.add("OTHER");
-                // Monitors
-                stmtsBeg.add("MONITOR");
-                stmtsBeg.add("ON-ERROR");
-
-                // Ends of block statements
-
-                // Declarations
-                stmtsEnd.add("ENDSR");
-                // Loops
-                stmtsEnd.add("ENDDO");
-                stmtsEnd.add("END  ");
-                // Conditions
-                stmtsEnd.add("ENDIF");
-                stmtsEnd.add("ENDSL");
-                // Monitor
-                stmtsEnd.add("ENDMON");
-                break;
-            } // End of case RPG IV fixed
-
-            case "RPG III": {
-                // Beginnings of block statements
-
-                // Declarations
-                stmtsBeg.add("BEGSR");
-                // Loops
-                stmtsBeg.add("DO");
-                stmtsBeg.add("DOW");
-                stmtsBeg.add("DOU");
-                // Conditions
-                stmtsBeg.add("IF");
-                stmtsBeg.add("SELEC");
-                stmtsBeg.add("CAS");
-                stmtsBeg.add("WH");
-                stmtsBeg.add("OTHER");
-
-                // Ends of block statements
-
-                // Declarations
-                stmtsEnd.add("ENDSR");
-                // Loops
-                stmtsEnd.add("ENDDO");
-                stmtsEnd.add("END  ");
-                // Conditions
-                stmtsEnd.add("ENDIF");
-                stmtsEnd.add("ENDSL");
-                stmtsEnd.add("ENDCS");
-                break;
-            } // End of case RPG III
-
-            case "CL": {
-                // Beginnings of block statements
-
-                // Declarations
-                stmtsBeg.add("SUBR");
-                // Loops
-                stmtsBeg.add("DOUNTIL");
-                stmtsBeg.add("DOWHILE");
-                stmtsBeg.add("DOFOR");
-                stmtsBeg.add("DO");
-                // Conditions
-                stmtsBeg.add("IF");
-                stmtsBeg.add("THEN");
-                stmtsBeg.add("ELSE");
-                stmtsBeg.add("SELECT");
-                stmtsBeg.add("WHEN");
-                stmtsBeg.add("OTHERWISE");
-                // Monitors
-                stmtsBeg.add("MONMSG");
-
-                // Ends of block statements
-
-                // Declarations
-                stmtsEnd.add("ENDSUBR");
-                // Loops
-                stmtsEnd.add("ENDDO");
-                stmtsEnd.add("ENDSELECT");
-                break;
-            } // End of case CL
-
-            case "COBOL": {
-                // Beginnings of block statements
-
-                // Declarations
-                stmtsBeg.add("SECTION");
-                // Loops
-                stmtsBeg.add("PERFORM");
-                stmtsBeg.add("UNTIL");
-                // Conditions
-                stmtsBeg.add("IF ");
-                stmtsBeg.add("THEN");
-                stmtsBeg.add("ELSE");
-                stmtsBeg.add("EVALUATE");
-                stmtsBeg.add("WHEN");
-
-                // Ends of block statements
-
-                // Loops
-                stmtsEnd.add("END-PERFORM");
-                // Conditions
-                stmtsEnd.add("END-IF");
-                stmtsEnd.add("END-EVALUATE");
-                break;
-            } // End of case COBOL
-
-            case "C": {
-                // Beginnings of block statements
-
-                // Loops
-                stmtsBeg.add("WHILE");
-                stmtsBeg.add("FOR");
-                stmtsBeg.add("DO");
-                // Conditions
-                stmtsBeg.add("IF");
-                stmtsBeg.add("ELSE");
-                stmtsBeg.add("SWITCH");
-                stmtsBeg.add("CASE");
-                stmtsBeg.add("DEFAULT");
-                stmtsBeg.add("{");
-
-                // Endings of block statements
-
-                stmtsEnd.add("}");
-                stmtsEnd.add("ENDIF");
-                break;
-            } // End of case C
-
-            case "C++": {
-                // Beginnings of block statements
-
-                // Loops
-                stmtsBeg.add("WHILE");
-                stmtsBeg.add("FOR");
-                stmtsBeg.add("DO");
-                // Conditions
-                stmtsBeg.add("IF");
-                stmtsBeg.add("ELSE");
-                stmtsBeg.add("SWITCH");
-                stmtsBeg.add("CASE");
-                stmtsBeg.add("DEFAULT");
-                // Monitors
-                stmtsBeg.add("TRY");
-                stmtsBeg.add("CATCH");
-                stmtsBeg.add("{");
-
-                // Endings of block statements
-
-                stmtsEnd.add("}");
-                stmtsEnd.add("ENDIF");
-                break;
-            } // End of case C++
-
-        } // End of switch
-
-        // Find and highlight beginning block statements
-        stmtsBeg.forEach(stmtBeg -> {
-            highlightBlockStmt(stmtBeg, true); // true is tested as beg
-        });
-
-        // Find and highlight ending block statements
-        stmtsEnd.forEach(stmtEnd -> {
-            highlightBlockStmt(stmtEnd, false); // false is tested as !beg
-        });
-
-    }
-
-    /**
-     * Highlight block statements
-     *
-     * @param blockStmt
-     * @param beg
-     */
-    private void highlightBlockStmt(String blockStmt, boolean beg) {
-
-        // Beginnings of block statements - colors
-        if (beg && (blockStmt.equals("DCL-DS"))) {
-            // DCL-DS in RPG **FREE
-            blockPainter = blockBrownLighter;
-        } else if (beg && blockStmt.equals("DCL-PR")) {
-            // DCL-PR in RPG **FREE
-            blockPainter = blockBrownLighter;
-        } else if (beg && blockStmt.equals("DCL-PI")) {
-            // DCL-PI in RPG **FREE
-            blockPainter = blockBrownLighter;
-        } else if (beg && blockStmt.equals("DOW")) {
-            // DOW in RPG
-            blockPainter = blockBlueLighter;
-        } else if (beg && blockStmt.equals("DOW(")) {
-            // DOW( in RPG **FREE
-            blockPainter = blockBlueLighter;
-        } else if (beg && blockStmt.equals("DOU")) {
-            // DOU in RPG
-            blockPainter = blockBlueLighter;
-        } else if (beg && blockStmt.equals("DOU(")) {
-            // DOU( in RPG **FREE
-            blockPainter = blockBlueLighter;
-        } else if (beg && blockStmt.equals("DOUNTIL")) {
-            // DOUNTIL in CL
-            blockPainter = blockBlueLighter;
-        } else if (beg && blockStmt.equals("DOWHILE")) {
-            // DOWHILE in CL
-            blockPainter = blockBlueLighter;
-        } else if (beg && blockStmt.equals("DO")) {
-            // DO in CL, C, C++, older RPG
-            blockPainter = blockBlueLighter;
-        } else if (beg && blockStmt.equals("WHILE")) {
-            // WHILE in C, C++
-            blockPainter = blockBlueLighter;
-        } else if (beg && blockStmt.equals("UNTIL")) {
-            // UNTIL in C, C++, COBOL
-            blockPainter = blockBlueLighter;
-        } else if (beg && blockStmt.equals("FOR")) {
-            // FOR in RPG, C, C++
-            blockPainter = blockBlueLighter;
-        } else if (beg && blockStmt.equals("FOR(")) {
-            // FOR( in RPG **FREE
-            blockPainter = blockBlueLighter;
-        } else if (beg && blockStmt.equals("DOFOR")) {
-            // DOFOR in CL
-            blockPainter = blockBlueLighter;
-        } else if (beg && blockStmt.equals("PERFORM")) {
-            // PERFORM in COBOL
-            blockPainter = blockBlueLighter;
-        } else if (beg && blockStmt.equals("IF")) {
-            // IF in RPG, CL, C, C++
-            blockPainter = blockGreenLighter;
-        } else if (beg && blockStmt.equals("IF(")) {
-            // IF( in RPG **FREE
-            blockPainter = blockGreenLighter;
-        } else if (beg && blockStmt.equals("IF ")) {
-            // IF in COBOL (with a space at the end)
-            blockPainter = blockGreenLighter;
-        } else if (beg && blockStmt.equals("ELSEIF")) {
-            // ELSEIF in RPG
-            blockPainter = blockGreenLighter;
-        } else if (beg && blockStmt.equals("THEN")) {
-            // THEN in COBOL
-            blockPainter = blockGreenLighter;
-        } else if (beg && blockStmt.equals("ELSE")) {
-            // ELSE in RPG, CL, COBOL, C, C++
-            blockPainter = blockGreenLighter;
-        } else if (beg && blockStmt.equals("SELECT")) {
-            // SELECT in RPG IV
-            blockPainter = blockYellowLighter;
-        } else if (beg && blockStmt.equals("SELEC")) {
-            // SELEC in RPG III
-            blockPainter = blockYellowLighter;
-        } else if (beg && blockStmt.equals("WHEN")) {
-            // WHEN in RPG, COBOL
-            blockPainter = blockYellowLighter;
-        } else if (beg && blockStmt.equals("WHEN(")) {
-            // WHEN( in RPG
-            blockPainter = blockYellowLighter;
-        } else if (beg && blockStmt.equals("WH")) {
-            // WH in RPG III (as WHEQ, WHLE, ...)
-            blockPainter = blockYellowLighter;
-        } else if (beg && blockStmt.equals("OTHER")) {
-            // OTHER in RPG
-            blockPainter = blockYellowLighter;
-        } else if (beg && blockStmt.equals("SWITCH")) {
-            // switch in C or C++
-            blockPainter = blockYellowLighter;
-        } else if (beg && blockStmt.equals("CASE")) {
-            // case in switch in C or C++
-            blockPainter = blockYellowLighter;
-        } else if (beg && blockStmt.equals("EVALUATE")) {
-            // EVALUATE in COBOL
-            blockPainter = blockYellowLighter;
-        } else if (beg && blockStmt.equals("MONITOR")) {
-            // MONITOR in RPG IV
-            blockPainter = blockRedLighter;
-        } else if (beg && blockStmt.equals("ON-ERROR")) {
-            // ON-ERROR in RPG IV
-            blockPainter = blockRedLighter;
-        } else if (beg && blockStmt.equals("TRY")) {
-            // try in C++
-            blockPainter = blockRedLighter;
-        } else if (beg && blockStmt.equals("CATCH")) {
-            // catch in C++
-            blockPainter = blockRedLighter;
-        } else if (beg && blockStmt.equals("DCL-PROC")) {
-            // DCL-PROC in RPG **FREE
-            blockPainter = blockGrayLighter;
-        } else if (beg && blockStmt.equals("BEGSR")) {
-            // BEGSR in RPG
-            blockPainter = blockGrayLighter;
-        } else if (beg && blockStmt.equals("SECTION")) {
-            // SECTION in COBOL
-            blockPainter = blockGrayLighter;
-        } else if (beg && blockStmt.equals("{")) {
-            // { in C, C++
-            blockPainter = curlyBracketsLighter;
-
-            // Ends of block statements - colors
-        } else if (!beg && blockStmt.equals("END-DS")) {
-            // END-DS in RPG **FREE
-            blockPainter = blockBrownDarker;
-        } else if (!beg && blockStmt.equals("END-PR")) {
-            // END-PR in RPG **FREE
-            blockPainter = blockBrownDarker;
-        } else if (!beg && blockStmt.equals("END-PI")) {
-            // END-PI in RPG **FREE
-            blockPainter = blockBrownDarker;
-        } else if (!beg && blockStmt.equals("ENDDO")) {
-            // ENDDO in RPG, CL
-            blockPainter = blockBlueDarker;
-        } else if (!beg && blockStmt.equals("END  ")) {
-            // END in RPGIII
-            blockPainter = blockBlueDarker;
-        } else if (!beg && blockStmt.equals("ENDFOR")) {
-            // ENDFOR in RPG, CL
-            blockPainter = blockBlueDarker;
-        } else if (!beg && blockStmt.equals("END-PERFORM")) {
-            // END-PERFORM in COBOL
-            blockPainter = blockBlueDarker;
-        } else if (!beg && blockStmt.equals("ENDIF")) {
-            // ENDIF in RPG and C, C++ (in #endif)
-            blockPainter = blockGreenDarker;
-        } else if (!beg && blockStmt.equals("END-IF")) {
-            // END-IF in COBOL
-            blockPainter = blockGreenDarker;
-        } else if (!beg && blockStmt.equals("ENDSL")) {
-            // ENDSL in RPG
-            blockPainter = blockYellowDarker;
-        } else if (!beg && blockStmt.equals("ENDSELECT")) {
-            // ENDSELECT in CL
-            blockPainter = blockYellowDarker;
-        } else if (!beg && blockStmt.equals("DEFAULT")) {
-            // default in C, C++
-            blockPainter = blockYellowDarker;
-        } else if (!beg && blockStmt.equals("END-EVALUATE")) {
-            // END-EVALUATE in COBOL
-            blockPainter = blockYellowDarker;
-        } else if (!beg && blockStmt.equals("ENDMON")) {
-            // ENDMON in CL
-            blockPainter = blockRedDarker;
-        } else if (!beg && blockStmt.equals("ENDSR")) {
-            // ENDSR in RPG
-            blockPainter = blockGrayDarker;
-        } else if (!beg && blockStmt.equals("END-PROC")) {
-            // END-PROC in RPG **FREE
-            blockPainter = blockGrayDarker;
-        } else if (!beg && blockStmt.equals("}")) {
-            // } in C, C++
-            blockPainter = curlyBracketsDarker;
-        }
-
-        // Inspect each line separately for ONE occurrence of the block statement.
-        // Highlight only the block statement that is outside of a comment, if it is not too complex.
-
-        // C and C++ are inspected NEITHER for comments NOR for block end statements (i.e. curly brackets).
-        // It would be unacceptably complex.
-
-        // The *ALL option highlights all occurrences in all languages.
-        String text = textArea.getText().toUpperCase();
-        int startOfLine = 0;
-        int endOfLine = 0;
-        try {
-            endOfLine = text.indexOf(NEW_LINE, startOfLine);
-            while (startOfLine > -1 && startOfLine < text.length()) {
-
-                if (endOfLine - startOfLine > 0) {
-
-                    int startOfBlockStmt = text.indexOf(blockStmt, startOfLine);
-                    int endOfBlockStmt = startOfBlockStmt + blockStmt.length();
-
-                    if (startOfBlockStmt >= startOfLine && startOfBlockStmt <= endOfLine - blockStmt.length()) {
-                        switch (progLanguage) {
-
-                            case "*ALL": {
-                                blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
-                                break;
-                            }
-
-                            case "RPG **FREE": {
-                                // Before block statement: All spaces or empty
-                                // After block statement: A space or semicolon or new line
-                                if ((text.substring(startOfLine, startOfBlockStmt).equals(fixedLengthSpaces(startOfBlockStmt
-                                        - startOfLine))
-                                        || text.substring(startOfLine, startOfBlockStmt).isEmpty())
-                                        && (text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(" ")
-                                        || text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(";")
-                                        || text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(NEW_LINE))) {
-                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
-                                }
-                                break;
-                            } // End of case RPG **FREE
-
-                            case "RPG /FREE": {
-                                // Before block statement: at least 7 spaces
-                                // After block statement: A space or new line or semicolon
-                                // No asterisk comment (* in column 7)
-                                if (text.length() >= 7) {
-                                    if ((text.substring(startOfLine + 7, startOfBlockStmt).equals(fixedLengthSpaces(startOfBlockStmt
-                                            - (startOfLine + 7)))
-                                            || text.substring(startOfLine, startOfBlockStmt).isEmpty())
-                                            && (text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(" ")
-                                            || text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(NEW_LINE)
-                                            || text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(";"))
-                                            && !text.substring(startOfLine + 6, startOfLine + 7).equals("*")) {
-                                        blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
-                                    }
-                                }
-                                break;
-                            } // End of case RPG /FREE
-
-                            case "RPG IV fixed": {
-                                // C in column 6 and no asterisk comment (* in column 7) and block statement in column 26 (Opcode)
-                                if (text.length() >= 5) {
-                                    if (text.substring(startOfLine + 5, startOfLine + 6).equals("C")
-                                            && !text.substring(startOfLine + 6, startOfLine + 7).equals("*")
-                                            && startOfBlockStmt - startOfLine == 25) {
-                                        blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
-                                    }
-                                }
-                                break;
-                            } // End of case RPG IV fixed
-
-                            case "RPG III": {
-                                // C in column 6 and no asterisk comment (* in column 7) and block statement in column 28 (Opcode)
-                                if (text.length() >= 5) {
-                                    if (text.substring(startOfLine + 5, startOfLine + 6).equals("C")
-                                            && !text.substring(startOfLine + 6, startOfLine + 7).equals("*")
-                                            && startOfBlockStmt - startOfLine == 27) {
-                                        blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
-                                    }
-                                }
-                                break;
-                            } // End of case RPG RPG III
-
-                            case "CL": {
-                                String line = text.substring(startOfLine, endOfLine);
-                                int commentLeftPos = line.indexOf("/*");
-                                int commentRightPos = line.indexOf("*/");
-                                // One comment exists in the line and the block statement is outside
-                                // (We do not assume that there are more comments in the line.)
-                                if (commentRightPos > 4 && commentLeftPos < commentRightPos
-                                        && (endOfBlockStmt <= startOfLine + commentLeftPos
-                                        || startOfBlockStmt >= startOfLine + commentRightPos + "*/".length())) {
-                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
-                                } // Highlight block statement if there is no
-                                // comment in line
-                                else if (commentLeftPos == -1) {
-                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
-                                }
-                                break;
-                            } // End of case CL
-
-                            case "COBOL": {
-                                // No asterisk or slash comment (* or / in column 7)
-                                // and the block statement is in columns 12 to 72
-
-                                if (text.length() >= 7) {
-                                    if (!text.substring(startOfLine + 6, startOfLine + 7).equals("*")
-                                            && !text.substring(startOfLine + 6, startOfLine + 7).equals("/")
-                                            && startOfBlockStmt - startOfLine >= 11
-                                            && endOfBlockStmt - startOfLine <= 72) {
-                                        blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
-                                    }
-                                }
-                                break;
-                            } // End of case COBOL
-
-                            case "C": {
-                                String line = text.substring(startOfLine, endOfLine);
-                                int doubleSlashPos = line.indexOf("//");
-                                int commentLeftPos = line.indexOf("/*");
-                                int commentRightPos = line.indexOf("*/");
-                                // One comment exists in the line and the block
-                                // statement is outside
-                                // (We do not assume that there are more comments in
-                                // the line.)
-                                if (commentRightPos > 4 && commentLeftPos < commentRightPos
-                                        && commentLeftPos > 0
-                                        && (endOfBlockStmt <= startOfLine + commentLeftPos
-                                        || startOfBlockStmt >= startOfLine + commentRightPos + "*/".length())) {
-                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
-                                } else if (doubleSlashPos > -1) {
-                                    if (endOfBlockStmt <= startOfLine + doubleSlashPos) {
-                                        blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
-                                    }
-                                } // Highlight block statement if there is no
-                                // comment in line
-                                else if (commentLeftPos == -1) {
-                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
-                                }
-                                break;
-                            } // End of case C
-
-                            case "C++": {
-                                String line = text.substring(startOfLine, endOfLine);
-                                int doubleSlashPos = line.indexOf("//");
-                                int commentLeftPos = line.indexOf("/*");
-                                int commentRightPos = line.indexOf("*/");
-                                // One comment exists in the line and the block
-                                // statement is outside
-                                // (We do not assume that there are more comments in
-                                // the line.)
-                                if (commentRightPos > 4 && commentLeftPos < commentRightPos
-                                        && commentLeftPos > 0
-                                        && (endOfBlockStmt <= startOfLine + commentLeftPos
-                                        || startOfBlockStmt >= startOfLine + commentRightPos + "*/".length())) {
-                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
-                                } else if (doubleSlashPos > -1) {
-                                    if (endOfBlockStmt <= startOfLine + doubleSlashPos) {
-                                        blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
-                                    }
-                                } // Highlight block statement if there is no
-                                // comment in line
-                                else if (commentLeftPos == -1) {
-                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
-                                }
-                                break;
-                            } // End of case C++
-
-                        } // End of switch
-                    }
-                }
-                startOfLine = text.indexOf(NEW_LINE, startOfLine) + NEW_LINE.length();
-                endOfLine = text.indexOf(NEW_LINE, startOfLine);
-            }
-        } catch (Exception exc) {
-            exc.printStackTrace();
-        }
-    }
-
-    /**
-     * Construct Pattern object and compile it.
-     *
-     * @return
-     */
-    private Pattern getPattern() {
-        String pattern = findField.getText();
-
-        if (Objects.isNull(pattern) || pattern.isEmpty()) {
-            return null;
-        }
-        try {
-            pattern = String.format(pattern);
-            // Allow backslash, asterisk, plus, question mark etc.
-            // The backslash must be tested first!!!
-            pattern = pattern.replace("\\", "\\\\");
-            pattern = pattern.replace("*", "\\*");
-            pattern = pattern.replace("+", "\\+");
-            pattern = pattern.replace("?", "\\?");
-            pattern = pattern.replace("$", "\\$");
-            pattern = pattern.replace(".", "\\.");
-            pattern = pattern.replace("[", "\\[");
-            pattern = pattern.replace("^", "\\^");
-            pattern = pattern.replace("_", "\\_");
-            pattern = pattern.replace("|", "\\|");
-            pattern = pattern.replace("{", "\\{");
-            pattern = pattern.replace("(", "\\(");
-            pattern = pattern.replace(")", "\\)");
-            pattern = pattern.replace("`", "\\`");
-
-            return Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
-        } catch (PatternSyntaxException ex) {
-            findField.setBackground(WARNING_COLOR);
-            return null;
-        }
-    }
-
-    /**
-     * Find all matches and highlight it YELLOW (highlightPainter). Then hihglight the match ORANGE (currentPainter) on
-     * the current position. Current positions begin with -1 and are incremented or decremented by 1 using buttons or
-     * keys.
-     */
-    private void changeHighlight() {
-        Highlighter highlighter = textArea.getHighlighter();
-        highlighter.removeAllHighlights();
-
-        findField.setBackground(Color.WHITE);
-        Document doc = textArea.getDocument();
-        try {
-            Pattern pattern = getPattern();
-            //System.out.println("patternOk: " + pattern);
-            if (pattern == null) {
-                return;
-            }
-            if (Objects.nonNull(pattern)) {
-                Matcher matcher = pattern.matcher(doc.getText(0, doc.getLength()));
-                int pos = 0;
-                while (matcher.find(pos)) {
-                    int start = matcher.start();
-                    int end = matcher.end();
-                    highlighter.addHighlight(start, end, highlightPainter);
-                    pos = end;
-                }
-            }
-
-            JLabel label = layerUI.hint;
-            Highlighter.Highlight[] array = highlighter.getHighlights();
-            int hits = array.length;
-            if (hits == 0) {
-                currentPos = -1;
-                label.setOpaque(true);
-            } else {
-                currentPos = (currentPos + hits) % hits;
-                label.setOpaque(false);
-                Highlighter.Highlight hh = highlighter.getHighlights()[currentPos];
-                highlighter.removeHighlight(hh);
-                highlighter.addHighlight(hh.getStartOffset(), hh.getEndOffset(), currentPainter);
-                // Remember offsets of the found text for possible later replacing
-                startOffset = hh.getStartOffset();
-                endOffset = hh.getEndOffset();
-                scrollToCenter(textArea, startOffset);
-            }
-            label.setText(String.format("%02d / %02d%n", currentPos + 1, hits));
-        } catch (BadLocationException ex) {
-            ex.printStackTrace();
-        }
-        findField.repaint();
-    }
-
-    /**
-     * Set the currently highlighted row to be seen (in the visible part of the text area).
-     *
-     * @param textComponent
-     * @param position
-     * @throws BadLocationException
-     */
-    private static void scrollToCenter(JTextComponent textComponent, int position) throws BadLocationException {
-        Rectangle rectangle = textComponent.modelToView(position);
-        Container container = SwingUtilities.getAncestorOfClass(JViewport.class, textComponent);
-        if (Objects.nonNull(rectangle) && container instanceof JViewport) {
-            rectangle.x = (int) (rectangle.x - container.getWidth() * 0.5);
-            rectangle.width = container.getWidth();
-            rectangle.height = (int) (container.getHeight() * 0.5);
-            textComponent.scrollRectToVisible(rectangle);
-        }
-    }
-
-    /**
-     * Replace all TAB characters with a number of spaces
-     */
-    private void replaceTabsWithSpaces() {
-        String text = textArea.getText();
-        text = text.replace("\t", fixedLengthSpaces(TAB_SIZE));
-        textArea.setText(text);
-    }
-
-    /**
-     * Create String of spaces with a given length
-     *
-     * @param length
-     * @return
-     */
-    private String fixedLengthSpaces(int length) {
-        char[] spaces = new char[length];
-        for (int idx = 0; idx < length; idx++) {
-            spaces[idx] = ' ';
-        }
-        return String.copyValueOf(spaces);
-    }
-
-    /**
-     * Button listener for buttons Find (<,>) and Replace and Replace/Find. Note: "ReplaceAll" button has different
-     * action listener.
-     */
-    class HighlightHandler implements DocumentListener, ActionListener {
-
-        @Override
-        public void changedUpdate(DocumentEvent de) {
-            /* not needed */
-        }
-
-        @Override
-        public void insertUpdate(DocumentEvent de) {
-            changeHighlight();
-        }
-
-        @Override
-        public void removeUpdate(DocumentEvent de) {
-            changeHighlight();
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent de) {
-            Object obj = de.getSource();
-            if (obj instanceof AbstractButton) {
-                String cmd = ((AbstractButton) obj).getActionCommand();
-                if (cmd.equals("prev")) {
-                    currentPos--;
-                } else if (cmd.equals("next")) {
-                    currentPos++;
-                } else if (cmd.equals("replace")) {
-                    if (currentPos > -1) {
-                        textArea.replaceRange(replaceField.getText(), startOffset, endOffset);
-                        textArea.setCaretPosition(endOffset);
-                        textArea.requestFocus();
-                        return; // Do not find next match
-                    }
-                } else if (cmd.equals("replaceFind")) {
-                    if (currentPos > -1) {
-                        textArea.replaceRange(replaceField.getText(), startOffset, endOffset);
-                        textArea.setCaretPosition(endOffset);
-                        textArea.requestFocus();
-                    }
-                }
-            }
-            // Find next match
-            changeHighlight();
-        }
-    }
-
-    /**
-     * Set indicator N/M that overlays the search field and is right adjusted N - the sequence number of the text that is
-     * just highlighted, M - how many matches were found.
-     */
-    class PlaceholderLayerUI extends LayerUI<JTextComponent> {
-
-        public final JLabel hint = new JLabel() {
-            @Override
-            public void updateUI() {
-                super.updateUI();
-                // setForeground(UIManager.getColor("TextField.inactiveForeground"));
-                // The following foreground color is almost the same as
-                // "TextField.inactiveForeground"
-                setForeground(DIM_BLUE); // blue little saturated dim - gray
-                setBackground(DIM_RED); // red little saturated - bright
-            }
-        };
-
-        @Override
-        public void paint(Graphics g, JComponent component) {
-            super.paint(g, component);
-            if (component instanceof JLayer) {
-                JLayer jlayer = (JLayer) component;
-                JTextComponent textComponent = (JTextComponent) jlayer.getView();
-                if (!textComponent.getText().isEmpty()) {
-                    Graphics2D g2 = (Graphics2D) g.create();
-                    g2.setPaint(hint.getForeground());
-                    Insets insets = textComponent.getInsets();
-                    Dimension dimension = hint.getPreferredSize();
-                    int x = textComponent.getWidth() - insets.right - dimension.width - 2;
-                    int y = (textComponent.getHeight() - dimension.height) / 2;
-                    g2.translate(x, y);
-                    SwingUtilities.paintComponent(g2, hint, textComponent, 0, 0, dimension.width, dimension.height);
-                    g2.dispose();
-                }
-            }
-        }
-    }
-
-    class UndoHandler implements UndoableEditListener {
-
-        /**
-         * Messaged when the Document has created an edit, the edit is added to "undo", an instance of UndoManager.
-         */
-        public void undoableEditHappened(UndoableEditEvent uee) {
-            undo.addEdit(uee.getEdit());
-            undoAction.update();
-            redoAction.update();
-        }
-    }
-
-    class UndoAction extends AbstractAction {
-
-        public UndoAction() {
-            super("Undo");
-            setEnabled(false);
-        }
-
-        public void actionPerformed(ActionEvent e) {
-            try {
-                undo.undo();
-            } catch (CannotUndoException ex) {
-                // Logger.getLogger(UndoAction.class.getName()).log(Level.SEVERE,
-                // "Unable to undo", ex);
-            }
-            update();
-            redoAction.update();
-        }
-
-        protected void update() {
-            if (undo.canUndo()) {
-                setEnabled(true);
-                putValue(Action.NAME, undo.getUndoPresentationName());
-            } else {
-                setEnabled(false);
-                putValue(Action.NAME, "Undo");
-            }
-        }
-    }
-
-    class RedoAction extends AbstractAction {
-
-        public RedoAction() {
-            super("Redo");
-            setEnabled(false);
-        }
-
-        public void actionPerformed(ActionEvent ae) {
-            try {
-                undo.redo();
-            } catch (CannotRedoException cre) {
-                // Logger.getLogger(RedoAction.class.getName()).log(Level.SEVERE,
-                // "Unable to redo", cre);
-            }
-            update();
-            undoAction.update();
-        }
-
-        protected void update() {
-            if (undo.canRedo()) {
-                setEnabled(true);
-                putValue(Action.NAME, undo.getRedoPresentationName());
-            } else {
-                setEnabled(false);
-                putValue(Action.NAME, "Redo");
-            }
-        }
     }
 
     /**
@@ -2376,16 +1331,12 @@ public final class EditFile extends JFrame {
 
             String textAreaString = textArea.getText();
             byte[] byteArray;
-            AS400Text textConverter = new AS400Text(textAreaString.length(), attributeCCSID, remoteServer);
+            AS400Text textConverter = new AS400Text(textAreaString.length(), ccsidAttribute, remoteServer);
             byteArray = textConverter.toBytes(textAreaString);
             // Write text from the text area to the file
             outStream.write(byteArray);
             // Close file
             outStream.close();
-
-            // Set caret at the beginning of the text area
-            textArea.setCaretPosition(0);
-            textArea.requestFocus();
 
             row = "Comp: IFS file  " + filePathString + "  was saved.";
             mainWindow.msgVector.add(row);
@@ -2394,7 +1345,7 @@ public final class EditFile extends JFrame {
 
         } catch (Exception exc) {
             exc.printStackTrace();
-            row = "Error: " + exc.toString();
+            row = "Error in rewriting IFS file: " + exc.toString();
             mainWindow.msgVector.add(row);
             mainWindow.showMessages();
             return "ERROR";
@@ -2420,10 +1371,6 @@ public final class EditFile extends JFrame {
             // Close file
             outputFile.close();
 
-            // Set caret at the beginning of the text area
-            textArea.setCaretPosition(0);
-            textArea.requestFocus();
-
             row = "Comp: PC file  " + filePathString + "  was saved with charset  " + pcCharset + ".";
             mainWindow.msgVector.add(row);
             mainWindow.showMessages();
@@ -2431,7 +1378,7 @@ public final class EditFile extends JFrame {
 
         } catch (Exception exc) {
             exc.printStackTrace();
-            row = "Error: " + exc.toString();
+            row = "Error in rewriting PC file: " + exc.toString();
             mainWindow.msgVector.add(row);
             mainWindow.showMessages();
             return "ERROR";
@@ -2445,18 +1392,12 @@ public final class EditFile extends JFrame {
      */
     protected String rewriteSourceMember() {
 
-        // Extract individual names (libraryName, fileName, memberName) from the
-        // AS400 IFS path
+        // Extract individual names (libraryName, fileName, memberName) from the AS400 IFS path
         extractNamesFromIfsPath(filePathString);
 
         // Path to the output source member
-        String outMemberPathString = "/QSYS.LIB/" + libraryName
-                + ".LIB/"
-                + fileName
-                + ".FILE"
-                + "/"
-                + memberName
-                + ".MBR";
+        String outMemberPathString = "/QSYS.LIB/" + libraryName + ".LIB/" + fileName
+                + ".FILE" + "/" + memberName + ".MBR";
 
         // Enable calling CL commands
         CommandCall cmdCall = new CommandCall(remoteServer);
@@ -2467,12 +1408,7 @@ public final class EditFile extends JFrame {
             // If overwrite is not allowed - return
             // ------------------------------------
             if (!properties.getProperty("OVERWRITE_FILE").equals("Y")) {
-                row = "Info: Member  " + libraryName
-                        + "/"
-                        + fileName
-                        + "("
-                        + memberName
-                        + ")   cannot be overwtitten. "
+                row = "Info: Member  " + libraryName + "/" + fileName + "(" + memberName + ")   cannot be overwtitten. "
                         + " Overwriting files is not allowed.";
                 mainWindow.msgVector.add(row);
                 mainWindow.showMessages();
@@ -2482,8 +1418,7 @@ public final class EditFile extends JFrame {
             // Overwrite is allowed
             // --------------------
 
-            // First create an IFS '/home/userName directory if it does not
-            // exist
+            // First create an IFS '/home/userName directory if it does not exist
             String home_userName = "/home/" + userName;
             IFSFile ifsDir = new IFSFile(remoteServer, home_userName);
             // Create new directory if it does not exist
@@ -2508,12 +1443,9 @@ public final class EditFile extends JFrame {
             // Close file
             outStream.close();
 
-            // Copy data from temporary IFS file to the member. If the member
-            // does not exist it is created.
+            // Copy data from temporary IFS file to the member. If the member does not exist it is created.
             String commandCpyFrmStmfString = "CPYFRMSTMF FROMSTMF('" + tmpFileString
-                    + "') TOMBR('"
-                    + outMemberPathString
-                    + "') MBROPT(*REPLACE) CVTDTA(*NONE)";
+                    + "') TOMBR('" + outMemberPathString + "') MBROPT(*REPLACE) CVTDTA(*AUTO)";
             // Perform the command
             cmdCall.run(commandCpyFrmStmfString);
 
@@ -2523,24 +1455,14 @@ public final class EditFile extends JFrame {
             // return.
             for (AS400Message as400Message : as400MessageList) {
                 if (as400Message.getType() == AS400Message.ESCAPE) {
-                    row = "Error: Copy IFS file  " + tmpFileString
-                            + "  to source member  "
-                            + tmpFileString
-                            + "  using command CPYFRMSTMF  -  "
-                            + as400Message.getID()
-                            + " "
-                            + as400Message.getText();
+                    row = "Error: Copy IFS file  " + tmpFileString + "  to source member  " + tmpFileString
+                            + "  using command CPYFRMSTMF  -  " + as400Message.getID() + " " + as400Message.getText();
                     mainWindow.msgVector.add(row);
                     mainWindow.showMessages();
                     return "ERROR";
                 } else {
-                    row = "Info: Copy IFS file  " + tmpFileString
-                            + "  to source member  "
-                            + tmpFileString
-                            + "  using command CPYFRMSTMF  -  "
-                            + as400Message.getID()
-                            + " "
-                            + as400Message.getText();
+                    row = "Info: Copy IFS file  " + tmpFileString + "  to source member  " + tmpFileString
+                            + "  using command CPYFRMSTMF  -  " + as400Message.getID() + " " + as400Message.getText();
                     mainWindow.msgVector.add(row);
                     mainWindow.showMessages();
                 }
@@ -2548,10 +1470,6 @@ public final class EditFile extends JFrame {
 
             // Delete the temporary file
             ifsTmpFile.delete();
-
-            // Set caret at the beginning of the text area
-            textArea.setCaretPosition(0);
-            textArea.requestFocus();
 
             row = "Comp: Source member  " + libraryName + "/" + fileName + "(" + memberName + ")  was saved.";
             mainWindow.msgVector.add(row);
@@ -2770,6 +1688,1239 @@ public final class EditFile extends JFrame {
     }
 
     /**
+     * Prepare text area and set location and visibility of the window.
+     */
+    private void prepareEditingAndShow() {
+
+        // Set scroll bar to last caret position
+        textArea.setCaretPosition(caretPosition);
+
+        // Listener for undoable edits
+        textArea.getDocument().addUndoableEditListener(undoHandler);
+
+        // Get a highlighter for the primary text area
+        blockHighlighter = textArea.getHighlighter();
+        // Remove all preceding highlights
+        blockHighlighter.removeAllHighlights();
+        // Hightlight only if the option is not *NONE
+        if (!progLanguage.equals("*NONE")) {
+            highlightBlocks(textArea, progLanguage);
+        }
+        // Get a highlighter for the primary text area
+        blockHighlighter = textArea2.getHighlighter();
+        // Remove all preceding highlights
+        blockHighlighter.removeAllHighlights();
+        // Hightlight only if the option is not *NONE
+        if (!progLanguage.equals("*NONE")) {
+            highlightBlocks(textArea2, progLanguage);
+        }
+
+        // Undo button listener
+        undoButton.addActionListener(new UndoAction());
+
+        // Redo button listener
+        redoButton.addActionListener(new RedoAction());
+
+        // Show the window on the specified position
+//        setLocation(windowX - 100, windowY);
+
+        try {
+            BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+            // Save programming language into properties
+            properties.setProperty("HIGHLIGHT_BLOCKS", progLanguage);
+            properties.store(outfile, PROP_COMMENT);
+            outfile.close();
+        } catch (Exception exc) {
+            exc.printStackTrace();
+        }
+
+    }
+
+    /**
+     * Highlight compound statements (blocks) in a simplified parsing
+     *
+     * @param textArea
+     * @param progLanguage
+     */
+    protected void highlightBlocks(JTextArea textArea, String progLanguage) {
+        stmtsBeg.clear();
+        stmtsEnd.clear();
+
+        switch (progLanguage) {
+            case "*ALL": {
+                // Beginnings of block statements
+
+                // Declarations
+                stmtsBeg.add("DCL-DS");
+                stmtsBeg.add("DCL-PR");
+                stmtsBeg.add("DCL-PI");
+                stmtsBeg.add("DCL-PROC");
+                stmtsBeg.add("BEGSR");
+                stmtsBeg.add("SECTION");
+                stmtsBeg.add("INPUT-OUTPUT");
+                stmtsBeg.add("WORKING-STORAGE");
+                stmtsBeg.add("LINKAGE");
+                stmtsBeg.add("DIVISION");
+                stmtsBeg.add("ENVIRONMENT");
+                stmtsBeg.add("IDENTIFICATION");
+                stmtsBeg.add("DATA");
+                stmtsBeg.add("PROCEDURE");
+                // Loops
+                stmtsBeg.add("DOW");
+                stmtsBeg.add("DOW(");
+                stmtsBeg.add("DOU");
+                stmtsBeg.add("DOU(");
+                stmtsBeg.add("DOUNTIL");
+                stmtsBeg.add("DO");
+                stmtsBeg.add("WHILE");
+                stmtsBeg.add("DOWHILE");
+                stmtsBeg.add("UNTIL");
+                stmtsBeg.add("FOR");
+                stmtsBeg.add("FOR(");
+                stmtsBeg.add("DOFOR");
+                stmtsBeg.add("PERFORM");
+                // Conditions
+                stmtsBeg.add("IF");
+                stmtsBeg.add("IF(");
+                stmtsBeg.add("ELSEIF");
+                stmtsBeg.add("ELSEIF(");
+                stmtsBeg.add("THEN");
+                stmtsBeg.add("ELSE");
+                stmtsBeg.add("SELECT");
+                stmtsBeg.add("SWITCH");
+                stmtsBeg.add("CASE");
+                stmtsBeg.add("DEFAULT");
+                stmtsBeg.add("WHEN");
+                stmtsBeg.add("WHEN(");
+                stmtsBeg.add("OTHER");
+                stmtsBeg.add("OTHERWISE");
+                stmtsBeg.add("EVALUATE");
+                // Monitors
+                stmtsBeg.add("MONITOR");
+                stmtsBeg.add("ON-ERROR");
+                stmtsBeg.add("MONMSG");
+                stmtsBeg.add("TRY");
+                stmtsBeg.add("CATCH");
+                // C - style
+                stmtsBeg.add("{");
+
+                // Ends of block statements
+
+                // Declarations
+                stmtsEnd.add("END-DS");
+                stmtsEnd.add("END-PR");
+                stmtsEnd.add("END-PI");
+                stmtsEnd.add("END-PROC");
+                stmtsEnd.add("ENDSR");
+                // Loops
+                stmtsEnd.add("ENDDO");
+                stmtsEnd.add("ENDFOR");
+                stmtsEnd.add("END-PERFORM");
+                // Conditions
+                stmtsEnd.add("ENDIF");
+                stmtsEnd.add("END-IF");
+                stmtsEnd.add("ENDSL");
+                stmtsEnd.add("ENDSELECT");
+                stmtsEnd.add("END-EVALUATE");
+                // Monitor
+                stmtsEnd.add("ENDMON");
+                // C - style
+                stmtsEnd.add("}");
+                break;
+            } // End of case *ALL
+
+            case "RPG **FREE": {
+                // Beginnings of block statements
+
+                // Declarations
+                stmtsBeg.add("DCL-DS");
+                stmtsBeg.add("DCL-PR");
+                stmtsBeg.add("DCL-PI");
+                stmtsBeg.add("DCL-PROC");
+                stmtsBeg.add("BEGSR");
+                // Loops
+                stmtsBeg.add("DOW");
+                stmtsBeg.add("DOW(");
+                stmtsBeg.add("DOU");
+                stmtsBeg.add("DOU(");
+                stmtsBeg.add("FOR");
+                stmtsBeg.add("FOR(");
+                // Conditions
+                stmtsBeg.add("IF");
+                stmtsBeg.add("IF(");
+                stmtsBeg.add("ELSEIF");
+                stmtsBeg.add("ELSEIF(");
+                stmtsBeg.add("SELECT");
+                stmtsBeg.add("WHEN");
+                stmtsBeg.add("WHEN(");
+                stmtsBeg.add("OTHER");
+                // Monitors
+                stmtsBeg.add("MONITOR");
+                stmtsBeg.add("ON-ERROR");
+
+                // Ends of block statements
+
+                // Declarations
+                stmtsEnd.add("END-DS");
+                stmtsEnd.add("END-PR");
+                stmtsEnd.add("END-PI");
+                stmtsEnd.add("END-PROC");
+                stmtsEnd.add("ENDSR");
+                // Loops
+                stmtsEnd.add("ENDDO");
+                stmtsEnd.add("ENDFOR");
+                // Conditions
+                stmtsEnd.add("ENDIF");
+                stmtsEnd.add("ENDSL");
+                // Monitor
+                stmtsEnd.add("ENDMON");
+                break;
+            } // End of case RPG **FREE
+
+            case "RPG /FREE": {
+                // Beginnings of block statements
+
+                // Declarations
+                stmtsBeg.add("DCL-DS");
+                stmtsBeg.add("DCL-PR");
+                stmtsBeg.add("DCL-PI");
+                stmtsBeg.add("DCL-PROC");
+                stmtsBeg.add("BEGSR");
+                // Loops
+                stmtsBeg.add("DOW");
+                stmtsBeg.add("DOW(");
+                stmtsBeg.add("DOU");
+                stmtsBeg.add("DOU(");
+                stmtsBeg.add("FOR");
+                stmtsBeg.add("FOR(");
+                // Conditions
+                stmtsBeg.add("IF");
+                stmtsBeg.add("IF(");
+                stmtsBeg.add("ELSEIF");
+                stmtsBeg.add("ELSEIF(");
+                stmtsBeg.add("SELECT");
+                stmtsBeg.add("WHEN");
+                stmtsBeg.add("WHEN(");
+                stmtsBeg.add("OTHER");
+                // Monitors
+                stmtsBeg.add("MONITOR");
+                stmtsBeg.add("ON-ERROR");
+
+                // Ends of block statements
+
+                // Declarations
+                stmtsEnd.add("END-DS");
+                stmtsEnd.add("END-PR");
+                stmtsEnd.add("END-PI");
+                stmtsEnd.add("END-PROC");
+                stmtsEnd.add("ENDSR");
+                // Loops
+                stmtsEnd.add("ENDDO");
+                stmtsEnd.add("ENDFOR");
+                // Conditions
+                stmtsEnd.add("ENDIF");
+                stmtsEnd.add("ENDSL");
+                // Monitor
+                stmtsEnd.add("ENDMON");
+                break;
+            } // End of case RPG /FREE
+
+            case "RPG IV fixed": {
+                // Beginnings of block statements
+
+                // Declarations
+                stmtsBeg.add("BEGSR");
+                // Loops
+                stmtsBeg.add("DO");
+                stmtsBeg.add("DOW");
+                stmtsBeg.add("DOW(");
+                stmtsBeg.add("DOU");
+                stmtsBeg.add("DOU(");
+                // Conditions
+                stmtsBeg.add("IF");
+                stmtsBeg.add("IF(");
+                stmtsBeg.add("ELSEIF");
+                stmtsBeg.add("SELECT");
+                stmtsBeg.add("WHEN");
+                stmtsBeg.add("WHEN(");
+                stmtsBeg.add("OTHER");
+                // Monitors
+                stmtsBeg.add("MONITOR");
+                stmtsBeg.add("ON-ERROR");
+
+                // End of block statements
+
+                // Declarations
+                stmtsEnd.add("ENDSR");
+                // Loops
+                stmtsEnd.add("ENDDO");
+                stmtsEnd.add("END  ");
+                // Conditions
+                stmtsEnd.add("ENDIF");
+                stmtsEnd.add("ENDSL");
+                // Monitor
+                stmtsEnd.add("ENDMON");
+                break;
+            } // End of case RPG IV fixed
+
+            case "RPG III": {
+                // Beginnings of block statements
+
+                // Declarations
+                stmtsBeg.add("BEGSR");
+                // Loops
+                stmtsBeg.add("DO");
+                stmtsBeg.add("DOW");
+                stmtsBeg.add("DOU");
+                // Conditions
+                stmtsBeg.add("IF");
+                stmtsBeg.add("SELEC");
+                stmtsBeg.add("CAS");
+                stmtsBeg.add("WH");
+                stmtsBeg.add("OTHER");
+
+                // Ends of block statements
+
+                // Declarations
+                stmtsEnd.add("ENDSR");
+                // Loops
+                stmtsEnd.add("ENDDO");
+                stmtsEnd.add("END  ");
+                // Conditions
+                stmtsEnd.add("ENDIF");
+                stmtsEnd.add("ENDSL");
+                stmtsEnd.add("ENDCS");
+                break;
+            } // End of case RPG III
+
+            case "CL": {
+                // Beginnings of block statements
+
+                // Declarations
+                stmtsBeg.add("SUBR");
+                // Loops
+                stmtsBeg.add("DOUNTIL");
+                stmtsBeg.add("DOWHILE");
+                stmtsBeg.add("DOFOR");
+                stmtsBeg.add("DO");
+                // Conditions
+                stmtsBeg.add("IF");
+                stmtsBeg.add("THEN");
+                stmtsBeg.add("ELSE");
+                stmtsBeg.add("SELECT");
+                stmtsBeg.add("WHEN");
+                stmtsBeg.add("OTHERWISE");
+                // Monitors
+                stmtsBeg.add("MONMSG");
+
+                // Ends of block statements
+
+                // Declarations
+                stmtsEnd.add("ENDSUBR");
+                // Loops
+                stmtsEnd.add("ENDDO");
+                stmtsEnd.add("ENDSELECT");
+                break;
+            } // End of case CL
+
+            case "COBOL": {
+                // Beginnings of block statements
+
+                // Declarations
+                stmtsBeg.add("SECTION");
+                stmtsBeg.add("INPUT-OUTPUT");
+                stmtsBeg.add("WORKING-STORAGE");
+                stmtsBeg.add("LINKAGE");
+                stmtsBeg.add("DIVISION");
+                stmtsBeg.add("ENVIRONMENT");
+                stmtsBeg.add("IDENTIFICATION");
+                stmtsBeg.add("DATA ");
+                stmtsBeg.add("PROCEDURE");
+                // Loops
+                stmtsBeg.add("PERFORM");
+                stmtsBeg.add("UNTIL");
+                // Conditions
+                stmtsBeg.add("IF ");
+                stmtsBeg.add("THEN");
+                stmtsBeg.add("ELSE");
+                stmtsBeg.add("EVALUATE");
+                stmtsBeg.add("WHEN");
+
+                // Ends of block statements
+
+                // Loops
+                stmtsEnd.add("END-PERFORM");
+                // Conditions
+                stmtsEnd.add("END-IF");
+                stmtsEnd.add("END-EVALUATE");
+                break;
+            } // End of case COBOL
+
+            case "C": {
+                // Beginnings of block statements
+
+                // Loops
+                stmtsBeg.add("MAIN ");
+                stmtsBeg.add("MAIN(");
+                stmtsBeg.add("WHILE ");
+                stmtsBeg.add("WHILE(");
+                stmtsBeg.add("FOR ");
+                stmtsBeg.add("FOR(");
+                stmtsBeg.add("DO ");
+                stmtsBeg.add("DO(");
+                // Conditions
+                stmtsBeg.add("IF ");
+                stmtsBeg.add("IF(");
+                stmtsBeg.add("ELSE ");
+                stmtsBeg.add("SWITCH");
+                stmtsBeg.add("CASE");
+                stmtsBeg.add("DEFAULT");
+                stmtsBeg.add("{");
+
+                // Endings of block statements
+
+                stmtsEnd.add("}");
+                break;
+            } // End of case C
+
+            case "C++": {
+                // Beginnings of block statements
+
+                // Loops
+                stmtsBeg.add("MAIN ");
+                stmtsBeg.add("MAIN(");
+                stmtsBeg.add("WHILE ");
+                stmtsBeg.add("WHILE(");
+                stmtsBeg.add("FOR ");
+                stmtsBeg.add("FOR(");
+                stmtsBeg.add("DO ");
+                stmtsBeg.add("DO(");
+                // Conditions
+                stmtsBeg.add("IF ");
+                stmtsBeg.add("IF(");
+                stmtsBeg.add("ELSE ");
+                stmtsBeg.add("SWITCH");
+                stmtsBeg.add("CASE");
+                stmtsBeg.add("DEFAULT");
+                // Monitors
+                stmtsBeg.add("TRY");
+                stmtsBeg.add("CATCH");
+                stmtsBeg.add("{");
+
+                // Endings of block statements
+
+                stmtsEnd.add("}");
+                break;
+            } // End of case C++
+
+        } // End of switch
+
+        // Find and highlight beginning block statements
+        stmtsBeg.forEach(stmtBeg -> {
+            highlightBlockStmt(textArea, stmtBeg, true); // true is tested as beg
+        });
+
+        // Find and highlight ending block statements
+        stmtsEnd.forEach(stmtEnd -> {
+            highlightBlockStmt(textArea, stmtEnd, false); // false is tested as !beg
+        });
+
+    }
+
+    /**
+     * Highlight block statements
+     *
+     * @param blockStmt
+     * @param beg
+     */
+    protected void highlightBlockStmt(JTextArea textArea, String blockStmt, boolean beg) {
+
+        // Beginnings of block statements - colors
+        if (beg && (blockStmt.equals("DCL-DS"))) {
+            // DCL-DS in RPG **FREE
+            blockPainter = blockBrownLighter;
+        } else if (beg && blockStmt.equals("DCL-PR")) {
+            // DCL-PR in RPG **FREE
+            blockPainter = blockBrownLighter;
+        } else if (beg && blockStmt.equals("DCL-PI")) {
+            // DCL-PI in RPG **FREE
+            blockPainter = blockBrownLighter;
+        } else if (beg && blockStmt.equals("DOW")) {
+            // DOW in RPG
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("DOW(")) {
+            // DOW( in RPG **FREE
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("DOU")) {
+            // DOU in RPG
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("DOU(")) {
+            // DOU( in RPG **FREE
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("DOUNTIL")) {
+            // DOUNTIL in CL
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("DOWHILE")) {
+            // DOWHILE in CL
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("DO ")) {
+            // DO in CL, C, C++, older RPG
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("DO(")) {
+            // DO in CL, C, C++, older RPG
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("WHILE ")) {
+            // WHILE in C, C++
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("WHILE(")) {
+            // WHILE in C, C++
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("UNTIL ")) {
+            // UNTIL in C, C++, COBOL
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("FOR ")) {
+            // FOR in RPG, C, C++
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("FOR(")) {
+            // FOR( in RPG **FREE, C, C++
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("MAIN ")) {
+            // MAIN in C, C++
+            blockPainter = blockRedDarker;
+        } else if (beg && blockStmt.equals("MAIN(")) {
+            // MAIN in C, C++
+            blockPainter = blockRedDarker;
+        } else if (beg && blockStmt.equals("DOFOR")) {
+            // DOFOR in CL
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("PERFORM")) {
+            // PERFORM in COBOL
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("IF ")) {
+            // IF in RPG, CL, C, C++
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("IF(")) {
+            // IF( in RPG **FREE
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("IF ")) {
+            // IF in COBOL (with a space at the end)
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("ELSEIF")) {
+            // ELSEIF in RPG
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("THEN")) {
+            // THEN in COBOL
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("ELSE")) {
+            // ELSE in RPG, CL, COBOL, C, C++
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("SELECT")) {
+            // SELECT in RPG IV
+            blockPainter = blockYellowLighter;
+        } else if (beg && blockStmt.equals("SELEC")) {
+            // SELEC in RPG III
+            blockPainter = blockYellowLighter;
+        } else if (beg && blockStmt.equals("WHEN")) {
+            // WHEN in RPG, COBOL
+            blockPainter = blockYellowLighter;
+        } else if (beg && blockStmt.equals("WHEN(")) {
+            // WHEN( in RPG
+            blockPainter = blockYellowLighter;
+        } else if (beg && blockStmt.equals("WH")) {
+            // WH in RPG III (as WHEQ, WHLE, ...)
+            blockPainter = blockYellowLighter;
+        } else if (beg && blockStmt.equals("OTHER")) {
+            // OTHER in RPG
+            blockPainter = blockYellowLighter;
+        } else if (beg && blockStmt.equals("SWITCH")) {
+            // switch in C or C++
+            blockPainter = blockYellowLighter;
+        } else if (beg && blockStmt.equals("CASE")) {
+            // case in switch in C or C++
+            blockPainter = blockYellowLighter;
+        } else if (beg && blockStmt.equals("EVALUATE")) {
+            // EVALUATE in COBOL
+            blockPainter = blockYellowLighter;
+        } else if (beg && blockStmt.equals("MONITOR")) {
+            // MONITOR in RPG IV
+            blockPainter = blockRedLighter;
+        } else if (beg && blockStmt.equals("ON-ERROR")) {
+            // ON-ERROR in RPG IV
+            blockPainter = blockRedLighter;
+        } else if (beg && blockStmt.equals("TRY")) {
+            // try in C++
+            blockPainter = blockRedLighter;
+        } else if (beg && blockStmt.equals("CATCH")) {
+            // catch in C++
+            blockPainter = blockRedLighter;
+        } else if (beg && blockStmt.equals("DCL-PROC")) {
+            // DCL-PROC in RPG **FREE
+            blockPainter = blockGrayLighter;
+        } else if (beg && blockStmt.equals("BEGSR")) {
+            // BEGSR in RPG
+            blockPainter = blockGrayLighter;
+        } else if (beg && blockStmt.equals("SECTION")) {
+            // SECTION in COBOL
+            blockPainter = blockGrayLighter;
+        } else if (beg && blockStmt.equals("INPUT-OUTPUT")) {
+            // WORKING-STORAGE in COBOL
+            blockPainter = blockGrayLighter;
+        } else if (beg && blockStmt.equals("WORKING-STORAGE")) {
+            // INPUT-OUTPUT in COBOL
+            blockPainter = blockGrayLighter;
+        } else if (beg && blockStmt.equals("LINKAGE")) {
+            // LINKAGE in COBOL
+            blockPainter = blockGrayLighter;
+        } else if (beg && blockStmt.equals("DIVISION")) {
+            // DIVISION in COBOL
+            blockPainter = blockRedDarker;
+        } else if (beg && blockStmt.equals("ENVIRONMENT")) {
+            // ENVIRONMENT in COBOL
+            blockPainter = blockRedDarker;
+        } else if (beg && blockStmt.equals("IDENTIFICATION")) {
+            // IDENTIFICATION in COBOL
+            blockPainter = blockRedDarker;
+        } else if (beg && blockStmt.equals("DATA ")) {
+            // DATA in COBOL
+            blockPainter = blockRedDarker;
+        } else if (beg && blockStmt.equals("PROCEDURE")) {
+            // PROCEDURE in COBOL
+            blockPainter = blockRedDarker;
+        } else if (beg && blockStmt.equals("{")) {
+            // { in C, C++
+            blockPainter = curlyBracketsLighter;
+
+            // Ends of block statements - colors
+        } else if (!beg && blockStmt.equals("END-DS")) {
+            // END-DS in RPG **FREE
+            blockPainter = blockBrownDarker;
+        } else if (!beg && blockStmt.equals("END-PR")) {
+            // END-PR in RPG **FREE
+            blockPainter = blockBrownDarker;
+        } else if (!beg && blockStmt.equals("END-PI")) {
+            // END-PI in RPG **FREE
+            blockPainter = blockBrownDarker;
+        } else if (!beg && blockStmt.equals("ENDDO")) {
+            // ENDDO in RPG, CL
+            blockPainter = blockBlueDarker;
+        } else if (!beg && blockStmt.equals("END  ")) {
+            // END in RPGIII
+            blockPainter = blockBlueDarker;
+        } else if (!beg && blockStmt.equals("ENDFOR")) {
+            // ENDFOR in RPG, CL
+            blockPainter = blockBlueDarker;
+        } else if (!beg && blockStmt.equals("END-PERFORM")) {
+            // END-PERFORM in COBOL
+            blockPainter = blockBlueDarker;
+        } else if (!beg && blockStmt.equals("ENDIF")) {
+            // ENDIF in RPG and C, C++ (in #endif)
+            blockPainter = blockGreenDarker;
+        } else if (!beg && blockStmt.equals("END-IF")) {
+            // END-IF in COBOL
+            blockPainter = blockGreenDarker;
+        } else if (!beg && blockStmt.equals("ENDSL")) {
+            // ENDSL in RPG
+            blockPainter = blockYellowDarker;
+        } else if (!beg && blockStmt.equals("ENDSELECT")) {
+            // ENDSELECT in CL
+            blockPainter = blockYellowDarker;
+        } else if (!beg && blockStmt.equals("DEFAULT")) {
+            // default in C, C++
+            blockPainter = blockYellowDarker;
+        } else if (!beg && blockStmt.equals("END-EVALUATE")) {
+            // END-EVALUATE in COBOL
+            blockPainter = blockYellowDarker;
+        } else if (!beg && blockStmt.equals("ENDMON")) {
+            // ENDMON in CL
+            blockPainter = blockRedDarker;
+        } else if (!beg && blockStmt.equals("ENDSR")) {
+            // ENDSR in RPG
+            blockPainter = blockGrayDarker;
+        } else if (!beg && blockStmt.equals("END-PROC")) {
+            // END-PROC in RPG **FREE
+            blockPainter = blockGrayDarker;
+        } else if (!beg && blockStmt.equals("}")) {
+            // } in C, C++
+            blockPainter = curlyBracketsDarker;
+        }
+
+        // Inspect each line separately for ONE occurrence of the block statement.
+        // Highlight only the block statement that is outside of a comment, if it is not too complex.
+
+        // C and C++ are inspected NEITHER for comments NOR for block end statements (i.e. curly brackets).
+        // It would be unacceptably complex.
+
+        String text;
+
+        // The *ALL option highlights all occurrences in all languages.
+        text = textArea.getText().toUpperCase();
+
+        int startOfLine = 0;
+        int endOfLine = 0;
+        try {
+            endOfLine = text.indexOf(NEW_LINE, startOfLine);
+            while (startOfLine > -1 && startOfLine < text.length()) {
+
+                if (endOfLine - startOfLine > 0) {
+
+                    int startOfBlockStmt = text.indexOf(blockStmt, startOfLine);
+                    int endOfBlockStmt = startOfBlockStmt + blockStmt.length();
+
+                    if (startOfBlockStmt >= startOfLine && startOfBlockStmt <= endOfLine - blockStmt.length()) {
+                        switch (progLanguage) {
+
+                            case "*ALL": {
+                                blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                break;
+                            }
+
+                            case "RPG **FREE": {
+                                // Before block statement: All spaces or empty
+                                // After block statement: A space or semicolon or new line
+                                if ((text.substring(startOfLine, startOfBlockStmt).equals(fixedLengthSpaces(startOfBlockStmt
+                                        - startOfLine))
+                                        || text.substring(startOfLine, startOfBlockStmt).isEmpty())
+                                        && (text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(" ")
+                                        || text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(";")
+                                        || text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(NEW_LINE))) {
+                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                }
+                                break;
+                            } // End of case RPG **FREE
+
+                            case "RPG /FREE": {
+                                // Before block statement: at least 7 spaces
+                                // After block statement: A space or new line or semicolon
+                                // No asterisk comment (* in column 7)
+                                if (text.length() >= 7) {
+                                    if ((text.substring(startOfLine + 7, startOfBlockStmt).equals(fixedLengthSpaces(startOfBlockStmt
+                                            - (startOfLine + 7)))
+                                            || text.substring(startOfLine, startOfBlockStmt).isEmpty())
+                                            && (text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(" ")
+                                            || text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(NEW_LINE)
+                                            || text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(";"))
+                                            && !text.substring(startOfLine + 6, startOfLine + 7).equals("*")) {
+                                        blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                    }
+                                }
+                                break;
+                            } // End of case RPG /FREE
+
+                            case "RPG IV fixed": {
+                                // C in column 6 and no asterisk comment (* in column 7) and block statement in column 26 (Opcode)
+                                if (text.length() >= 5) {
+                                    if (text.substring(startOfLine + 5, startOfLine + 6).equals("C")
+                                            && !text.substring(startOfLine + 6, startOfLine + 7).equals("*")
+                                            && startOfBlockStmt - startOfLine == 25) {
+                                        blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                    }
+                                }
+                                break;
+                            } // End of case RPG IV fixed
+
+                            case "RPG III": {
+                                // C in column 6 and no asterisk comment (* in column 7) and block statement in column 28 (Opcode)
+                                if (text.length() >= 5) {
+                                    if (text.substring(startOfLine + 5, startOfLine + 6).equals("C")
+                                            && !text.substring(startOfLine + 6, startOfLine + 7).equals("*")
+                                            && startOfBlockStmt - startOfLine == 27) {
+                                        blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                    }
+                                }
+                                break;
+                            } // End of case RPG RPG III
+
+                            case "CL": {
+                                String line = text.substring(startOfLine, endOfLine);
+                                int commentLeftPos = line.indexOf("/*");
+                                int commentRightPos = line.indexOf("*/");
+                                // One comment exists in the line and the block statement is outside
+                                // (We do not assume that there are more comments in the line.)
+                                if (commentRightPos > 4 && commentLeftPos < commentRightPos
+                                        && (endOfBlockStmt <= startOfLine + commentLeftPos
+                                        || startOfBlockStmt >= startOfLine + commentRightPos + "*/".length())) {
+                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                } // Highlight block statement if there is no
+                                // comment in line
+                                else if (commentLeftPos == -1) {
+                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                }
+                                break;
+                            } // End of case CL
+
+                            case "COBOL": {
+                                // No asterisk or slash comment (* or / in column 7)
+                                // and the block statement is in columns 12 to 72
+                                if (text.length() >= 7) {
+                                    if (!text.substring(startOfLine + 6, startOfLine + 7).equals("*")
+                                            && !text.substring(startOfLine + 6, startOfLine + 7).equals("/")
+                                            //&& startOfBlockStmt - startOfLine >= 11
+                                            && endOfBlockStmt - startOfLine <= 72) {
+                                        blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                    }
+                                }
+                                break;
+                            } // End of case COBOL
+
+                            case "C": {
+                                String line = text.substring(startOfLine, endOfLine);
+                                int doubleSlashPos = line.indexOf("//");
+                                int commentLeftPos = line.indexOf("/*");
+                                int commentRightPos = line.indexOf("*/");
+                                // One comment exists in the line and the block statement is outside
+                                // (We do not assume that there are more comments in the line.)
+                                if (commentRightPos > 4 && commentLeftPos < commentRightPos
+                                        && commentLeftPos > 0
+                                        && (endOfBlockStmt <= startOfLine + commentLeftPos
+                                        || startOfBlockStmt >= startOfLine + commentRightPos + "*/".length())) {
+                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                } else if (doubleSlashPos > -1) {
+                                    if (endOfBlockStmt <= startOfLine + doubleSlashPos) {
+                                        blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                    }
+                                } // Highlight block statement if there is no comment in line
+                                else if (commentLeftPos == -1) {
+                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                }
+                                break;
+                            } // End of case C
+
+                            case "C++": {
+                                String line = text.substring(startOfLine, endOfLine);
+                                int doubleSlashPos = line.indexOf("//");
+                                int commentLeftPos = line.indexOf("/*");
+                                int commentRightPos = line.indexOf("*/");
+                                // One comment exists in the line and the block statement is outside
+                                // (We do not assume that there are more comments in the line.)
+                                if (commentRightPos > 4 && commentLeftPos < commentRightPos
+                                        && commentLeftPos > 0
+                                        && (endOfBlockStmt <= startOfLine + commentLeftPos
+                                        || startOfBlockStmt >= startOfLine + commentRightPos + "*/".length())) {
+                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                } else if (doubleSlashPos > -1) {
+                                    if (endOfBlockStmt <= startOfLine + doubleSlashPos) {
+                                        blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                    }
+                                } // Highlight block statement if there is no comment in line
+                                else if (commentLeftPos == -1) {
+                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                }
+                                break;
+                            } // End of case C++
+
+                        } // End of switch
+                    }
+                }
+                startOfLine = text.indexOf(NEW_LINE, startOfLine) + NEW_LINE.length();
+                endOfLine = text.indexOf(NEW_LINE, startOfLine);
+            }
+        } catch (Exception exc) {
+            exc.printStackTrace();
+        }
+    }
+
+    /**
+     * Find all matches and highlight it YELLOW (highlightPainter), then hihglight the match ORANGE (currentPainter) on
+     * the current position. Current positions begin with -1 and are incremented or decremented by 1 using buttons or
+     * keys. For PRIMARY text area.
+     */
+    protected void changeHighlight() {
+
+        Highlighter highlighter = textArea.getHighlighter();
+        highlighter.removeAllHighlights();
+
+        findWindow.findField.setBackground(Color.WHITE);
+        Document doc = textArea.getDocument();
+        try {
+            Pattern pattern = findWindow.getPattern();
+            //System.out.println("patternOk: " + pattern);
+            if (pattern == null) {
+                return;
+            }
+            if (Objects.nonNull(pattern)) {
+                Matcher matcher = pattern.matcher(doc.getText(0, doc.getLength()));
+                int pos = 0;
+                while (matcher.find(pos)) {
+                    int start = matcher.start();
+                    int end = matcher.end();
+                    highlighter.addHighlight(start, end, highlightPainter);
+                    pos = end;
+                }
+            }
+
+            JLabel label = findWindow.layerUI.hint;
+            Highlighter.Highlight[] array = highlighter.getHighlights();
+            int hits = array.length;
+
+            if (hits == 0) {
+                currentPos = -1;
+                label.setOpaque(true);
+            } else {
+                currentPos = (currentPos + hits) % hits;
+                label.setOpaque(false);
+                Highlighter.Highlight hh = highlighter.getHighlights()[currentPos];
+                highlighter.removeHighlight(hh);
+                highlighter.addHighlight(hh.getStartOffset(), hh.getEndOffset(), currentPainter);
+                startOffset = hh.getStartOffset();
+                endOffset = hh.getEndOffset();
+                //scrollToCenter(textArea, startOffset);
+                textArea.setCaretPosition(startOffset);
+            }
+            label.setText(String.format("%02d / %02d%n", currentPos + 1, hits));
+        } catch (BadLocationException ex) {
+            ex.printStackTrace();
+        }
+        findWindow.findField.repaint();
+    }
+
+    /**
+     * Find all matches and highlight it YELLOW (highlightPainter), then hihglight the match ORANGE (currentPainter) on
+     * the current position. Current positions begin with -1 and are incremented or decremented by 1 using buttons or
+     * keys. For SECONDARY text area.
+     */
+    protected void changeHighlight2() {
+        Highlighter highlighter2 = textArea2.getHighlighter();
+        highlighter2.removeAllHighlights();
+
+        findWindow.findField.setBackground(Color.WHITE);
+        Document doc2 = textArea2.getDocument();
+        try {
+            Pattern pattern = findWindow.getPattern();
+            //System.out.println("patternOk: " + pattern);
+            if (pattern == null) {
+                return;
+            }
+            if (Objects.nonNull(pattern)) {
+                Matcher matcher2 = pattern.matcher(doc2.getText(0, doc2.getLength()));
+                int pos2 = 0;
+                while (matcher2.find(pos2)) {
+                    int start2 = matcher2.start();
+                    int end2 = matcher2.end();
+                    highlighter2.addHighlight(start2, end2, highlightPainter);
+                    pos2 = end2;
+                }
+            }
+
+            JLabel label = findWindow.layerUI.hint;
+            Highlighter.Highlight[] array = highlighter2.getHighlights();
+            int hits = array.length;
+            if (hits == 0) {
+                currentPos2 = -1;
+                label.setOpaque(true);
+            } else {
+                currentPos2 = (currentPos2 + hits) % hits;
+                label.setOpaque(false);
+                Highlighter.Highlight hh2 = highlighter2.getHighlights()[currentPos2];
+                highlighter2.removeHighlight(hh2);
+                highlighter2.addHighlight(hh2.getStartOffset(), hh2.getEndOffset(), currentPainter);
+                // Remember offsets of the found text for possible later replacing
+                startOffset2 = hh2.getStartOffset();
+                endOffset2 = hh2.getEndOffset();
+                //scrollToCenter(textArea2, startOffset2);
+                textArea2.setCaretPosition(startOffset2);
+            }
+            label.setText(String.format("%02d / %02d%n", currentPos2 + 1, hits));
+        } catch (BadLocationException ex) {
+            ex.printStackTrace();
+        }
+        findWindow.findField.repaint();
+    }
+
+    /**
+     * Split the text area view to an upper primary area and lower secondary area.
+     */
+    protected void splitTextArea() {
+
+        // Initially, the document listener is set for primary text area.
+        // The setting is changed when one of the document listeners is performed (on text change).
+
+        // Copy text from the primary to the secondary text area
+        textArea2.setText(textArea.getText());
+
+        // Set background for secondary text area
+        if (methodName.equals("rewritePcFile")) {
+            textArea2.setBackground(VERY_LIGHT_PINK);
+        } else {
+            textArea2.setBackground(VERY_LIGHT_BLUE);
+        }
+
+        // Set caret shapes for selection modes in the secondary text area
+        // ---------------------------------------------------------------
+
+        if (selectionModeButton.getText().equals(HORIZONTAL_SELECTION)) {
+            // Horizontal selection
+            if (caretShape.equals(LONG_CARET)) {
+                // Long caret
+                textArea2.setCaret(longCaret2);
+            } else {
+                // Short basic caret
+                textArea2.setCaret(basicCaret2);
+            }
+        } else {
+            // Vertical selection
+            textArea2.setCaret(specialCaret2);
+        }
+
+        // Build upper and lower scroll panes, and a split vertical scroll pane
+        scrollPaneUpper = new JScrollPane();
+        scrollPaneUpper.setViewportView(textArea);
+        scrollPaneUpper.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPaneUpper.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+
+        scrollPaneLower = new JScrollPane();
+        scrollPaneLower.setViewportView(textArea2);
+        scrollPaneLower.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPaneLower.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+
+        splitVerticalPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        splitVerticalPane.setPreferredSize(new Dimension(windowWidth, windowHeight));
+        splitVerticalPane.setBorder(BorderFactory.createEmptyBorder());
+
+        splitVerticalPane.setTopComponent(scrollPaneUpper);
+        splitVerticalPane.setBottomComponent(scrollPaneLower);
+
+        splitVerticalPane.setDividerSize(6);
+
+        double splitVerticalPaneDividerLoc = 0.50d; // 50 %
+        splitVerticalPane.setDividerLocation(splitVerticalPaneDividerLoc);
+
+        // Stabilize vertical divider always in the middle
+        splitVerticalPane.setResizeWeight(0.5);
+        splitVerticalPane.setAlignmentX(CENTER_ALIGNMENT);
+
+        // Remove global panel and create it again
+        this.remove(globalPanel);
+        globalPanel = new JPanel();
+        // Renew global panel layout
+        GroupLayout topPanelLayout = new GroupLayout(globalPanel);
+        topPanelLayout.setHorizontalGroup(topPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addComponent(rowPanel1)
+                .addComponent(rowPanel2)
+                .addComponent(splitVerticalPane)
+        );
+        topPanelLayout.setVerticalGroup(topPanelLayout.createSequentialGroup()
+                .addComponent(rowPanel1)
+                .addComponent(rowPanel2)
+                .addComponent(splitVerticalPane)
+        );
+        // Set global panel layout
+        globalPanel.setLayout(topPanelLayout);
+        globalPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        // Add global panel to this (JFrame)
+        add(globalPanel);
+
+        // Get a highlighter for the primary text area
+        blockHighlighter = textArea.getHighlighter();
+        // Remove all preceding highlights
+        blockHighlighter.removeAllHighlights();
+        // Hightlight only if the option is not *NONE
+        if (!progLanguage.equals("*NONE")) {
+            highlightBlocks(textArea, progLanguage);
+        }
+
+        // Get a highlighter for the secondary text area
+        blockHighlighter = textArea2.getHighlighter();
+        // Remove all preceding highlights
+        blockHighlighter.removeAllHighlights();
+        // Hightlight only if the option is not *NONE
+        if (!progLanguage.equals("*NONE")) {
+            highlightBlocks(textArea2, progLanguage);
+        }
+
+        // Add document listener for the secondary text area 
+        // for the first time and next time when the view is being split.
+        textArea2.getDocument().addDocumentListener(textArea2DocListener);
+
+        // Add also document listener for the primary text area.
+        textArea.getDocument().addDocumentListener(textAreaDocListener);
+
+        // Show the window
+        setVisible(true);
+    }
+
+    /**
+     * Unsplit editor area to contain only primary text area.
+     */
+    protected void unsplitTextArea() {
+
+        lowerHalfActive = false;
+
+        textArea.requestFocus();
+
+        textArea2.getDocument().removeDocumentListener(textArea2DocListener);
+        textArea.getDocument().removeDocumentListener(textAreaDocListener);
+
+        // Create a scroll pane
+        scrollPane = new JScrollPane(textArea);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+        // Now the scroll pane may be sized because window height is defined
+        scrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        scrollPane.setPreferredSize(new Dimension(windowWidth, windowHeight));
+
+        this.remove(globalPanel);
+        globalPanel = new JPanel();
+        GroupLayout topPanelLayout = new GroupLayout(globalPanel);
+        topPanelLayout.setHorizontalGroup(topPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addComponent(rowPanel1)
+                .addComponent(rowPanel2)
+                .addComponent(scrollPane)
+        );
+        topPanelLayout.setVerticalGroup(topPanelLayout.createSequentialGroup()
+                .addComponent(rowPanel1)
+                .addComponent(rowPanel2)
+                .addComponent(scrollPane)
+        );
+        globalPanel.setLayout(topPanelLayout);
+
+        globalPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+
+        add(globalPanel);
+
+        this.setVisible(true);
+
+        if (findWindow.findField.getText().isEmpty()) {
+            // Get a highlighter for the secondary text area
+            blockHighlighter = textArea.getHighlighter();
+            // Remove all preceding highlights
+            blockHighlighter.removeAllHighlights();
+            // Hightlight only if the option is not *NONE
+            if (!progLanguage.equals("*NONE")) {
+                highlightBlocks(textArea, progLanguage);
+            }
+        }
+
+        textArea.setCaretPosition(caretPosition);
+    }
+
+    /**
+     * Create String of spaces with a given length
+     *
+     * @param length
+     * @return
+     */
+    private String fixedLengthSpaces(int length) {
+        char[] spaces = new char[length];
+        for (int idx = 0; idx < length; idx++) {
+            spaces[idx] = ' ';
+        }
+        return String.copyValueOf(spaces);
+    }
+
+    /**
+     * Button listener for buttons Find (<,>) and Replace and Replace/Find;
+     * Note: "ReplaceAll" button has different action listener.
+     */
+
+    class HighlightHandler implements DocumentListener {
+
+        @Override
+        public void changedUpdate(DocumentEvent de) {
+            // not applied 
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent de) {
+            // Find next match
+            if (!lowerHalfActive) {
+                changeHighlight();
+            } else {
+                changeHighlight2();
+            }
+            changeHighlight();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent de) {
+            // Find next match
+            if (!lowerHalfActive) {
+                changeHighlight();
+            } else {
+                changeHighlight2();
+            }
+        }
+    }
+
+    /**
+     *
+     */
+    class UndoHandler implements UndoableEditListener {
+
+        /**
+         * Messaged when the Document has created an edit, the edit is added to "undo", an instance of UndoManager.
+         */
+        public void undoableEditHappened(UndoableEditEvent uee) {
+            undo.addEdit(uee.getEdit());
+            undoAction.update();
+            redoAction.update();
+        }
+    }
+
+    /**
+     *
+     */
+    class UndoAction extends AbstractAction {
+
+        public UndoAction() {
+            super("Undo");
+            setEnabled(false);
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            try {
+                undo.undo();
+            } catch (CannotUndoException ex) {
+                // Logger.getLogger(UndoAction.class.getName()).log(Level.SEVERE,
+                // "Unable to undo", ex);
+            }
+            update();
+            redoAction.update();
+        }
+
+        protected void update() {
+            if (undo.canUndo()) {
+                setEnabled(true);
+                putValue(Action.NAME, undo.getUndoPresentationName());
+            } else {
+                setEnabled(false);
+                putValue(Action.NAME, "Undo");
+            }
+        }
+    }
+
+    /**
+     *
+     */
+    class RedoAction extends AbstractAction {
+
+        public RedoAction() {
+            super("Redo");
+            setEnabled(false);
+        }
+
+        public void actionPerformed(ActionEvent ae) {
+            try {
+                undo.redo();
+            } catch (CannotRedoException cre) {
+                // Logger.getLogger(RedoAction.class.getName()).log(Level.SEVERE,
+                // "Unable to redo", cre);
+            }
+            update();
+            undoAction.update();
+        }
+
+        protected void update() {
+            if (undo.canRedo()) {
+                setEnabled(true);
+                putValue(Action.NAME, undo.getRedoPresentationName());
+            } else {
+                setEnabled(false);
+                putValue(Action.NAME, "Redo");
+            }
+        }
+    }
+
+    /**
      * Inner class for Ctrl + S (Save) function key
      */
     class SaveAction extends AbstractAction {
@@ -2808,7 +2959,7 @@ public final class EditFile extends JFrame {
     /**
      * Inner class for Compile button
      */
-    class CompileListener extends AbstractAction {
+    class CompileButtonListener extends AbstractAction {
 
         @Override
         public void actionPerformed(ActionEvent ae) {
@@ -2847,8 +2998,13 @@ public final class EditFile extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent ae) {
-            currentPos--;
-            changeHighlight();
+            if (!lowerHalfActive) {
+                currentPos--;
+                changeHighlight();
+            } else {
+                currentPos2--;
+                changeHighlight2();
+            }
         }
     }
 
@@ -2859,8 +3015,119 @@ public final class EditFile extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent ae) {
-            currentPos++;
-            changeHighlight();
+            if (!lowerHalfActive) {
+                currentPos++;
+                changeHighlight();
+            } else {
+                currentPos2++;
+                changeHighlight2();
+            }
+        }
+    }
+
+    /**
+     * Inner class for Ctrl + F function key
+     */
+    class CreateFindWindow extends AbstractAction {
+
+        @Override
+        public void actionPerformed(ActionEvent ae) {
+            if (findWindow != null) {
+                if (!textAreaIsSplit) {
+                    findWindow.createWindow(textArea.getSelectedText());
+                } else {
+                    findWindow.createWindow(textArea2.getSelectedText());
+                }
+            }
+        }
+    }
+
+    /**
+     *
+     */
+    protected void shiftLeft() {
+        JTextArea tArea;
+        if (!lowerHalfActive) {
+            tArea = textArea;
+        } else {
+            tArea = textArea2;
+        }
+        if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+            selectedText = tArea.getSelectedText();
+            selectionStart = tArea.getSelectionStart();
+            int numberOfLines = 0;
+            if (selectedText != null) {
+                String[] strArr = selectedText.split("\n");
+                int minPos = 1;
+                if (strArr.length > 0) {
+                    // If there are some lines selected, inspect all selected lines 
+                    // to get position of the leftmost non-blank character
+                    for (int idx = 0; idx < strArr.length; idx++) {
+                        int position = 0;
+                        for (position = 0; position < strArr[idx].length(); position++) {
+                            if (!strArr[idx].isEmpty()) {  // If the line is not empty 
+                                // Get position of the left-most non-space character (or zero)
+                                if (strArr[idx].charAt(position) != ' ') {
+                                    if (position < minPos) {
+                                        minPos = position;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    shiftedText = "";
+                    if (minPos > 0) {
+                        // 
+                        for (numberOfLines = 0; numberOfLines < strArr.length; numberOfLines++) {
+                            if (!strArr[numberOfLines].isEmpty()) {
+                                // Shift the non-empty line 1 position left and add a new line character.
+                                strArr[numberOfLines] = strArr[numberOfLines].substring(1);
+                                shiftedText += strArr[numberOfLines] + "\n";
+                            } else {
+                                // For empty line add a new line character.
+                                shiftedText += " \n"; // 2 characters added
+                            }
+                        }
+                        if (!selectedText.endsWith("\n")) {
+                            // If the line does not end with a new line character (a selection in single-line)
+                            // select the text one character shorter.
+                            shiftedText = shiftedText.substring(0, shiftedText.length() - 1);
+                        }
+                        tArea.replaceSelection(shiftedText);
+                    }
+                    // Select the shifted text
+                    tArea.requestFocus();
+                    tArea.select(selectionStart, selectionStart + shiftedText.length());
+                }
+            }
+        } else {
+            // Vertical selection
+            int cnt = selectionStarts.size();
+            int idx = 0;
+            try {
+                while (idx < cnt) {
+                    startSel = selectionStarts.get(idx);
+                    endSel = selectionEnds.get(idx);
+                    int line = tArea.getLineOfOffset(startSel);
+                    int lineStartOffset = tArea.getLineStartOffset(line);
+                    if (startSel > lineStartOffset) {
+                        String selectedText = tArea.getText(startSel, endSel - startSel);
+                        if (!selectedText.isEmpty()) {
+                            // Insert selected text followed by a space in place of the row selection (= shif left 1 position)
+                            tArea.replaceRange(selectedText + " ", startSel - 1, endSel);
+                            tArea.getHighlighter().addHighlight(startSel - 1, endSel - 1, DefaultHighlighter.DefaultPainter);
+                            selectionStarts.set(idx, startSel - 1);
+                            selectionEnds.set(idx, endSel - 1);
+                        }
+                    }
+                    idx++;
+                }
+                textArea.setCaretPosition(startSel - 1);
+                textArea2.setCaretPosition(startSel - 1);
+            } catch (Exception exc) {
+                System.out.println("Error in 'tArea.getLineOfOffset(startSel)': " + exc.toString());
+                exc.printStackTrace();
+            }
         }
     }
 
@@ -2872,105 +3139,6 @@ public final class EditFile extends JFrame {
         @Override
         public void actionPerformed(ActionEvent ae) {
             shiftLeft();
-            if (selectionMode.equals(HORIZONTAL_SELECTION) && !progLanguage.equals("*NONE")) {
-                highlightBlocks(progLanguage);
-            }
-        }
-    }
-
-    /**
-     *
-     */
-    protected void shiftLeft() {
-        if (selectionMode.equals(HORIZONTAL_SELECTION)) {
-            selectedText = textArea.getSelectedText();
-            selectionStart = textArea.getSelectionStart();
-            int numberOfLines = 0;
-            if (selectedText != null) {
-                String[] strArr = selectedText.split("\n");
-                int minPos = 10000;
-                if (strArr.length > 0) {
-                    for (int idx = 0; idx < strArr.length; idx++) {
-                        if (!strArr[idx].isEmpty()) {
-                            int position = 0;
-                            // minPos = strArr[idx].length();
-                            for (position = 0; position < strArr[idx].length(); position++) {
-                                if (!strArr[idx].isEmpty()) {
-                                    if (strArr[idx].charAt(position) != ' ') {
-                                        if (position < minPos) {
-                                            minPos = position;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    int numberOfEmptyLines = 0;
-                    shiftedText = "";
-                    if (minPos > 0) {
-                        for (numberOfLines = 0; numberOfLines < strArr.length; numberOfLines++) {
-                            if (!strArr[numberOfLines].isEmpty()) {
-                                strArr[numberOfLines] = strArr[numberOfLines].substring(1);
-                                shiftedText += strArr[numberOfLines] + "\n";
-                            } else {
-                                numberOfEmptyLines += 2;
-                                shiftedText += " \n"; // 2 characters added
-                            }
-                        }
-                        if (!selectedText.endsWith("\n")) {
-                            shiftedText = shiftedText.substring(0, shiftedText.length() - 1);
-                        }
-                        textArea.replaceSelection(shiftedText);
-                    }
-                    if (!progLanguage.equals("*NONE")) {
-                        highlightBlocks(progLanguage);
-                    }
-                    // Select shifted text
-                    textArea.select(selectionStart, selectionStart + shiftedText.length());
-                }
-            }
-        } else {
-            // Vertical selection
-            selections = textArea.getHighlighter().getHighlights();
-            String[] strArr = new String[selections.length];
-            try {
-                int cnt = selections.length;
-                for (int idx = 0; idx < cnt; idx++) {
-                    startSel = selections[idx].getStartOffset();
-                    endSel = selections[idx].getEndOffset();
-                    int line = textArea.getLineOfOffset(startSel);
-                    int lineStartOffset = textArea.getLineStartOffset(line);
-                    if (startSel > lineStartOffset) {
-                        String selectedText = textArea.getText(startSel, endSel - startSel);
-                        strArr[idx] = selectedText;
-                        if (!selectedText.isEmpty()) {
-                            // System.out.println("selectedText: '" + strArr[idx] + "'");
-                            textArea.replaceRange(selectedText + " ", startSel - 1, endSel);
-                            selectionHighlighter.addHighlight(startSel - 1, endSel - 1, DefaultHighlighter.DefaultPainter);
-                        }
-                        textArea.setCaretPosition(endSel - 1);
-                    }
-                }
-            } catch (Exception exc) {
-                System.out.println("Error: " + exc.toString());
-                exc.printStackTrace();
-            }
-        }
-
-    }
-
-    /**
-     * Inner class for Ctrl + Arrow Left function key
-     */
-    class ArrowRight extends AbstractAction {
-
-        @Override
-        public void actionPerformed(ActionEvent ae) {
-            shiftRight();
-            textArea.requestFocusInWindow();
-            if (selectionMode.equals(HORIZONTAL_SELECTION) && !progLanguage.equals("*NONE")) {
-                highlightBlocks(progLanguage);
-            }
         }
     }
 
@@ -2978,9 +3146,15 @@ public final class EditFile extends JFrame {
      *
      */
     protected void shiftRight() {
+        JTextArea tArea;
+        if (!lowerHalfActive) {
+            tArea = textArea;
+        } else {
+            tArea = textArea2;
+        }
         if (selectionMode.equals(HORIZONTAL_SELECTION)) {
-            selectedText = textArea.getSelectedText();
-            selectionStart = textArea.getSelectionStart();
+            selectedText = tArea.getSelectedText();
+            selectionStart = tArea.getSelectionStart();
             int lineNbr = 0;
             char[] charArr = new char[1];
             Arrays.fill(charArr, ' ');
@@ -2996,40 +3170,49 @@ public final class EditFile extends JFrame {
                 if (!selectedText.endsWith("\n")) {
                     shiftedText = shiftedText.substring(0, shiftedText.length() - 1);
                 }
-                textArea.replaceSelection(shiftedText);
-                if (!progLanguage.equals("*NONE")) {
-                    highlightBlocks(progLanguage);
-                }
+                tArea.replaceSelection(shiftedText);
                 // Select shifted text
-                textArea.select(selectionStart, selectionStart + shiftedText.length());
+                tArea.requestFocus();
+                tArea.select(selectionStart, selectionStart + shiftedText.length());
             }
         } else {
             // Vertical selection
-            selections = textArea.getHighlighter().getHighlights();
-            String[] strArr = new String[selections.length];
-
+            int cnt = selectionStarts.size();
+            int idx = 0;
             try {
-                int cnt = selections.length;
-                for (int idx = 0; idx < cnt; idx++) {
-                    startSel = selections[idx].getStartOffset();
-                    endSel = selections[idx].getEndOffset();
-                }
-
-                for (int idx = 0; idx < cnt; idx++) {
-                    startSel = selections[idx].getStartOffset();
-                    endSel = selections[idx].getEndOffset();
-                    String selectedText = textArea.getText(startSel, endSel - startSel);
-                    strArr[idx] = selectedText;
+                while (idx < cnt) {
+                    startSel = selectionStarts.get(idx);
+                    endSel = selectionEnds.get(idx);
+                    String selectedText = tArea.getText(startSel, endSel - startSel);
+                    // Process non-empty lines, empty lines are skipped.
                     if (!selectedText.isEmpty()) {
-                        textArea.insert(" ", endSel);
-                        textArea.replaceRange(" " + selectedText, startSel, endSel + 1);
-                        selectionHighlighter.addHighlight(startSel + 1, endSel + 1, DefaultHighlighter.DefaultPainter);
+                        //tArea.insert(" ", endSel); // Insert a space at the end of row selection.
+                        // Insert a space plus selected text at the selection start.
+                        tArea.replaceRange(" " + selectedText, startSel, endSel + 1);
+                        //tArea.select(startSel + 1, endSel + 1);
+                        tArea.getHighlighter().addHighlight(startSel + 1, endSel + 1, DefaultHighlighter.DefaultPainter);
+                        selectionStarts.set(idx, startSel + 1);
+                        selectionEnds.set(idx, endSel + 1);
                     }
+                    idx++;
                 }
+                textArea.setCaretPosition(endSel + 1);
+                textArea2.setCaretPosition(endSel + 1);
             } catch (Exception exc) {
-                System.out.println("Error: " + exc.toString());
+                System.out.println("Error in 'selections[idx].getStartOffset();': " + exc.toString());
                 exc.printStackTrace();
             }
+        }
+    }
+
+    /**
+     * Inner class for Ctrl + Arrow Left function key
+     */
+    class ArrowRight extends AbstractAction {
+
+        @Override
+        public void actionPerformed(ActionEvent ae) {
+            shiftRight();
         }
     }
 
@@ -3040,12 +3223,18 @@ public final class EditFile extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent ae) {
+            JTextArea tArea;
+            if (!lowerHalfActive) {
+                tArea = textArea;
+            } else {
+                tArea = textArea2;
+            }
             if (selectionMode.equals(HORIZONTAL_SELECTION)) {
                 // Horiontal selection
-                int startSel = textArea.getSelectionStart();
-                int endSel = textArea.getSelectionEnd();
+                int startSel = tArea.getSelectionStart();
+                int endSel = tArea.getSelectionEnd();
                 try {
-                    selectedText = textArea.getText(startSel, endSel - startSel);
+                    selectedText = tArea.getText(startSel, endSel - startSel);
                     StringSelection stringSelections = new StringSelection(selectedText);
                     Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelections, stringSelections);
                 } catch (Exception exc) {
@@ -3055,22 +3244,20 @@ public final class EditFile extends JFrame {
                 // Vertical selection
                 selectedText = "";
                 try {
-                    Highlighter.Highlight[] selections = textArea.getHighlighter().getHighlights();
-                    int cnt = selections.length;
+                    int cnt = selectionStarts.size();
                     selectedArray = new String[cnt];
                     for (int idx = 0; idx < cnt; idx++) {
-                        int start = selections[idx].getStartOffset();
-                        int end = selections[idx].getEndOffset();
-                        selectedArray[idx] = textArea.getText(start, end - start);
+                        int start = selectionStarts.get(idx);
+                        int end = selectionEnds.get(idx);
+                        selectedArray[idx] = tArea.getText(start, end - start);
                         selectedText += selectedArray[idx] + '\n';
                         StringSelection stringSelections = new StringSelection(selectedText);
                         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelections, stringSelections);
                     }
                     // In order to paste the copied area again with copied text
-                    // set caret to its original position that it has before the
-                    // operation
-                    int caretPos = selections[0].getStartOffset();
-                    textArea.setCaretPosition(caretPos);
+                    // set caret to its original position that it has before the operation
+                    int caretPos = selectionStarts.get(0);
+                    tArea.setCaretPosition(caretPos);
                 } catch (Exception exc) {
                     exc.printStackTrace();
                 }
@@ -3085,15 +3272,21 @@ public final class EditFile extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent ae) {
+            JTextArea tArea;
+            if (!lowerHalfActive) {
+                tArea = textArea;
+            } else {
+                tArea = textArea2;
+            }
             if (selectionMode.equals(HORIZONTAL_SELECTION)) {
                 // Horiontal selection
-                int startSel = textArea.getSelectionStart();
-                int endSel = textArea.getSelectionEnd();
+                int startSel = tArea.getSelectionStart();
+                int endSel = tArea.getSelectionEnd();
                 try {
-                    selectedText = textArea.getText(startSel, endSel - startSel);
+                    selectedText = tArea.getText(startSel, endSel - startSel);
                     StringSelection stringSelections = new StringSelection(selectedText);
                     Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelections, stringSelections);
-                    textArea.replaceRange("", startSel, endSel);
+                    tArea.replaceRange("", startSel, endSel);
                 } catch (Exception exc) {
                     exc.printStackTrace();
                 }
@@ -3101,25 +3294,24 @@ public final class EditFile extends JFrame {
                 // Vertical selection
                 selectedText = "";
                 try {
-                    Highlighter.Highlight[] selections = textArea.getHighlighter().getHighlights();
-                    int cnt = selections.length;
+                    int cnt = selectionStarts.size();
                     selectedArray = new String[cnt];
                     for (int idx = 0; idx < cnt; idx++) {
-                        int start = selections[idx].getStartOffset();
-                        int end = selections[idx].getEndOffset();
-                        selectedArray[idx] = textArea.getDocument().getText(start, end - start);
+                        int start = selectionStarts.get(idx);
+                        int end = selectionEnds.get(idx);
+                        selectedArray[idx] = tArea.getDocument().getText(start, end - start);
                         selectedText += selectedArray[idx] + '\n';
                         StringSelection stringSelections = new StringSelection(selectedText);
                         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelections, stringSelections);
                         char[] charArr = new char[end - start];
                         Arrays.fill(charArr, ' ');
-                        textArea.replaceRange(String.valueOf(charArr), start, end);
+                        tArea.replaceRange(String.valueOf(charArr), start, end);
                     }
                     // In order to paste the cut area again with cut text
-                    // set caret to its original position that it has before the
-                    // operation
-                    int caretPos = selections[0].getStartOffset();
-                    textArea.setCaretPosition(caretPos - selectedArray[0].length());
+                    // set caret to its original position that it has before the operation
+                    int caretPos = selectionStarts.get(0);
+                    tArea.setCaretPosition(caretPos - selectedArray[0].length());
+                    selectionStarts.clear();
                 } catch (Exception exc) {
                     exc.printStackTrace();
                 }
@@ -3139,33 +3331,41 @@ public final class EditFile extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent ae) {
+            JTextArea tArea;
+            if (!lowerHalfActive) {
+                tArea = textArea;
+            } else {
+                tArea = textArea2;
+            }
             if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+
                 // Horiontal selection
-                int caretPosition = textArea.getCaretPosition();
-                Transferable tran = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(textArea);
+                int caretPosition = tArea.getCaretPosition();
+                Transferable tran = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(tArea);
                 DataFlavor df = DataFlavor.stringFlavor;
                 try {
-                    selectedText = (String) tran.getTransferData(df);
-                    if (caretPosition < textArea.getText().length()) {
-                        textArea.insert(selectedText, caretPosition);
+                    String textFromClipboard = (String) tran.getTransferData(df);
+                    if (caretPosition < tArea.getText().length()) {
+                        tArea.replaceSelection(textFromClipboard);
                     } else {
-                        textArea.append(selectedText);
+                        tArea.append(textFromClipboard);
                     }
                 } catch (Exception exc) {
                     exc.printStackTrace();
                 }
             } else {
+
                 // Vertical selection
-                int caretPos = textArea.getCaretPosition();
-                Transferable tran = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(textArea);
+                int caretPos = tArea.getCaretPosition();
+                Transferable tran = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(tArea);
                 DataFlavor df = DataFlavor.stringFlavor;
                 try {
-                    selectedText = (String) tran.getTransferData(df);
-                    selectedArray = selectedText.split("\n");
+                    String textFromClipboard = (String) tran.getTransferData(df);
+                    selectedArray = textFromClipboard.split("\n");
 
-                    int lineNbr = textArea.getLineOfOffset(caretPos);
+                    int lineNbr = tArea.getLineOfOffset(caretPos);
                     int lineNbrFirst = lineNbr;
-                    int lineStart = textArea.getLineStartOffset(lineNbr);
+                    int lineStart = tArea.getLineStartOffset(lineNbr);
                     int offset = caretPos - lineStart; // constant distance
                     int lineEnd = 0;
                     int selLenMax = 0;
@@ -3177,9 +3377,9 @@ public final class EditFile extends JFrame {
                     }
                     // Replace characters in the text area with selected text (from Copy or Cut) starting from the caret position.
                     for (cnt = 0; cnt < selectedArray.length; cnt++) {
-                        lineEnd = textArea.getText().indexOf("\n", lineStart);
+                        lineEnd = tArea.getText().indexOf("\n", lineStart);
                         int selLen = selectedArray[cnt].length(); // Length of selected text in the source line
-                        int selPosMax = caretPos + selLenMax; // Maximum position of a character to be replaced
+                        int selPosMax = caretPos + selLenMax; // Maximum position of a character to be wasReplaced
                         // Get maximum length of selected texts from all lines selected.                                               
                         String sel = selectedArray[cnt]; // Text of the idx-th selection 
                         // Number of spaces to pad 
@@ -3189,7 +3389,7 @@ public final class EditFile extends JFrame {
                             char[] charArr = new char[padLen];
                             Arrays.fill(charArr, ' ');
                             try {
-                                textArea.insert(String.valueOf(charArr), lineEnd);
+                                tArea.insert(String.valueOf(charArr), lineEnd);
                             } catch (IllegalArgumentException iae) {
                                 // If the number of selected lines exceeds the number of target lines available
                                 // a new target line is appended for each exceeding selected line.
@@ -3200,20 +3400,27 @@ public final class EditFile extends JFrame {
                                 System.out.println("padLen: " + padLen);
                                 charArr = new char[caretPos + selLen - lineStart];
                                 Arrays.fill(charArr, ' ');
-                                textArea.append(String.valueOf(charArr) + "\n");
+                                tArea.append(String.valueOf(charArr) + "\n");
                             }
                         }
                         // Replace characters from caret position in the selection length with the selection
-                        textArea.replaceRange(sel, caretPos, caretPos + selLen);
+                        tArea.replaceRange(sel, caretPos, caretPos + selLen);
                         lineNbr++; // Get next line of the text area
-                        lineStart = textArea.getLineStartOffset(lineNbr);
+                        lineStart = tArea.getLineStartOffset(lineNbr);
                         caretPos = lineStart + offset;
                     }
                     // Remove all preceding highlights
                     blockHighlighter.removeAllHighlights();
                     // Hightlight only if the option is not *NONE
                     if (!progLanguage.equals("*NONE")) {
-                        highlightBlocks(progLanguage);
+                        // Get a highlighter for the secondary text area
+                        blockHighlighter = tArea.getHighlighter();
+                        // Remove all preceding highlights
+                        blockHighlighter.removeAllHighlights();
+                        // Hightlight only if the option is not *NONE
+                        if (!progLanguage.equals("*NONE")) {
+                            highlightBlocks(tArea, progLanguage);
+                        }
                     }
                 } catch (Exception exc) {
                     exc.printStackTrace();
@@ -3229,6 +3436,7 @@ public final class EditFile extends JFrame {
 
         String key;
 
+        // Constructor
         CustomDelete(String key) {
             this.key = key;
         }
@@ -3239,70 +3447,69 @@ public final class EditFile extends JFrame {
          */
         @Override
         public void actionPerformed(ActionEvent ae) {
-            //if (selectionMode.equals(HORIZONTAL_SELECTION)) {
-            /*
-                // Horiontal selection
-                selectedText = "";
-                int startSel = textArea.getSelectionStart();
-                int endSel = textArea.getSelectionEnd();
-                try {
-                    selectedText = textArea.getText(startSel, endSel - startSel);
-                    // System.out.println("selectedText: "+selectedText);
-                    StringSelection stringSelections = new StringSelection(selectedText);
-                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelections, stringSelections);
-                    textArea.replaceRange("", startSel, endSel);
-                } catch (Exception exc) {
-                    exc.printStackTrace();
-                }
-             */
-            //} else {
-            // Vertical selection
-
-            selections = textArea.getHighlighter().getHighlights();
-            int cnt = selections.length;
-            // When no selection is present, delete one position only (preceding or next)
+            JTextArea tArea;
+            if (!lowerHalfActive) {
+                tArea = textArea;
+            } else {
+                tArea = textArea2;
+            }
+            System.out.println(selectionStarts);
+            int cnt = selectionStarts.size();
+            // When NO TEXT is selected, delete one position only (preceding or next)
             if (cnt == 0) {
-                caretPosition = textArea.getCaretPosition();
+                caretPosition = tArea.getCaretPosition();
                 if (key.equals("BACKSPACE")) {
                     // BACKSPACE key
-                    textArea.replaceRange("", caretPosition - 1, caretPosition);
+                    tArea.replaceRange("", caretPosition - 1, caretPosition);
                 } else {
                     // DEL key
-                    textArea.replaceRange("", caretPosition, caretPosition + 1);
+                    tArea.replaceRange("", caretPosition, caretPosition + 1);
                 }
             } else {
+                // When a TEXT IS SELECTED, delete selections in all lines
                 try {
-                    String[] lines = textArea.getText().split("\n");
-                    int startSel0 = selections[0].getStartOffset();
-                    int lineNbr0 = textArea.getLineOfOffset(startSel0);
-                    int lineStartOffset0 = textArea.getLineStartOffset(lineNbr0);
-                    int lineEnd0 = textArea.getText().indexOf("\n", lineStartOffset0);
+                    String[] lines = tArea.getText().split("\n");
+                    int startSel0 = selectionStarts.get(0);
+                    int lineNbr0 = tArea.getLineOfOffset(startSel0);
+                    int lineStartOffset0 = tArea.getLineStartOffset(lineNbr0);
+                    int lineEnd0 = tArea.getText().indexOf("\n", lineStartOffset0);
                     int lineLen0 = lineEnd0 - lineStartOffset0;
-                    for (int idx = 0; idx < cnt; idx++) {
-                        startSel = selections[idx].getStartOffset();
-                        endSel = selections[idx].getEndOffset();
+                    for (int idx = cnt - 1; idx >= 0; idx--) {
+                        startSel = selectionStarts.get(idx);
+                        endSel = selectionEnds.get(idx);
                         int diff = endSel - startSel;
-                        int lineNbr = textArea.getLineOfOffset(startSel);
-                        int lineStartOffset = textArea.getLineStartOffset(lineNbr);
-                        int lineEnd = textArea.getText().indexOf("\n", lineStartOffset);
+                        int lineNbr = tArea.getLineOfOffset(startSel);
+                        int lineStartOffset = tArea.getLineStartOffset(lineNbr);
+                        int lineEnd = tArea.getText().indexOf("\n", lineStartOffset);
                         if (diff < lineLen0) {
-                            // Partial chunk of the line
+                            // Partial selection of the line
                             if (!lines[lineNbr].isEmpty()) {
-                                textArea.replaceRange(textArea.getText().substring(endSel, lineEnd), startSel, lineEnd);
+                                tArea.replaceRange(tArea.getText().substring(endSel, lineEnd), startSel, lineEnd);
                             }
                         } else {
                             // Whole line selected
-                            int lastLineNbr = textArea.getLineOfOffset(endSel);
-                            int lastLineStartOffset = textArea.getLineStartOffset(lastLineNbr);
-                            int lastLineEnd = textArea.getText().indexOf('\n', lastLineStartOffset);
-                            textArea.replaceRange("", startSel0, lastLineEnd + 1);
+                            int lastLineNbr = tArea.getLineOfOffset(endSel);
+                            int lastLineStartOffset = tArea.getLineStartOffset(lastLineNbr);
+                            int lastLineEnd = tArea.getText().indexOf('\n', lastLineStartOffset);
+                            tArea.replaceRange("", startSel0, lastLineEnd + 1);
                         }
                     }
+                    // Set caret to the start position in the FIRST line of the selection
+                    tArea.setCaretPosition(startSel0);
+                    selectionStarts.clear();
+
                     // Remove all preceding highlights
                     blockHighlighter.removeAllHighlights();
                     // Hightlight only if the option is not *NONE
                     if (!progLanguage.equals("*NONE")) {
-                        highlightBlocks(progLanguage);
+                        // Get a highlighter for the secondary text area
+                        blockHighlighter = tArea.getHighlighter();
+                        // Remove all preceding highlights
+                        blockHighlighter.removeAllHighlights();
+                        // Hightlight only if the option is not *NONE
+                        if (!progLanguage.equals("*NONE")) {
+                            highlightBlocks(tArea, progLanguage);
+                        }
                     }
                 } catch (Exception exc) {
                     exc.printStackTrace();
@@ -3311,18 +3518,6 @@ public final class EditFile extends JFrame {
         }
     }
 
-    /**
-     * Inner class for Enter key
-     */
-    /*
-    class EnterKey extends AbstractAction {
-
-        @Override
-        public void actionPerformed(ActionEvent ae) {
-            //changeHighlight();
-        }
-    }
-     */
     /**
      * Inner class for Tab function key. Inserts TAB_SIZE spaces in caret position
      */
@@ -3336,19 +3531,17 @@ public final class EditFile extends JFrame {
 
     /**
      * Implements custom caret as a long vertical line with a short red line pointer
+     * for primary text area
      */
     public class LongCaret extends DefaultCaret {
 
         @Override
-        public void damage(Rectangle r) {
-            // give values to x,y,width,height (inherited from
-            // java.awt.Rectangle)
-            x = r.x;
-            y = 0; // upper edge of the vertical line is at the upper edge of
-            // the text area
+        public void damage(Rectangle verticalLine) {
+            // give values to x, y, width,height (inherited from java.awt.Rectangle)
+            x = verticalLine.x;
+            y = 0;
             height = textArea.getHeight();
             width = 2;
-
             repaint(); // calls getComponent().repaint(x, y, width, height)
         }
 
@@ -3366,7 +3559,52 @@ public final class EditFile extends JFrame {
             if (isVisible()) {
                 // The long vertical line will be light gray
                 g.setColor(Color.LIGHT_GRAY);
-                g.fillRect(verticalLine.x, 0, width, textArea.getHeight());
+                if (!textAreaIsSplit) {
+                    g.fillRect(verticalLine.x, 0, width, textArea.getHeight());
+                    // The short line segment of the caret in the y position will be red
+                    g.setColor(Color.RED);
+                    g.fillRect(verticalLine.x, verticalLine.y, width, fontSize);
+                } else {
+                    g.fillRect(verticalLine.x, 0, width, textArea2.getHeight());
+                    // The short line segment of the caret in the y position will be red
+                    g.setColor(Color.RED);
+                    g.fillRect(verticalLine.x, verticalLine.y, width, fontSize);
+                }
+            }
+        }
+    }
+
+    /**
+     * Implements custom caret as a long vertical line with a short red line pointer
+     * for secondary text area
+     */
+    public class LongCaret2 extends DefaultCaret {
+
+        @Override
+        public void damage(Rectangle verticalLine) {
+            // give values to x, y, width,height (inherited from java.awt.Rectangle)
+            x = verticalLine.x;
+            y = 0;
+            height = textArea2.getHeight();
+            width = 2;
+            repaint(); // calls getComponent().repaint(x, y, width, height)
+        }
+
+        @Override
+        public void paint(Graphics g) {
+
+            JTextComponent component = getComponent();
+            int dot = getDot();
+            Rectangle verticalLine = null;
+            try {
+                verticalLine = component.modelToView(dot);
+            } catch (BadLocationException e) {
+                return;
+            }
+            if (isVisible()) {
+                // The long vertical line will be light gray
+                g.setColor(Color.LIGHT_GRAY);
+                g.fillRect(verticalLine.x, 0, width, textArea2.getHeight());
                 // The short line segment of the caret in the y position will be red
                 g.setColor(Color.RED);
                 g.fillRect(verticalLine.x, verticalLine.y, width, fontSize);
@@ -3381,44 +3619,30 @@ public final class EditFile extends JFrame {
 
         Point lastPoint = new Point(0, 0);
 
-        /**
-         *
-         * @param me
-         */
         @Override
-        public void mouseMoved(MouseEvent me) {
-            lastPoint = new Point(me.getX(), me.getY());
-            super.mouseMoved(me);
+        public void mouseMoved(MouseEvent mouseEvent) {
+            lastPoint = new Point(mouseEvent.getX(), mouseEvent.getY());
+            super.mouseMoved(mouseEvent);
         }
 
-        /**
-         *
-         * @param me
-         */
         @Override
-        public void mousePressed(MouseEvent me) {
-            if (me.getClickCount() == 1) {
-                super.mousePressed(me);
-                // Remove all preceding highlights
-                blockHighlighter.removeAllHighlights();
-                // Hightlight only if the option is not *NONE
-                if (!progLanguage.equals("*NONE")) {
-                    highlightBlocks(progLanguage);
+        public void mouseClicked(MouseEvent mouseEvent) {
+            if (selectionMode.equals(VERTICAL_SELECTION)) {
+                super.mouseClicked(mouseEvent);
+                selectionStarts.clear();
+                selectionEnds.clear();
+                if (mouseEvent.getClickCount() == 2 || mouseEvent.getClickCount() == 3) {
+                    selectionStarts.add(textArea.getSelectionStart());
+                    selectionEnds.add(textArea.getSelectionEnd());
                 }
-            }
-            if (me.getClickCount() != 1) {
-                blockHighlighter.removeAllHighlights();
-                super.mousePressed(me);
+            } else {
+                super.mouseClicked(mouseEvent);
             }
         }
 
-        /**
-         *
-         * @param me
-         */
         @Override
-        protected void moveCaret(MouseEvent me) {
-            Point pt = new Point(me.getX(), me.getY());
+        protected void moveCaret(MouseEvent mouseEvent) {
+            Point pt = new Point(mouseEvent.getX(), mouseEvent.getY());
             int pos = getComponent().getUI().viewToModel(getComponent(), pt);
             if (pos >= 0) {
                 setDot(pos);
@@ -3434,6 +3658,9 @@ public final class EditFile extends JFrame {
          * @param end
          */
         protected void customHighlight(Point start, Point end) {
+            selectionStarts.clear();
+            selectionEnds.clear();
+
             getComponent().getHighlighter().removeAllHighlights();
             int y = start.y;
             int firstX = start.x;
@@ -3442,6 +3669,9 @@ public final class EditFile extends JFrame {
             int pos1 = getComponent().getUI().viewToModel(getComponent(), new Point(firstX, y));
             int pos2 = getComponent().getUI().viewToModel(getComponent(), new Point(lastX, y));
             try {
+                selectionStarts.add(pos1);
+                selectionEnds.add(pos2);
+                //textArea.select(pos1, pos2);
                 getComponent().getHighlighter().addHighlight(pos1, pos2, DefaultHighlighter.DefaultPainter);
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -3454,6 +3684,9 @@ public final class EditFile extends JFrame {
                     pos1 = pos1new;
                     pos2 = pos2new;
                     try {
+                        selectionStarts.add(pos1);
+                        selectionEnds.add(pos2);
+                        //textArea.select(pos1, pos2);
                         getComponent().getHighlighter().addHighlight(pos1, pos2, DefaultHighlighter.DefaultPainter);
                     } catch (Exception ex) {
                         ex.printStackTrace();
@@ -3472,8 +3705,7 @@ public final class EditFile extends JFrame {
             if (caretShape.equals(LONG_CARET)) {
                 // Long caret
                 // ----------
-                // give values to x,y,width,height (inherited from
-                // java.awt.Rectangle)
+                // give values to x, y, width,height (inherited from java.awt.Rectangle)
                 x = verticalLine.x;
                 y = 0; // upper edge of the vertical line is at the upper edge
                 // of the text area
@@ -3505,15 +3737,13 @@ public final class EditFile extends JFrame {
             } catch (BadLocationException ble) {
                 return;
             }
-            // if (isVisible()) {
             if (caretShape.equals(LONG_CARET)) {
                 // Long caret
                 // ----------
                 // The long vertical line will be light gray
                 g.setColor(Color.LIGHT_GRAY);
                 g.fillRect(verticalLine.x, 0, width, height);
-                // The short line segment of the caret in the y position will be
-                // red
+                // The short line segment of the caret in the y position will be red
                 g.setColor(Color.RED);
                 g.fillRect(verticalLine.x, verticalLine.y, 2, fontSize);
             } else {
@@ -3522,10 +3752,163 @@ public final class EditFile extends JFrame {
                 g.setColor(Color.BLACK);
                 g.fillRect(verticalLine.x, verticalLine.y, 1, fontSize + 2);
             }
-            // }
         }
     }
 
+    /**
+     * Implements vertical (rectangular) selection of text for secondary text area
+     */
+    public class SpecialCaret2 extends DefaultCaret {
+
+        Point lastPoint = new Point(0, 0);
+
+        @Override
+        public void mouseMoved(MouseEvent mouseEvent) {
+            lastPoint = new Point(mouseEvent.getX(), mouseEvent.getY());
+            super.mouseMoved(mouseEvent);
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent mouseEvent) {
+            if (selectionMode.equals(VERTICAL_SELECTION)) {
+                super.mouseClicked(mouseEvent);
+                //if (mouseEvent.getClickCount() == 2 || mouseEvent.getClickCount() == 3) {
+                selectionStarts.clear();
+                selectionEnds.clear();
+                selectionStarts.add(textArea2.getSelectionStart());
+                selectionEnds.add(textArea2.getSelectionEnd());
+                //}
+            } else {
+                super.mouseClicked(mouseEvent);
+
+            }
+        }
+
+        @Override
+        protected void moveCaret(MouseEvent mouseEvent) {
+            Point pt = new Point(mouseEvent.getX(), mouseEvent.getY());
+            int pos = getComponent().getUI().viewToModel(getComponent(), pt);
+            if (pos >= 0) {
+                setDot(pos);
+                Point start = new Point(Math.min(lastPoint.x, pt.x), Math.min(lastPoint.y, pt.y));
+                Point end = new Point(Math.max(lastPoint.x, pt.x), Math.max(lastPoint.y, pt.y));
+                customHighlight(start, end);
+            }
+        }
+
+        /**
+         *
+         * @param start
+         * @param end
+         */
+        protected void customHighlight(Point start, Point end) {
+            selectionStarts.clear();
+            selectionEnds.clear();
+
+            getComponent().getHighlighter().removeAllHighlights();
+            int y = start.y;
+            int firstX = start.x;
+            int lastX = end.x;
+
+            int pos1 = getComponent().getUI().viewToModel(getComponent(), new Point(firstX, y));
+            int pos2 = getComponent().getUI().viewToModel(getComponent(), new Point(lastX, y));
+            textArea2.select(pos1, pos2);
+            try {
+                selectionStarts.add(pos1);
+                selectionEnds.add(pos2);
+                //textArea2.select(pos1, pos2);
+                getComponent().getHighlighter().addHighlight(pos1, pos2, DefaultHighlighter.DefaultPainter);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            y++;
+            while (y < end.y) {
+                int pos1new = getComponent().getUI().viewToModel(getComponent(), new Point(firstX, y));
+                int pos2new = getComponent().getUI().viewToModel(getComponent(), new Point(lastX, y));
+                if (pos1 != pos1new) {
+                    pos1 = pos1new;
+                    pos2 = pos2new;
+                    try {
+                        selectionStarts.add(pos1);
+                        selectionEnds.add(pos2);
+                        //textArea2.select(pos1, pos2);
+                        getComponent().getHighlighter().addHighlight(pos1, pos2, DefaultHighlighter.DefaultPainter);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                y++;
+            }
+        }
+
+        /**
+         *
+         * @param verticalLine
+         */
+        @Override
+        public void damage(Rectangle verticalLine) {
+            /*
+            if (!lowerHalfActive) {
+                tArea = textArea;
+            } else {
+                tArea = textArea2;
+            }
+             */
+            if (caretShape.equals(LONG_CARET)) {
+                // Long caret
+                // ----------
+                // give values to x, y, width,height (inherited from java.awt.Rectangle)
+                x = verticalLine.x;
+                y = 0; // upper edge of the vertical line is at the upper edge of the text area
+                height = textArea2.getHeight();
+                width = 2;
+                repaint(); // calls getComponent().repaint(x, y, width, height)
+            } else {
+                // Short caret
+                // -----------
+                x = verticalLine.x;
+                y = verticalLine.y;
+                height = fontSize + 2;
+                width = 1;
+                repaint();
+            }
+        }
+
+        /**
+         *
+         * @param g
+         */
+        @Override
+        public void paint(Graphics g) {
+            JTextComponent component = getComponent();
+            int dot = getDot();
+            Rectangle verticalLine = null;
+            try {
+                verticalLine = component.modelToView(dot);
+            } catch (BadLocationException ble) {
+                return;
+            }
+            if (caretShape.equals(LONG_CARET)) {
+                // Long caret
+                // ----------
+                // The long vertical line will be light gray
+                g.setColor(Color.LIGHT_GRAY);
+                g.fillRect(verticalLine.x, 0, width, height);
+                // The short line segment of the caret in the y position will be red
+                g.setColor(Color.RED);
+                g.fillRect(verticalLine.x, verticalLine.y, 2, fontSize);
+            } else {
+                // Short caret
+                // -----------
+                g.setColor(Color.BLACK);
+                g.fillRect(verticalLine.x, verticalLine.y, 1, fontSize + 2);
+            }
+        }
+    }
+
+    /**
+     *
+     */
     public class FontComboBoxRenderer extends JLabel implements ListCellRenderer {
 
         /**
@@ -3558,6 +3941,125 @@ public final class EditFile extends JFrame {
                 }
             }
             return this;
+        }
+    }
+
+    /**
+     *
+     */
+    class TextAreaDocListener implements DocumentListener {
+
+        @Override
+        public void changedUpdate(DocumentEvent de) {
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent de) {
+            textArea2.getDocument().removeDocumentListener(textArea2DocListener);
+            int offset = de.getOffset();
+            int length = de.getLength();
+            String str = textArea.getText().substring(offset, offset + length);
+            textArea2.insert(str, offset);
+            changeHighlight2();
+            //System.out.println("ins: " + offset + ", " + length + " inserted chars: '" + textArea2.getText().substring(offset, offset + length) + "'");
+            textArea2.getDocument().addDocumentListener(textArea2DocListener);
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent de) {
+            textArea2.getDocument().removeDocumentListener(textArea2DocListener);
+            int offset = de.getOffset();
+            int length = de.getLength();
+            //System.out.println("rmv: " + offset + ", " + length + " removed chars : '" + textArea2.getText().substring(offset, offset + length) + "'");
+            textArea2.replaceRange("", offset, offset + length);
+            changeHighlight2();
+            textArea2.getDocument().addDocumentListener(textArea2DocListener);
+        }
+    }
+
+    /**
+     *
+     */
+    class TextArea2DocListener implements DocumentListener {
+
+        @Override
+        public void changedUpdate(DocumentEvent de) {
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent de) {
+            textArea.getDocument().removeDocumentListener(textAreaDocListener);
+            int offset = de.getOffset();
+            int length = de.getLength();
+            String str = textArea2.getText().substring(offset, offset + length);
+            textArea.insert(str, offset);
+            changeHighlight();
+            //System.out.println("ins2: " + offset + ", " + length + " inserted chars2: '" + textArea.getText().substring(offset, offset + length) + "'");
+            textArea.getDocument().addDocumentListener(textAreaDocListener);
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent de) {
+            textArea.getDocument().removeDocumentListener(textAreaDocListener);
+            int offset = de.getOffset();
+            int length = de.getLength();
+            //System.out.println("rmv2: " + offset + ", " + length + " removed chars2 : '" + textArea.getText().substring(offset, offset + length) + "'");
+            textArea.replaceRange("", offset, offset + length);
+            changeHighlight();
+            textArea.getDocument().addDocumentListener(textAreaDocListener);
+        }
+    }
+
+    class TextAreaMouseListener extends MouseAdapter {
+
+        @Override
+        public void mousePressed(MouseEvent mouseEvent) {
+
+            lowerHalfActive = false;
+
+            if (findWindow.findField.getText().isEmpty()) {
+                // Get a highlighter for the primary text area
+                blockHighlighter = textArea.getHighlighter();
+                // Remove all preceding highlights
+                blockHighlighter.removeAllHighlights();
+                // Hightlight only if the option is not *NONE
+                if (!progLanguage.equals("*NONE")) {
+                    highlightBlocks(textArea, progLanguage);
+                }
+            }
+        }
+    }
+
+    class TextArea2MouseListener extends MouseAdapter {
+
+        @Override
+        public void mousePressed(MouseEvent mouseEvent) {
+
+            lowerHalfActive = true;
+
+            if (findWindow.findField.getText().isEmpty()) {
+                // Get a highlighter for the secondary text area
+                blockHighlighter = textArea2.getHighlighter();
+                // Remove all preceding highlights
+                blockHighlighter.removeAllHighlights();
+                // Hightlight only if the option is not *NONE
+                if (!progLanguage.equals("*NONE")) {
+                    highlightBlocks(textArea2, progLanguage);
+                }
+            }
+        }
+    }
+
+    /**
+     * Window adapter closes the FindWindow window and also this window.
+     */
+    class WindowEditFileAdapter extends WindowAdapter {
+
+        @Override
+        public void windowClosing(WindowEvent we) {
+            if (findWindow != null) {
+                findWindow.dispose();
+            }
         }
     }
 }

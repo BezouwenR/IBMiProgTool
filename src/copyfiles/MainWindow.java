@@ -2,6 +2,7 @@ package copyfiles;
 
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.IFSFile;
+import com.ibm.as400.access.SystemValue;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -69,6 +70,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
@@ -636,7 +638,7 @@ public class MainWindow extends JFrame {
         helpMenuItemRPGIV = new JMenuItem("RPG IV forms");
         helpMenuItemCOBOL = new JMenuItem("COBOL form");
         helpMenuItemDDS = new JMenuItem("DDS forms");
-        
+
         helpMenu.add(helpMenuItemEN);
         helpMenu.add(helpMenuItemCZ);
         helpMenu.add(helpMenuItemRPGIII);
@@ -646,7 +648,7 @@ public class MainWindow extends JFrame {
         menuBar.add(helpMenu);
 
         setJMenuBar(menuBar); // In macOS on the main system menu bar above, in Windows on the window menu bar
- 
+
         panelTop = new JPanel();
 
         panelTopLayout = new GroupLayout(panelTop);
@@ -833,24 +835,19 @@ public class MainWindow extends JFrame {
         globalPanelLayout.setAutoCreateGaps(false);
         globalPanelLayout.setAutoCreateContainerGaps(false);
 
-        globalPanelLayout
-                .setHorizontalGroup(globalPanelLayout.createSequentialGroup().addGroup(globalPanelLayout
-                        .createParallelGroup().addComponent(panelTop).addComponent(splitPaneOuter)));
-        globalPanelLayout
-                .setVerticalGroup(globalPanelLayout.createParallelGroup().addGroup(globalPanelLayout
-                        .createSequentialGroup().addComponent(panelTop).addComponent(splitPaneOuter)));
+        globalPanelLayout.setHorizontalGroup(globalPanelLayout.createSequentialGroup().addGroup(globalPanelLayout
+                .createParallelGroup().addComponent(panelTop).addComponent(splitPaneOuter)));
+        globalPanelLayout.setVerticalGroup(globalPanelLayout.createParallelGroup().addGroup(globalPanelLayout
+                .createSequentialGroup().addComponent(panelTop).addComponent(splitPaneOuter)));
 
         // Create a global panel to wrap the layout
         globalPanel.setLayout(globalPanelLayout);
         // Set border to the global panel - before it is visible
-        globalPanel
-                .setBorder(BorderFactory.createLineBorder(globalPanel.getBackground(), borderWidth));
+        globalPanel.setBorder(BorderFactory.createLineBorder(globalPanel.getBackground(), borderWidth));
 
         // When the split pane is visible - can divide it by percentage
         double splitPaneInnerDividerLoc = 0.50d; // 50 %
-        // Percentage to reveal the first message line height when the scroll
-        // pane
-        // is full
+        // Percentage to reveal the first message line height when the scroll pane is full
         double splitPaneOuterDividerLoc = 0.835d;
 
         splitPaneInner.setDividerLocation(splitPaneInnerDividerLoc);
@@ -1272,8 +1269,7 @@ public class MainWindow extends JFrame {
             }
         });
 
-        // Insert spooled file that is copied from directory *workfiles* and,
-        // renamed,
+        // Insert spooled file that is copied from directory *workfiles* and, renamed,
         // into selected directory *targetPathString*
         insertSpooledFile.addActionListener(ae -> {
             scrollMessagePane.getVerticalScrollBar()
@@ -1291,22 +1287,21 @@ public class MainWindow extends JFrame {
             // Display all selected files
             for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
                 sourcePathString = clipboardPathStrings[idx];
+                JTextArea textArea = new JTextArea();
                 // This is a way to display a PC file directly from Java:
-                DisplayFile dpf = new DisplayFile(this);
-                dpf.displayPcFile(sourcePathString);
+                DisplayFile dspf = new DisplayFile(textArea, this);
+                dspf.displayPcFile(sourcePathString);
             }
         });
 
-        // Edit PC file - now disabled
+        // Edit PC file
         editPcFile.addActionListener(ae -> {
             clipboardPathStrings = leftPathStrings;
             for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
                 sourcePathString = clipboardPathStrings[idx];
-                // Get values from properties and set variables and text fields
-                // "true" stands for "IFS file"
-                EditFile edtf = new EditFile(remoteServer, this, leftPathString, "rewritePcFile");
-                // "true" stands for "edit"
-                edtf.displayPcFile(true);
+                JTextArea textArea = new JTextArea();
+                JTextArea textArea2 = new JTextArea();
+                EditFile edtf = new EditFile(remoteServer, this, textArea, textArea2, leftPathString, "rewritePcFile");
             }
         });
 
@@ -1634,7 +1629,8 @@ public class MainWindow extends JFrame {
         displayIfsFile.addActionListener(ae -> {
             scrollMessagePane.getVerticalScrollBar()
                     .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-            DisplayFile dspf = new DisplayFile(this);
+            JTextArea textArea = new JTextArea();
+            DisplayFile dspf = new DisplayFile(textArea, this);
             dspf.displayIfsFile(remoteServer, rightPathString);
         });
 
@@ -1642,10 +1638,9 @@ public class MainWindow extends JFrame {
         editIfsFile.addActionListener(ae -> {
             scrollMessagePane.getVerticalScrollBar()
                     .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-            // Edit IFS file
-            EditFile edtf = new EditFile(remoteServer, this, rightPathString, "rewriteIfsFile");
-            // "true" stands for "edit"
-            edtf.displayIfsFile(true);
+            JTextArea textArea = new JTextArea();
+            JTextArea textArea2 = new JTextArea();
+            EditFile edtf = new EditFile(remoteServer, this, textArea, textArea2, rightPathString, "rewriteIfsFile");
         });
 
         // Rename IFS file
@@ -1672,7 +1667,8 @@ public class MainWindow extends JFrame {
         displaySourceMember.addActionListener(ae -> {
             scrollMessagePane.getVerticalScrollBar()
                     .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-            DisplayFile dspf = new DisplayFile(this);
+            JTextArea textArea = new JTextArea();
+            DisplayFile dspf = new DisplayFile(textArea, this);
             dspf.displaySourceMember(remoteServer, rightPathString);
         });
 
@@ -1680,10 +1676,9 @@ public class MainWindow extends JFrame {
         editSourceMember.addActionListener(ae -> {
             scrollMessagePane.getVerticalScrollBar()
                     .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-            // "false" stands for "not IFS file"
-            EditFile edtf = new EditFile(remoteServer, this, rightPathString, "rewriteSourceMember");
-            // "true" stands for "edit"
-            edtf.displaySourceMember(true);
+            JTextArea textArea = new JTextArea();
+            JTextArea textArea2 = new JTextArea();
+            EditFile edtf = new EditFile(remoteServer, this, textArea, textArea2, rightPathString, "rewriteSourceMember");
         });
 
         // Compile Source Member
@@ -1787,11 +1782,6 @@ public class MainWindow extends JFrame {
         // ========
         // ======================================== Connetion to the server
         //
-        // Introductory message - waiting for the server.
-        row = "Wait: Connecting to server  " + properties.getProperty("HOST") + " . . .";
-        msgVector.add(row);
-        // Reload LEFT side. Do not use Right side! It would enter a loop.
-        showMessages(noNodes);
 
         // Get connection to the IBM i SERVER.
         // The third parameter (password) should NOT be specified. The user must sign on.
@@ -1800,8 +1790,22 @@ public class MainWindow extends JFrame {
         // !!!!remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText(), "ZUP047");
         // Connect FILE service of the IBM i server.
         try {
-            remoteServer.disconnectAllServices();
+            // Introductory message - waiting for the server.
+            row = "Wait: Connecting to server  " + properties.getProperty("HOST") + " . . .";
+            msgVector.add(row);
+            // Reload LEFT side. Do not use Right side! It would enter a loop.
+            showMessages(noNodes);
+
             remoteServer.connectService(AS400.FILE);
+
+            SystemValue sysVal = new SystemValue(remoteServer, "QCCSID");
+            //if ((Integer) sysVal.getValue() == 65535) {
+                row = "Info: System value QCCSID is " + sysVal.getValue() + ".";
+                msgVector.add(row);
+                // Reload LEFT side. Do not use Right side! It would enter a loop.
+                showMessages(noNodes);
+            //}
+
             try {
                 infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
                 properties.load(infile);
@@ -1832,7 +1836,8 @@ public class MainWindow extends JFrame {
         // *****
 
         // Show completion message when connection to IBM i server connected.
-        row = "Comp: Server IBM i  " + properties.getProperty("HOST") + "  was conneted to user  " + remoteServer.getUserId() + ".";
+        row = "Comp: Server IBM i  " + properties.getProperty("HOST") + "  has been conneted to user  " + remoteServer.getUserId()
+                + " and is retrieving the Integrated File System.";
         msgVector.add(row);
         showMessages(noNodes);
         // Change cursor to default
@@ -1847,22 +1852,28 @@ public class MainWindow extends JFrame {
      *
      */
     protected void connectReconnectRefresh() {
-        boolean OK = connectReconnect();
-        if (OK) {
-            // Search for MEMBERS without defining a library or a file. This operation is long-lasting.
-            // ------------------
-            if ((libraryPatternTextField.getText().isEmpty() || libraryPatternTextField.getText().equals("*"))
-                    && (filePatternTextField.getText().isEmpty() || filePatternTextField.getText().equals("*"))
-                    && (!memberPatternTextField.getText().isEmpty() && !memberPatternTextField.getText().equals("*"))) {
-                int n = JOptionPane.showConfirmDialog(this, "Searching for members in ALL libraries and ALL files "
-                        + " \ntakes longer time. \nWould you still like to continue?",
-                        "Warning!", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE);
-                if (n == JOptionPane.NO_OPTION) {
-                    return;
+        boolean OK = false;
+        do {
+            OK = connectReconnect();
+            if (OK) {
+                // Search for MEMBERS without defining a library or a file. This operation is long-lasting.
+                // ------------------
+                if ((libraryPatternTextField.getText().isEmpty() || libraryPatternTextField.getText().equals("*"))
+                        && (filePatternTextField.getText().isEmpty() || filePatternTextField.getText().equals("*"))
+                        && (!memberPatternTextField.getText().isEmpty() && !memberPatternTextField.getText().equals("*"))) {
+                    int n = JOptionPane.showConfirmDialog(this, "Searching for members in ALL libraries and ALL files "
+                            + " \ntakes longer time. \nWould you still like to continue?",
+                            "Warning!", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE);
+                    if (n == JOptionPane.NO_OPTION) {
+                        return;
+                    }
                 }
+                refreshWindow();
+                break;
+            } else {
+                return;
             }
-            refreshWindow();
-        }
+        } while (true);
     }
 
     /**
@@ -2303,7 +2314,6 @@ public class MainWindow extends JFrame {
      * Reload node structure in the right side of the window.
      */
     protected void reloadRightSide() {
-        System.out.println("reloadRightSide");
 
         ifsFile = new IFSFile(remoteServer, rightPathString);
 
@@ -2515,7 +2525,6 @@ public class MainWindow extends JFrame {
 
             // Change tree root
             rightRoot = rightPathString;
-            System.out.println("RightTreeExpansionListener");
             // Reload children of the node
             reloadRightSide();
         }
@@ -2633,11 +2642,9 @@ public class MainWindow extends JFrame {
                 clipboardPathStrings = leftPathStrings;
                 for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
                     sourcePathString = clipboardPathStrings[idx];
-                    // Get values from properties and set variables and text fields
-                    // "true" stands for "IFS file"
-                    EditFile edtf = new EditFile(remoteServer, MainWindow.this, leftPathString, "rewritePcFile");
-                    // "true" stands for "edit"
-                    edtf.displayPcFile(true);
+                    JTextArea textArea = new JTextArea();
+                    JTextArea textArea2 = new JTextArea();
+                    EditFile edtf = new EditFile(remoteServer, MainWindow.this, textArea, textArea2, leftPathString, "rewritePcFile");
                 }
             }
 
@@ -2802,10 +2809,9 @@ public class MainWindow extends JFrame {
                             && (mouseEvent.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK) == MouseEvent.BUTTON1_DOWN_MASK) {
                         scrollMessagePane.getVerticalScrollBar()
                                 .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-                        // "false" stands for "not IFS file"
-                        EditFile edtf = new EditFile(remoteServer, MainWindow.this, rightPathString, "rewriteSourceMember");
-                        // "true" stands for "edit"
-                        edtf.displaySourceMember(true);
+                        JTextArea textArea = new JTextArea();
+                        JTextArea textArea2 = new JTextArea();
+                        EditFile edtf = new EditFile(remoteServer, MainWindow.this, textArea, textArea2, rightPathString, "rewriteSourceMember");
                     }
 
                 } //
@@ -2860,9 +2866,9 @@ public class MainWindow extends JFrame {
                         scrollMessagePane.getVerticalScrollBar()
                                 .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
                         // "false" stands for "not IFS file"
-                        EditFile edtf = new EditFile(remoteServer, MainWindow.this, rightPathString, "rewriteIfsFile");
-                        // "true" stands for "edit"
-                        edtf.displayIfsFile(true);
+                        JTextArea textArea = new JTextArea();
+                        JTextArea textArea2 = new JTextArea();
+                        EditFile edtf = new EditFile(remoteServer, MainWindow.this, textArea, textArea2, rightPathString, "rewriteIfsFile");
                     }
 
                     rightTreePopupMenu.add("");

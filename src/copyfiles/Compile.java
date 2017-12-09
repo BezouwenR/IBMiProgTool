@@ -5,6 +5,7 @@ import com.ibm.as400.access.AS400Message;
 import com.ibm.as400.access.CommandCall;
 import com.ibm.as400.access.IFSFile;
 import com.ibm.as400.access.Job;
+import com.ibm.as400.access.SpooledFile;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
@@ -41,6 +42,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 
@@ -53,7 +55,7 @@ public class Compile extends JFrame {
 
     MainWindow mainWindow;
 
-    int windowWidth = 800;
+    int windowWidth = 850;
     int windowHeight = 500;
 
     final Color DIM_BLUE = new Color(50, 60, 160);
@@ -85,19 +87,19 @@ public class Compile extends JFrame {
     JLabel pathLabel = new JLabel();
 
     JButton cancelButton = new JButton("Cancel");
-
     JButton performButton = new JButton("Perform command");
-
     JButton jobLogButton = new JButton("Job log");
-
+    JButton lastSplfButton = new JButton("Last spooled file");
     JButton spooledFileButton = new JButton("Spooled files");
-    WrkSplFCall wwsp;
 
     JButton editButton = new JButton("Edit");
-
     JButton clearButton = new JButton("Clear messages");
 
+    WrkSplFCall wwsp;
+
     AS400 remoteServer;
+    String ibmCcsid;
+    int ibmCcsidInt;
 
     String host;
     String qsyslib;
@@ -163,7 +165,7 @@ public class Compile extends JFrame {
     Properties properties;
     Path parPath = Paths.get(System.getProperty("user.dir"), "paramfiles", "Parameters.txt");
     String encoding = System.getProperty("file.encoding", "UTF-8");
-
+    String userName;
     int compileWindowX;
     int compileWindowY;
 
@@ -429,9 +431,10 @@ public class Compile extends JFrame {
 
         buttonPanel.add(cancelButton);
         buttonPanel.add(performButton);
-        buttonPanel.add(jobLogButton);
+        buttonPanel.add(lastSplfButton);
         buttonPanel.add(spooledFileButton);
         buttonPanel.add(editButton);
+        buttonPanel.add(jobLogButton);
         buttonPanel.add(clearButton);
 
         // Scroll pane for message list
@@ -507,7 +510,7 @@ public class Compile extends JFrame {
 
         // Listeners for parameter panel
         // -----------------------------
-        //
+
         // Library pattern listener
         libraryPatternTextField.addActionListener(en -> {
             libraryPattern = libraryPatternTextField.getText().toUpperCase();
@@ -572,16 +575,34 @@ public class Compile extends JFrame {
             printJobLog();
         });
 
+        // Last spooled file button listener
+        lastSplfButton.addActionListener(en -> {
+            scrollMessagePane.getVerticalScrollBar()
+                    .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+            extractNamesFromIfsPath(pathString);
+            String className = this.getClass().getSimpleName();
+            // "true" stands for *CURRENT user
+            WrkSplF wrkSplf = new WrkSplF(remoteServer, mainWindow, this.pathString, true, compileWindowX, compileWindowY, className);
+            SpooledFile splf;
+            if (!ifs) {
+                splf = wrkSplf.selectSpooledFiles(memberName, "", "", "", userName, "", "", ""); // Set member name
+            } else {
+                splf = wrkSplf.selectSpooledFiles(pathString, "", "", "", userName, "", "", ""); // Set IFS path string
+            }
+            String spoolTextAreaString = wrkSplf.convertSpooledFile(splf);
+            JTextArea textArea = new JTextArea();
+            DisplayFile dspf = new DisplayFile(textArea, mainWindow);
+            dspf.displayTextArea(spoolTextAreaString, ibmCcsid);
+        });
+
         // Spooled file button listener
         spooledFileButton.addActionListener(en -> {
             scrollMessagePane.getVerticalScrollBar()
                     .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-            //         if (wwsp == null) {
             String className = this.getClass().getSimpleName();
             // "true" stands for *CURRENT user
             wwsp = new WrkSplFCall(remoteServer, mainWindow, this.pathString, true, compileWindowX, compileWindowY, className);
-            //         }
-            wwsp.execute();
+            wwsp.execute(); // Run in parallel SwingWorker
         });
 
         // Edit button listener
@@ -592,20 +613,26 @@ public class Compile extends JFrame {
             // Then the new data is written back to the file (or member) by the user pressing a button.
             if (this.pathString.startsWith("/QSYS.LIB")) {
                 // Source member
-                EditFile edtf = new EditFile(remoteServer, mainWindow, this.pathString, "rewriteSourceMember");
-                edtf.displaySourceMember(true);
+                JTextArea textArea = new JTextArea();
+                JTextArea textArea2 = new JTextArea();
+                EditFile edtf = new EditFile(remoteServer, mainWindow, textArea, textArea2, this.pathString, "rewriteSourceMember");
+                edtf.displaySourceMember();
             } else {
                 // IFS file
-                EditFile edtf = new EditFile(remoteServer, mainWindow, this.pathString, "rewriteIfsFile");
-                edtf.displayIfsFile(true);
+                JTextArea textArea = new JTextArea();
+                JTextArea textArea2 = new JTextArea();
+                EditFile edtf = new EditFile(remoteServer, mainWindow, textArea, textArea2, this.pathString, "rewriteIfsFile");
+                edtf.displayIfsFile();
             }
         });
 
         // Clear messages button listener
         clearButton.addActionListener(en -> {
             msgVector.clear();
+            globalPanel.removeAll();
             messageList.removeAll();
             scrollMessagePane = new JScrollPane(messageList);
+            scrollMessagePane.setBorder(BorderFactory.createEmptyBorder());
             createGlobalPanelLayout();
         });
 
@@ -627,6 +654,7 @@ public class Compile extends JFrame {
      * @param ifs
      */
     public void compile(String pathString, boolean ifs) {
+        super.setTitle("Compile  '" + pathString + "'");
 
         this.pathString = pathString;
         this.ifs = ifs;
@@ -776,6 +804,9 @@ public class Compile extends JFrame {
                     commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) ";
                 }
                 commandText += " DBGVIEW(  *ALL  ) OUTPUT(  *PRINT  )";
+                if (compileCommand.equals("CRTBNDC") || compileCommand.equals("CRTBNDCPP")) {
+                    commandText += " OPTION(  *SHOWINC  )";
+                }
                 break;
             }
             // Compiling ILE languages to modules
@@ -790,6 +821,9 @@ public class Compile extends JFrame {
                     commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) ";
                 }
                 commandText += " DBGVIEW(  *ALL  ) OUTPUT(  *PRINT  )";
+                if (compileCommand.equals("CRTCMOD") || compileCommand.equals("CRTCPPMOD")) {
+                    commandText += " OPTION(  *SHOWINC  )";
+                }
                 break;
             }
             // SQL versions of ILE languages
@@ -1071,12 +1105,13 @@ public class Compile extends JFrame {
         if (ifsFile.getName().equals("QSYS.LIB")) {
             try {
                 // Get list of selected libraries
-                IFSFile[] ifsFiles2 = ifsFile.listFiles(libraryPattern + ".LIB");
+                IFSFile[] ifsFiles = ifsFile.listFiles(libraryPattern + ".LIB");
                 libraryNameVector.removeAllElements();
                 // Add the selected library names to the vector
-                libraryNameVector.addElement(libraryName);                
-                for (IFSFile ifsFileLevel2 : ifsFiles2) {
+                //libraryNameVector.addElement(libraryName);
+                for (IFSFile ifsFileLevel2 : ifsFiles) {
                     String bareLibraryName = ifsFileLevel2.getName().substring(0, ifsFileLevel2.getName().indexOf("."));
+                    System.out.println("bareLibraryName: " + bareLibraryName);
                     libraryNameVector.addElement(bareLibraryName);
                 }
                 // Add "current library" at the end of the vector
@@ -1085,6 +1120,8 @@ public class Compile extends JFrame {
                 exc.printStackTrace();
             }
         }
+        System.out.println("libraryNameVector: " + libraryNameVector);
+
         String[] strArr = new String[libraryNameVector.size()];
         strArr = libraryNameVector.toArray(strArr);
         return strArr;
@@ -1268,7 +1305,16 @@ public class Compile extends JFrame {
         compileWindowY = new Integer(compileWindowYString);
         libraryPattern = properties.getProperty("LIBRARY_PATTERN");
         sourceType = properties.getProperty("SOURCE_TYPE");
-
+        ibmCcsid = properties.getProperty("IBM_CCSID");
+        try {
+            ibmCcsidInt = Integer.parseInt(ibmCcsid);
+        } catch (Exception exc) {
+            // If ibmCcsid is not numeric, take 65535
+            exc.printStackTrace();
+            ibmCcsid = "65535";
+            ibmCcsidInt = 65535;
+        }
+        userName = properties.getProperty("USERNAME");
         // Path label differs for IFS file and source member
         titlePanel.add(pathLabel);
         if (ifs) {
@@ -1287,10 +1333,33 @@ public class Compile extends JFrame {
         // Obtain source type from IFS file or source file
         if (ifs) {
             // IFS file
+            sourceType = pathString.substring(pathString.lastIndexOf(".") + 1).toUpperCase();
+            sourceTypeComboBox.setSelectedItem(sourceType);
+        } else {
+            // Source file 
+            extractNamesFromIfsPath(pathString);
+            if (sourceType.equals("*DEFAULT")) {
+                // Set source type according to the standard Source file (QRPGLESRC, ...)
+                sourceType = getDefaultSourceType(fileName);
+            }
+            // Source type combo box - fill with source type
+            sourceTypeComboBox.setSelectedItem(sourceType);
+        }
+    }
+
+    /**
+     *
+     */
+    protected void getObjectNames() {
+        if (ifs) {
+            // IFS file
             try {
-                sourceType = pathString.substring(pathString.lastIndexOf(".") + 1).toUpperCase();
-                sourceTypeComboBox.setSelectedItem(sourceType);
-                libNamePar = "*CURLIB";
+                String[] librariesArr = getListOfLibraries(libraryPattern);
+                librariesComboBox.removeAllItems();
+                for (int idx = 0; idx < librariesArr.length; idx++) {
+                    librariesComboBox.addItem(librariesArr[idx]);
+                }
+                libNamePar = (String) librariesComboBox.getSelectedItem();
 
                 // Derive object name (or member name) from the IFS path string
                 String fname = pathString.substring(pathString.lastIndexOf("/") + 1);
@@ -1308,37 +1377,11 @@ public class Compile extends JFrame {
                 exc.printStackTrace();
             }
         } else {
-            // Source file 
-            extractNamesFromIfsPath(pathString);
-
-            if (sourceType.equals("*DEFAULT")) {
-                // Set source type according to the standard Source file (QRPGLESRC, ...)
-                sourceType = getDefaultSourceType(fileName);
-            }
-            // Source type combo box - fill with source type
-            sourceTypeComboBox.setSelectedItem(sourceType);
-
-            // Object p for source members
+            // Source file
             libNamePar = libraryName;
             objNamePar = memberName;
         }
-    }
-
-    /**
-     *
-     */
-    protected void getObjectNames() {
-
-        libraryPattern = libraryPatternTextField.getText().toUpperCase();
         libraryPatternTextField.setText(libraryPattern);
-        String[] librariesArr = getListOfLibraries(libraryPattern);
-        librariesComboBox.removeAllItems();
-        for (int idx = 0; idx < librariesArr.length; idx++) {
-            librariesComboBox.addItem(librariesArr[idx]);
-        }
-
-        libraryPatternTextField.setText(libraryPattern);
-
         librariesComboBox.setSelectedItem(libNamePar);
         objectNameFld.setText(objNamePar);
     }
