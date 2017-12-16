@@ -39,7 +39,7 @@ import javax.swing.text.Highlighter;
 import javax.swing.text.JTextComponent;
 
 /**
- * This class enables finding and replacing text in the editor.
+ * This class is a dialog for entering a name - new directory name, etc.
  *
  * @author Vladimír Župka 2016
  */
@@ -49,10 +49,13 @@ public class FindWindow extends JFrame {
     static final Color DIM_RED = Color.getHSBColor(0.00f, 0.2f, 0.98f); // red little
     static final Color WARNING_COLOR = new Color(255, 200, 200);
 
-    Path prevIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "prev.png");
-    Path nextIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "next.png");
     Path matchCaseIconPathDark = Paths.get(System.getProperty("user.dir"), "workfiles", "matchCase1.png");
     Path matchCaseIconPathDim = Paths.get(System.getProperty("user.dir"), "workfiles", "matchCase2.png");
+
+    Path prevInactiveIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "prevInactive.png");
+    Path nextInactiveIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "nextInactive.png");
+    Path prevActiveIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "prevActive.png");
+    Path nextActiveIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "nextActive.png");
 
     Path parPath = Paths.get(System.getProperty("user.dir"), "paramfiles", "Parameters.txt");
 
@@ -71,6 +74,7 @@ public class FindWindow extends JFrame {
     JButton replaceAllButton = new JButton("Replace All");
 
     boolean wasReplace = false;
+    String direction = "forward";
 
     JPanel colPanel1;
     JPanel colPanel2;
@@ -85,17 +89,18 @@ public class FindWindow extends JFrame {
 
     EditFile editFile;
 
-    // Icon "Aa" will toggle dim or dark when clicked
+    // Icon Aa will be dimmed or dark when clicked
     ImageIcon matchCaseIconDark = new ImageIcon(matchCaseIconPathDark.toString());
     ImageIcon matchCaseIconDim = new ImageIcon(matchCaseIconPathDim.toString());
-    // Icon "Left arrow" 
-    ImageIcon prevImageIcon = new ImageIcon(prevIconPath.toString());
-    // Icon "Right arrow"
-    ImageIcon nextImageIcon = new ImageIcon(nextIconPath.toString());
-
-    JButton prevButton = new JButton(prevImageIcon);
-    JButton nextButton = new JButton(nextImageIcon);
     JToggleButton matchCaseButton = new JToggleButton();
+
+    ImageIcon prevInactiveIcon = new ImageIcon(prevInactiveIconPath.toString());
+    ImageIcon nextInactiveIcon = new ImageIcon(nextInactiveIconPath.toString());
+    ImageIcon prevActiveIcon = new ImageIcon(prevActiveIconPath.toString());
+    ImageIcon nextActiveIcon = new ImageIcon(nextActiveIconPath.toString());
+
+    JButton prevButton = new JButton(prevInactiveIcon);
+    JButton nextButton = new JButton(nextActiveIcon);
 
     String pathString;
 
@@ -112,17 +117,11 @@ public class FindWindow extends JFrame {
         this.editFile = editFile;
         this.pathString = pathString;
 
-        // Create an icon (left arrow),
-        // then create the button and set the icon to it
         prevButton.setToolTipText("Previous match. Also Ctrl+⬆ (Cmd+⬆ in macOS).");
         prevButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         prevButton.setContentAreaFilled(false);
         prevButton.setPreferredSize(new Dimension(25, 20));
-        //prevButton.setMinimumSize(new Dimension(20, 20));
-        //prevButton.setMaximumSize(new Dimension(20, 20));
 
-        // Create an icon (right arrow),
-        // then create the button and set the icon to it
         nextButton.setToolTipText("Next match. Also Ctrl+⬇ (Cmd+⬇ in macOS).");
         nextButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         nextButton.setContentAreaFilled(false);
@@ -138,14 +137,20 @@ public class FindWindow extends JFrame {
         // This window will be allways on top.
         setAlwaysOnTop(true);
 
+        // Make window dimensions fixed.
+        setResizable(false);
+
+        // Register WindowListener for storing X and Y coordinates to properties
+        addWindowListener(new FindingPatternsWindowAdapter());
+
         findField.requestFocus();
         findField.setPreferredSize(new Dimension(200, 20));
         findField.setMaximumSize(new Dimension(200, 20));
         // Set document listener for the search field
-        findField.getDocument().addDocumentListener(editFile.highlightHandler);
+        findField.getDocument().addDocumentListener(editFile.highlightListener);
         findField.setToolTipText("Enter text to find.");
 
-        // Set a layer of counts that overlay the find field:
+        // Set a layer of counts that overlay the search field:
         // - the sequence number of just highlighted text found
         // - how many matches were found
         fieldLayer = new JLayer<>(findField, layerUI);
@@ -223,16 +228,25 @@ public class FindWindow extends JFrame {
         // "Previous" button listener
         // --------------------------
         prevButton.addActionListener(ae -> {
-            if (!editFile.lowerHalfActive) {
-                if (!wasReplace) {
-                    editFile.currentPos--; // Find previous match
+            direction = "backward";
+            prevButton.setIcon(prevActiveIcon);
+            nextButton.setIcon(nextInactiveIcon);
+            if (!wasReplace) {
+                if (!editFile.lowerHalfActive) {
+                    if (editFile.highlightMap.lowerKey(editFile.curPos) == null) {
+                        editFile.curPos = editFile.highlightMap.lastKey();
+                    } else {
+                        editFile.curPos = editFile.highlightMap.lowerKey(editFile.curPos);
+                    }
+                    editFile.changeHighlight();
+                } else {
+                    if (editFile.highlightMap.lowerKey(editFile.curPos2) == null) {
+                        editFile.curPos2 = editFile.highlightMap.lastKey();
+                    } else {
+                        editFile.curPos2 = editFile.highlightMap.lowerKey(editFile.curPos2);
+                    }
+                    editFile.changeHighlight2();
                 }
-                editFile.changeHighlight();
-            } else {
-                if (!wasReplace) {
-                    editFile.currentPos2--; // Find previous match
-                }
-                editFile.changeHighlight2();
             }
             wasReplace = false; // Set off Replace flag
         });
@@ -240,11 +254,22 @@ public class FindWindow extends JFrame {
         // "Next" button listener
         // ----------------------
         nextButton.addActionListener(ae -> {
+            direction = "forward";
+            prevButton.setIcon(prevInactiveIcon);
+            nextButton.setIcon(nextActiveIcon);
             if (!editFile.lowerHalfActive) {
-                editFile.currentPos++; // Find next match
+                if (editFile.highlightMap.higherKey(editFile.curPos) == null) {
+                    editFile.curPos = editFile.highlightMap.firstKey();
+                } else {
+                    editFile.curPos = editFile.highlightMap.higherKey(editFile.curPos);
+                }
                 editFile.changeHighlight();
             } else {
-                editFile.currentPos2++; // Find next match
+                if (editFile.highlightMap.higherKey(editFile.curPos2) == null) {
+                    editFile.curPos2 = editFile.highlightMap.firstKey();
+                } else {
+                    editFile.curPos2 = editFile.highlightMap.higherKey(editFile.curPos2);
+                }
                 editFile.changeHighlight2();
             }
             wasReplace = false; // Set off Replace flag
@@ -260,10 +285,11 @@ public class FindWindow extends JFrame {
                 matchCaseButton.setSelectedIcon(matchCaseIconDark);
                 matchCaseButton.setToolTipText("Match case. Toggle Case insensitive.");
             }
-            editFile.currentPos = 0;
-            editFile.changeHighlight();
-            editFile.currentPos2 = 0;
-            editFile.changeHighlight2();
+            if (!editFile.lowerHalfActive) {
+                editFile.changeHighlight();
+            } else {
+                editFile.changeHighlight2();
+            }
         });
 
         // "Cancel" button listener
@@ -285,16 +311,38 @@ public class FindWindow extends JFrame {
         // "Replace" button listener
         // ------------------------------
         replaceButton.addActionListener(ae -> {
-            if (editFile.currentPos > -1) {
-                if (!editFile.lowerHalfActive) {
-                    if (!wasReplace) {
-                        editFile.textArea.replaceRange(replaceField.getText(), editFile.startOffset, editFile.endOffset);
-                        editFile.currentPos--; // Find previous match
+            if (!editFile.lowerHalfActive) {
+                if (!wasReplace) {
+                    if (editFile.highlightMap.size() > 0) {
+                        if (!editFile.highlightMap.isEmpty()) {
+                            editFile.textArea.replaceRange(replaceField.getText(), editFile.startOffset, editFile.endOffset);
+                            editFile.changeHighlight();
+                            editFile.curPos = editFile.startOffset;
+                        } else {
+                            editFile.changeHighlight(); // No hits - erase numbers in findField
+                        }
+                        if (editFile.highlightMap.lowerKey(editFile.curPos) == null) {
+                            editFile.curPos = editFile.highlightMap.lastKey();
+                        } else {
+                            editFile.curPos = editFile.highlightMap.lowerKey(editFile.curPos);
+                        }
                     }
-                } else {
-                    if (!wasReplace) {
-                        editFile.textArea2.replaceRange(replaceField.getText(), editFile.startOffset2, editFile.endOffset2);
-                        editFile.currentPos2--; // Find previous match
+                }
+            } else {
+                if (!wasReplace) {
+                    if (editFile.highlightMap.size() > 0) {
+                        if (!editFile.highlightMap.isEmpty()) {
+                            editFile.textArea2.replaceRange(replaceField.getText(), editFile.startOffset2, editFile.endOffset2);
+                            editFile.changeHighlight2();
+                            editFile.curPos2 = editFile.startOffset2;
+                        } else {
+                            editFile.changeHighlight2(); // No hits - erase numbers in findField
+                        }
+                        if (editFile.highlightMap.lowerKey(editFile.curPos2) == null) {
+                            editFile.curPos2 = editFile.highlightMap.lastKey();
+                        } else {
+                            editFile.curPos2 = editFile.highlightMap.lowerKey(editFile.curPos2);
+                        }
                     }
                 }
             }
@@ -304,28 +352,74 @@ public class FindWindow extends JFrame {
         // "Replace+Find" button listener
         // ------------------------------
         replaceFindButton.addActionListener(ae -> {
-            if (editFile.currentPos > -1) {
+            if (direction.equals("forward")) {
+                // Direction forward
                 if (!editFile.lowerHalfActive) {
                     if (!wasReplace) {
-                        editFile.textArea.replaceRange(replaceField.getText(), editFile.startOffset, editFile.endOffset);
-                        if (replaceField.getText().toUpperCase().contains(findField.getText().toUpperCase())) {
-                            editFile.currentPos++;
+                        if (editFile.highlightMap.ceilingKey(editFile.curPos) == null) {
+                            editFile.curPos = 0;
+                        } else {
+                            editFile.curPos = editFile.highlightMap.ceilingKey(editFile.curPos + replaceField.getText().length());
                         }
-                        editFile.changeHighlight();
+                        if (!editFile.highlightMap.isEmpty()) {
+                            editFile.textArea.replaceRange(replaceField.getText(), editFile.startOffset, editFile.endOffset);
+                            editFile.changeHighlight();
+                        } else {
+                            editFile.changeHighlight(); // No hits - erase numbers in findField
+                        }
                     }
                 } else {
                     if (!wasReplace) {
-                        editFile.textArea2.replaceRange(replaceField.getText(), editFile.startOffset2, editFile.endOffset2);
-                        if (replaceField.getText().toUpperCase().contains(findField.getText().toUpperCase())) {
-                            editFile.currentPos++;
+                        if (editFile.highlightMap.ceilingKey(editFile.curPos2) == null) {
+                            editFile.curPos2 = 0;
+                        } else {
+                            editFile.curPos2 = editFile.highlightMap.ceilingKey(editFile.curPos2 + replaceField.getText().length());
                         }
-                        editFile.changeHighlight2();
+                        if (!editFile.highlightMap.isEmpty()) {
+                            editFile.textArea2.replaceRange(replaceField.getText(), editFile.startOffset2, editFile.endOffset2);
+                            editFile.changeHighlight2();
+                        } else {
+                            editFile.changeHighlight2(); // No hits - erase numbers in findField
+                        }
+                    }
+                }
+            } else {
+                // Direction backward
+                if (!editFile.lowerHalfActive) {
+                    System.out.println(editFile.highlightMap);
+                    System.out.println("curPos: " + editFile.curPos);
+                    if (!wasReplace) {
+                        if (editFile.highlightMap.lowerKey(editFile.curPos) == null) {
+                            editFile.curPos = editFile.textArea.getText().length();
+                        } else {
+                            editFile.curPos = editFile.highlightMap.lowerKey(editFile.curPos + replaceField.getText().length());
+                        }
+                        if (!editFile.highlightMap.isEmpty()) {
+                            editFile.textArea.replaceRange(replaceField.getText(), editFile.startOffset, editFile.endOffset);
+                            editFile.changeHighlight();
+                        } else {
+                            editFile.changeHighlight(); // No hits - erase numbers in findField
+                        }
+                    }
+                } else {
+                    if (!wasReplace) {
+                        if (editFile.highlightMap.lowerKey(editFile.curPos2) == null) {
+                            editFile.curPos2 = editFile.textArea2.getText().length();
+                        } else {
+                            editFile.curPos2 = editFile.highlightMap.lowerKey(editFile.curPos2 + replaceField.getText().length());
+                        }
+                        if (!editFile.highlightMap.isEmpty()) {
+                            editFile.textArea2.replaceRange(replaceField.getText(), editFile.startOffset2, editFile.endOffset2);
+                            editFile.changeHighlight2();
+                        } else {
+                            editFile.changeHighlight2(); // No hits - erase numbers in findField
+                        }
                     }
                 }
             }
         });
 
-        // "Replace All" button listener
+        // "Replace all" button listener
         replaceAllButton.addActionListener(ae -> {
             String replacement = replaceField.getText();
             ArrayList<String> arrListPattern = new ArrayList<>();
@@ -382,23 +476,18 @@ public class FindWindow extends JFrame {
             object.getActionMap().put("arrowDown", arrowDown);
         });
 
-        // Set document listener for the find field
-        findField.getDocument().addDocumentListener(editFile.highlightHandler);
-
+        // Register document listener for the "findField" when hihglighting matched patterns.
+        findField.getDocument().addDocumentListener(editFile.highlightListener);
     }
 
     /**
-     * Conclude creating the window when the constructor has already been performed.
-     * 
+     * Shows the window and resolves a text to be searched; 
+     * The actual text is obtained from EditFile object, not from the parameter.
+     *
      * @param searchedText
      */
-    public void createWindow(String searchedText) {
-
-        // Make window dimensions fixed.
-        setResizable(false);
-
-        // Register WindowListener for disposal of the window
-        addWindowListener(new FindWindowAdapter());
+    public void finishCreatingWindow(String searchedText) {
+        // Note: The parameter is not actually used. It is only tested if it is not empty.
 
         // Conclude showing window
         setSize(windowWidth, windowHeight);
@@ -407,13 +496,43 @@ public class FindWindow extends JFrame {
         // pack();
 
         // Set text selected from the text area (primary or secondary) into findField
-        findField.setText(searchedText);
+        // and highlight matches.
+        if (searchedText != null) {
+            if (!editFile.lowerHalfActive) {
+                if (editFile.selectionMode.equals(editFile.HORIZONTAL_SELECTION)) {
+                    editFile.curPos = editFile.textArea.getSelectionStart();
+                    findField.setText(editFile.textArea.getSelectedText());
+                } else {
+                    if (!editFile.selectionStarts.isEmpty()) {
+                        editFile.curPos = editFile.selectionStarts.get(0);
+                        editFile.textArea.select(editFile.selectionStarts.get(0), editFile.selectionEnds.get(0));
+                        findField.setText(editFile.textArea.getSelectedText());
+                    }
+                    editFile.changeHighlight();
+                }
+                editFile.changeHighlight();
+            } else {
+                if (editFile.selectionMode.equals(editFile.HORIZONTAL_SELECTION)) {
+                    editFile.curPos2 = editFile.textArea2.getSelectionStart();
+                    findField.setText(editFile.textArea2.getSelectedText());
+                } else {
+                    if (!editFile.selectionStarts.isEmpty()) {
+                        editFile.curPos2 = editFile.selectionStarts.get(0);
+                        editFile.textArea2.select(editFile.selectionStarts.get(0), editFile.selectionEnds.get(0));
+                        findField.setText(editFile.textArea2.getSelectedText());
+                    }
+                    editFile.changeHighlight2();
+                }
+                editFile.changeHighlight2();
+            }
+        }
     }
 
 
     /**
-     * Set indicator N/M that overlays the search field and is right adjusted N - the sequence number of the text that is
-     * just highlighted, M - how many matches were found.
+     * Set indicator N/M that overlays the search field and is right adjusted;
+     * N - the sequence number of the text that is just highlighted,
+     * M - how many matches were found.
      */
     class PlaceholderLayerUI extends LayerUI<JTextComponent> {
 
@@ -451,7 +570,8 @@ public class FindWindow extends JFrame {
     }
 
     /**
-     * Produce a Pattern object for matching in "changeHighlighter" methods (in EditFile class).
+     * Create and compile a Pattern object for a text in the findField.
+     *
      * @return
      */
     protected Pattern getPattern() {
@@ -488,43 +608,69 @@ public class FindWindow extends JFrame {
     }
 
     /**
-     * Inner class for Ctrl + Arrow Up function key.
+     * Inner class for Ctrl + Arrow Up function key (Previous match).
      */
     class ArrowUp extends AbstractAction {
 
         @Override
         public void actionPerformed(ActionEvent ae) {
-            if (!editFile.lowerHalfActive) {
-                editFile.currentPos--;
-                editFile.changeHighlight();
-            } else {
-                editFile.currentPos2--;
-                editFile.changeHighlight2();
+            direction = "backward";
+            prevButton.setIcon(prevActiveIcon);
+            nextButton.setIcon(nextInactiveIcon);
+            if (!wasReplace) {
+                if (!editFile.lowerHalfActive) {
+                    if (editFile.highlightMap.lowerKey(editFile.curPos) == null) {
+                        editFile.curPos = editFile.highlightMap.lastKey();
+                    } else {
+                        editFile.curPos = editFile.highlightMap.lowerKey(editFile.curPos);
+                    }
+                    editFile.changeHighlight();
+                } else {
+                    if (editFile.highlightMap.lowerKey(editFile.curPos2) == null) {
+                        editFile.curPos2 = editFile.highlightMap.lastKey();
+                    } else {
+                        editFile.curPos2 = editFile.highlightMap.lowerKey(editFile.curPos2);
+                    }
+                    editFile.changeHighlight2();
+                }
             }
+            wasReplace = false; // Set off Replace flag
         }
     }
 
     /**
-     * Inner class for Ctrl + Arrow Down function key.
+     * Inner class for Ctrl + Arrow Down function key (Next match).
      */
     class ArrowDown extends AbstractAction {
 
         @Override
         public void actionPerformed(ActionEvent ae) {
+            direction = "forward";
+            prevButton.setIcon(prevInactiveIcon);
+            nextButton.setIcon(nextActiveIcon);
             if (!editFile.lowerHalfActive) {
-                editFile.currentPos++;
+                if (editFile.highlightMap.higherKey(editFile.curPos) == null) {
+                    editFile.curPos = editFile.highlightMap.firstKey();
+                } else {
+                    editFile.curPos = editFile.highlightMap.higherKey(editFile.curPos);
+                }
                 editFile.changeHighlight();
             } else {
-                editFile.currentPos2++;
+                if (editFile.highlightMap.higherKey(editFile.curPos2) == null) {
+                    editFile.curPos2 = editFile.highlightMap.firstKey();
+                } else {
+                    editFile.curPos2 = editFile.highlightMap.higherKey(editFile.curPos2);
+                }
                 editFile.changeHighlight2();
             }
+            wasReplace = false; // Set off Replace flag
         }
     }
 
     /**
      * Window adapter clears text in findField and closes the window.
      */
-    class FindWindowAdapter extends WindowAdapter {
+    class FindingPatternsWindowAdapter extends WindowAdapter {
 
         @Override
         public void windowClosing(WindowEvent we) {

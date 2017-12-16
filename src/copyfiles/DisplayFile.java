@@ -12,17 +12,20 @@ import com.ibm.as400.access.RecordFormat;
 import com.ibm.as400.access.SequentialFile;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.nio.charset.Charset;
@@ -32,24 +35,27 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
-import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JLayer;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -57,13 +63,13 @@ import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.JViewport;
 import javax.swing.KeyStroke;
+import javax.swing.ListCellRenderer;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.plaf.LayerUI;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
-import javax.swing.text.Document;
 import javax.swing.text.Highlighter;
 import javax.swing.text.JTextComponent;
 
@@ -83,28 +89,61 @@ public final class DisplayFile extends JFrame {
     final Color WARNING_COLOR = new Color(255, 200, 200);
     final Color VERY_LIGHT_GRAY = Color.getHSBColor(0.50f, 0.01f, 0.90f);
 
-    Highlighter.HighlightPainter currentPosPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.ORANGE);
+    Highlighter.HighlightPainter currentPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.ORANGE);
     Highlighter.HighlightPainter highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
 
     JLabel characterSetLabel = new JLabel();
 
+    String[] fontNamesMac = {
+        "Monospaced",
+        "Courier",
+        "Courier New",
+        "Monaco",
+        "Lucida Sans Typewriter",
+        "Andale Mono",
+        "Ayuthaya",
+        "Menlo",
+        "PT Mono",};
+    String[] fontNamesWin = {
+        "Monospaced",
+        "Consolas",
+        "Courier New",
+        "DialogInput",
+        "Lucida Console",
+        "Lucida Sans Typewriter",
+        "MS Gothic",
+        "Source Code Pro",};
+
     JLabel fontSizeLabel = new JLabel("Font size:");
     JTextField fontSizeField = new JTextField();
 
-    JLabel searchLabel = new JLabel("Search:");
-    JTextField searchField = new JTextField();
+    JLabel searchLabel = new JLabel("Find:");
+    JTextField findField = new JTextField();
     JLayer fieldLayer;
-
-    JButton prevButton = new JButton("<"); // character "arrow up"
-    JButton nextButton = new JButton(">"); // character "arrow down"
 
     JToggleButton matchCaseButton;
     ImageIcon matchCaseIconDark;
     ImageIcon matchCaseIconDim;
 
     PlaceholderLayerUI layerUI = new PlaceholderLayerUI();
-    transient HighlightHandler highlightHandler = new HighlightHandler();
-    int currentPos = 0; // currentPos sequence number
+    HighlightListener highlightListener = new HighlightListener();
+
+    TextAreaMouseListener textAreaMouseListener;
+
+    // Map containing intervals (start, end) of highligthted texts.
+    TreeMap<Integer, Integer> highlightMap = new TreeMap<>();
+    // Position set by mouse press or by program in FindWindow class (find or replace listeners).
+    // The position is searched in the highlightMap to find the startOffset of a highlight.
+    Integer curPos = 0;
+
+    // Lists of starts and ends of highlighted texts taken from the highlightMap.
+    ArrayList<Integer> startOffsets = new ArrayList<>();
+    ArrayList<Integer> endOffsets = new ArrayList<>();
+
+    int sequence = 0; // sequence number of current highlighted interval in the primary text area
+    Integer startOffset; // start offset of highlighted interval
+    Integer endOffset; // end offset of highlighted interval
+    String direction = "forward";
 
     MainWindow mainWindow;
     static int windowWidth;
@@ -114,10 +153,21 @@ public final class DisplayFile extends JFrame {
     int windowX;
     int windowY;
 
-    Path prevIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "prev.png");
-    Path nextIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "next.png");
     Path matchCaseIconPathDark = Paths.get(System.getProperty("user.dir"), "workfiles", "matchCase1.png");
     Path matchCaseIconPathDim = Paths.get(System.getProperty("user.dir"), "workfiles", "matchCase2.png");
+
+    Path prevInactiveIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "prevInactive.png");
+    Path nextInactiveIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "nextInactive.png");
+    Path prevActiveIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "prevActive.png");
+    Path nextActiveIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "nextActive.png");
+
+    ImageIcon prevInactiveIcon = new ImageIcon(prevInactiveIconPath.toString());
+    ImageIcon nextInactiveIcon = new ImageIcon(nextInactiveIconPath.toString());
+    ImageIcon prevActiveIcon = new ImageIcon(prevActiveIconPath.toString());
+    ImageIcon nextActiveIcon = new ImageIcon(nextActiveIconPath.toString());
+
+    JButton prevButton = new JButton(prevInactiveIcon);
+    JButton nextButton = new JButton(nextActiveIcon);
 
     Path parPath = Paths.get(System.getProperty("user.dir"), "paramfiles", "Parameters.txt");
     String encoding = System.getProperty("file.encoding", "UTF-8");
@@ -127,7 +177,11 @@ public final class DisplayFile extends JFrame {
     String ibmCcsid;
     int ibmCcsidInt;
 
-    String editorFont;
+    String operatingSystem;
+
+    JComboBox<String> fontComboBox = new JComboBox<>();
+
+    String displayFont;
     String fontSizeString;
     int fontSize;
 
@@ -184,9 +238,35 @@ public final class DisplayFile extends JFrame {
             }
         }
 
-        editorFont = properties.getProperty("EDITOR_FONT");
+        Properties sysProp = System.getProperties();
+        if (sysProp.get("os.name").toString().toUpperCase().contains("MAC")) {
+            operatingSystem = "MAC";
+            // Adds Mac items to combo box
+            for (String str : fontNamesMac) {
+                fontComboBox.addItem(str);
+            }
+        } else if (sysProp.get("os.name").toString().toUpperCase().contains("WINDOWS")) {
+            operatingSystem = "WINDOWS";
+            // Adds Windows items to combo box
+            for (String str : fontNamesWin) {
+                fontComboBox.addItem(str);
+            }
+        }
 
-        fontSizeString = properties.getProperty("FONT_SIZE");
+        displayFont = properties.getProperty("DISPLAY_FONT");
+
+        fontComboBox.setPreferredSize(new Dimension(140, 20));
+        fontComboBox.setMaximumSize(new Dimension(140, 20));
+        fontComboBox.setMinimumSize(new Dimension(140, 20));
+        fontComboBox.setToolTipText("Choose font.");
+
+        // Sets the current display font item into the input field of the combo box
+        fontComboBox.setSelectedItem(displayFont);
+
+        // This class gives the corresponding fonts to the font names in the combo box list
+        fontComboBox.setRenderer(new FontComboBoxRenderer());
+
+        fontSizeString = properties.getProperty("DISPLAY_FONT_SIZE");
         try {
             fontSize = Integer.parseInt(fontSizeString);
         } catch (Exception exc) {
@@ -196,12 +276,12 @@ public final class DisplayFile extends JFrame {
         }
 
         fontSizeField.setText(fontSizeString);
-        fontSizeField.setPreferredSize(new Dimension(25, 20));
-        fontSizeField.setMaximumSize(new Dimension(25, 20));
+        fontSizeField.setPreferredSize(new Dimension(30, 20));
+        fontSizeField.setMaximumSize(new Dimension(30, 20));
 
         // Adjust the text area
         textArea.setEditable(false);
-        textArea.setFont(new Font(editorFont, Font.PLAIN, fontSize));
+        textArea.setFont(new Font(displayFont, Font.PLAIN, fontSize));
 
         // Create scroll pane with the text area inside
         scrollPane = new JScrollPane(textArea);
@@ -221,29 +301,15 @@ public final class DisplayFile extends JFrame {
         windowX = screenWidth / 2 - windowWidth / 2;
         windowY = 0;
 
-        // Create an icon (left arrow),
-        // then create the button and set the icon to it
-        ImageIcon prevImageIcon = new ImageIcon(prevIconPath.toString());
-        prevButton = new JButton(prevImageIcon);
-        prevButton.setToolTipText("Also Ctrl+⬆ (Cmd+⬆ in macOS).");
+        prevButton.setToolTipText("Previous match. Also Ctrl+⬆ (Cmd+⬆ in macOS).");
         prevButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         prevButton.setContentAreaFilled(false);
-        prevButton.setPreferredSize(new Dimension(20, 20));
-        prevButton.setMinimumSize(new Dimension(20, 20));
-        prevButton.setMaximumSize(new Dimension(20, 20));
-        prevButton.setActionCommand("prev");
+        prevButton.setPreferredSize(new Dimension(25, 20));
 
-        // Create an icon (right arrow),
-        // then create the button and set the icon to it
-        ImageIcon nextImageIcon = new ImageIcon(nextIconPath.toString());
-        nextButton = new JButton(nextImageIcon);
-        nextButton.setToolTipText("Also Ctrl+⬇ (Cmd+⬇ in macOS).");
+        nextButton.setToolTipText("Next match. Also Ctrl+⬇ (Cmd+⬇ in macOS).");
         nextButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         nextButton.setContentAreaFilled(false);
-        nextButton.setPreferredSize(new Dimension(20, 20));
-        nextButton.setMinimumSize(new Dimension(20, 20));
-        nextButton.setMaximumSize(new Dimension(20, 20));
-        nextButton.setActionCommand("next");
+        nextButton.setPreferredSize(new Dimension(25, 20));
 
         // Icon Aa will be dimmed or dark when clicked
         matchCaseIconDark = new ImageIcon(matchCaseIconPathDark.toString());
@@ -260,24 +326,19 @@ public final class DisplayFile extends JFrame {
         matchCaseButton.setMaximumSize(new Dimension(20, 20));
         matchCaseButton.setActionCommand("matchCase");
 
-        searchField.setPreferredSize(new Dimension(300, 20));
-        searchField.setMaximumSize(new Dimension(300, 20));
-
+        findField.setPreferredSize(new Dimension(300, 20));
+        findField.setMaximumSize(new Dimension(300, 20));
+        findField.setToolTipText("Enter text to find.");
         // Set document listener for the search field
-        searchField.getDocument().addDocumentListener(highlightHandler);
+        findField.getDocument().addDocumentListener(highlightListener);
 
-        // Set action listener for buttons and check boxes
-        Arrays.asList(nextButton, prevButton, matchCaseButton).stream().map((abstractButton) -> {
-            abstractButton.setFocusable(false);
-            return abstractButton;
-        }).forEachOrdered((abstractButton) -> {
-            abstractButton.addActionListener(highlightHandler);
-        });
+        textAreaMouseListener = new TextAreaMouseListener();
+        textArea.addMouseListener(textAreaMouseListener);
 
         // Set a layer of counts that overlay the search field:
         // - the sequence number of just highlighted text found
         // - how many matches were found
-        fieldLayer = new JLayer<>(searchField, layerUI);
+        fieldLayer = new JLayer<>(findField, layerUI);
 
         globalPanel = new JPanel();
         globalPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
@@ -290,11 +351,13 @@ public final class DisplayFile extends JFrame {
                 .addComponent(searchLabel)
                 .addComponent(fieldLayer)
                 .addComponent(prevButton)
+                .addGap(3)
                 .addComponent(nextButton)
                 .addGap(10)
                 .addComponent(matchCaseButton)
-                .addGap(20)
-                .addComponent(fontSizeLabel)
+                .addGap(10)
+                .addComponent(fontComboBox)
+                // .addComponent(fontSizeLabel)
                 .addComponent(fontSizeField)
                 .addGap(10)
                 .addComponent(characterSetLabel);
@@ -304,7 +367,8 @@ public final class DisplayFile extends JFrame {
                 .addComponent(prevButton)
                 .addComponent(nextButton)
                 .addComponent(matchCaseButton)
-                .addComponent(fontSizeLabel)
+                .addComponent(fontComboBox)
+                // .addComponent(fontSizeLabel)
                 .addComponent(fontSizeField)
                 .addComponent(characterSetLabel);
         globalPanelLayout.setHorizontalGroup(globalPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
@@ -321,6 +385,77 @@ public final class DisplayFile extends JFrame {
         scrollPane.setPreferredSize(new Dimension(windowWidth, windowHeight - 140));
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
+        // "Previous" button listener
+        // --------------------------
+        prevButton.addActionListener(ae -> {
+            direction = "backward";
+            prevButton.setIcon(prevActiveIcon);
+            nextButton.setIcon(nextInactiveIcon);
+            if (highlightMap.lowerKey(curPos) == null) {
+                curPos = highlightMap.lastKey();
+            } else {
+                curPos = highlightMap.lowerKey(curPos);
+            }
+            changeHighlight();
+        });
+
+        // "Next" button listener
+        // ----------------------
+        nextButton.addActionListener(ae -> {
+            direction = "forward";
+            prevButton.setIcon(prevInactiveIcon);
+            nextButton.setIcon(nextActiveIcon);
+            if (highlightMap.higherKey(curPos) == null) {
+                curPos = highlightMap.firstKey();
+            } else {
+                curPos = highlightMap.higherKey(curPos);
+            }
+            changeHighlight();
+        });
+
+        // "Match case" button listener
+        // ----------------------------
+        matchCaseButton.addActionListener(ae -> {
+            if (matchCaseButton.getSelectedIcon().equals(matchCaseIconDark)) {
+                matchCaseButton.setSelectedIcon(matchCaseIconDim);
+                matchCaseButton.setToolTipText("Case insensitive. Toggle Match case.");
+            } else {
+                matchCaseButton.setSelectedIcon(matchCaseIconDark);
+                matchCaseButton.setToolTipText("Match case. Toggle Case insensitive.");
+            }
+            changeHighlight();
+        });
+
+        // Select display font from the list in combo box - listener
+        // ---------------------------------------------------------
+        fontComboBox.addItemListener(il -> {
+            int currentCaretPos = textArea.getCaretPosition();
+            JComboBox<String> source = (JComboBox) il.getSource();
+            fontSizeString = fontSizeField.getText();
+            try {
+                fontSize = Integer.parseInt(fontSizeString);
+            } catch (Exception exc) {
+                exc.printStackTrace();
+                fontSizeString = "12";
+                fontSize = 12;
+            }
+            displayFont = (String) fontComboBox.getSelectedItem();
+            textArea.setFont(new Font(displayFont, Font.PLAIN, fontSize));
+            try {
+                BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                // Save programming language into properties
+                properties.setProperty("DISPLAY_FONT", displayFont);
+                properties.setProperty("DISPLAY_FONT_SIZE", fontSizeString);
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+            // Prepare text area with highlighting blocks and show
+            textArea.requestFocusInWindow();
+            textArea.setCaretPosition(currentCaretPos);
+        });
+
         // "Font size" field listener
         fontSizeField.addActionListener(al -> {
             fontSizeString = fontSizeField.getText();
@@ -332,12 +467,12 @@ public final class DisplayFile extends JFrame {
                 fontSize = 12;
             }
             fontSizeField.setText(fontSizeString);
-            textArea.setFont(new Font("Monospaced", Font.PLAIN, fontSize));
+            textArea.setFont(new Font(displayFont, Font.PLAIN, fontSize));
             repaint();
             try {
                 BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
                 // Save font size into properties
-                properties.setProperty("FONT_SIZE", fontSizeString);
+                properties.setProperty("DISPLAY_FONT_SIZE", fontSizeString);
                 properties.store(outfile, PROP_COMMENT);
                 outfile.close();
             } catch (Exception exc) {
@@ -348,7 +483,7 @@ public final class DisplayFile extends JFrame {
         // Set input maps and actions for Ctrl + Arrow UP and Ctrl + Arrow DOWN on different buttons and text areas.
         ArrowUp arrowUp = new ArrowUp();
         ArrowDown arrowDown = new ArrowDown();
-        Arrays.asList(prevButton, nextButton, searchField).stream().map((object) -> {
+        Arrays.asList(prevButton, nextButton, findField, textArea).stream().map((object) -> {
             return object;
         }).forEachOrdered((object) -> {
             // Enable processing of function key Ctrl + Arrow UP = Find next hit upwards
@@ -377,7 +512,7 @@ public final class DisplayFile extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();
 
-        searchField.requestFocusInWindow();
+        findField.requestFocusInWindow();
     }
 
     /**
@@ -643,7 +778,7 @@ public final class DisplayFile extends JFrame {
      * @return
      */
     protected Pattern getPattern() {
-        String pattern = searchField.getText();
+        String pattern = findField.getText();
 
         if (Objects.isNull(pattern) || pattern.isEmpty()) {
             return null;
@@ -670,23 +805,26 @@ public final class DisplayFile extends JFrame {
                     : Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
             return Pattern.compile(pattern, flags);
         } catch (PatternSyntaxException ex) {
-            searchField.setBackground(WARNING_COLOR);
+            findField.setBackground(WARNING_COLOR);
             return null;
         }
     }
 
     /**
-     *
+     * Find all matches and highlight it YELLOW (highlightPainter),
+     * then hihglight current match ORANGE for the text area.
      */
     private void changeHighlight() {
-        searchField.setBackground(Color.WHITE);
         Highlighter highlighter = textArea.getHighlighter();
         highlighter.removeAllHighlights();
-        Document doc = textArea.getDocument();
+        findField.setBackground(Color.WHITE);
         try {
             Pattern pattern = getPattern();
+            if (pattern == null) {
+                return;
+            }
             if (Objects.nonNull(pattern)) {
-                Matcher matcher = pattern.matcher(doc.getText(0, doc.getLength()));
+                Matcher matcher = pattern.matcher(textArea.getText(0, textArea.getText().length()));
                 int pos = 0;
                 while (matcher.find(pos)) {
                     int start = matcher.start();
@@ -695,32 +833,62 @@ public final class DisplayFile extends JFrame {
                     pos = end;
                 }
             }
-
             JLabel label = layerUI.hint;
+            startOffsets = new ArrayList<>();
+            endOffsets = new ArrayList<>();
             Highlighter.Highlight[] array = highlighter.getHighlights();
-            int hits = array.length;
-            if (hits == 0) {
-                currentPos = -1;
-                label.setOpaque(true);
-            } else {
-                currentPos = (currentPos + hits) % hits;
-                // label.setOpaque(false);
-                Highlighter.Highlight hh = highlighter.getHighlights()[currentPos];
-                highlighter.removeHighlight(hh);
-                highlighter.addHighlight(hh.getStartOffset(), hh.getEndOffset(), currentPosPainter);
-                scrollToCenter(textArea, hh.getStartOffset());
+            int hits = array.length; // number of highlighted intervals found.
+            highlightMap.clear();
+            // Put all highlighted intervals into a map.
+            for (int idx = 0; idx < hits; idx++) {
+                startOffsets.add(highlighter.getHighlights()[idx].getStartOffset());
+                endOffsets.add(highlighter.getHighlights()[idx].getEndOffset());
+                highlightMap.put(highlighter.getHighlights()[idx].getStartOffset(), highlighter.getHighlights()[idx].getEndOffset());
             }
-            label.setText(String.format("%02d / %02d%n", currentPos + 1, hits));
+            if (hits > 0) { // If at least one interval was found.
+                if (direction.equals("forward")) {
+                    // Forward direction
+                    startOffset = highlightMap.ceilingKey(curPos); // Get next interval start - greater or equal
+                    if (startOffset == null) {
+                        startOffset = highlightMap.ceilingKey(0); // First interval
+                    }
+                    endOffset = highlightMap.get(startOffset);     // This interval end
+                    sequence = startOffsets.indexOf(startOffset);  // Sequence number of the interval
+                    Highlighter.Highlight hh = highlighter.getHighlights()[sequence];
+                    highlighter.removeHighlight(hh);
+                    highlighter.addHighlight(hh.getStartOffset(), hh.getEndOffset(), currentPainter);
+                    textArea.setCaretPosition(startOffset);
+                    curPos = startOffset;
+                } else {
+                    // Backward direction
+                    startOffset = highlightMap.floorKey(curPos);
+                    if (startOffset == null) {
+                        startOffset = highlightMap.lastKey(); // Last interval
+                    }
+                    endOffset = highlightMap.get(startOffset);
+                    sequence = startOffsets.indexOf(startOffset);
+                    Highlighter.Highlight hh = highlighter.getHighlights()[sequence];
+                    highlighter.removeHighlight(hh);
+                    highlighter.addHighlight(hh.getStartOffset(), hh.getEndOffset(), currentPainter);
+                    textArea.setCaretPosition(startOffset);
+                    curPos = startOffset;
+                }
+            }
+            if (hits > 0) {
+                label.setText(String.format("%02d / %02d%n", sequence + 1, hits));
+            } else {
+                label.setText("");
+            }
         } catch (BadLocationException ex) {
             ex.printStackTrace();
         }
-        searchField.repaint();
+        findField.repaint();
     }
 
     /**
      *
      */
-    class HighlightHandler implements DocumentListener, ActionListener {
+    class HighlightListener implements DocumentListener {
 
         @Override
         public void changedUpdate(DocumentEvent de) {
@@ -733,32 +901,6 @@ public final class DisplayFile extends JFrame {
 
         @Override
         public void removeUpdate(DocumentEvent de) {
-            changeHighlight();
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent de) {
-            Object obj = de.getSource();
-            if (obj instanceof AbstractButton) {
-                String cmd = ((AbstractButton) obj).getActionCommand();
-                if ("prev".equals(cmd)) {
-                    currentPos--;
-                } else if ("next".equals(cmd)) {
-                    currentPos++;
-                } else if ("matchCase".equals(cmd)) {
-                    if (matchCaseButton.getSelectedIcon().equals(matchCaseIconDark)) {
-                        matchCaseButton.setSelectedIcon(matchCaseIconDim);
-                        matchCaseButton.setToolTipText("Case insensitive.");
-                        currentPos = 0;
-                        changeHighlight();
-                    } else {
-                        matchCaseButton.setSelectedIcon(matchCaseIconDark);
-                        matchCaseButton.setToolTipText("Match case.");
-                        changeHighlight();
-                        currentPos = 0;
-                    }
-                }
-            }
             changeHighlight();
         }
     }
@@ -821,7 +963,14 @@ public final class DisplayFile extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent de) {
-            currentPos--;
+            direction = "backward";
+            prevButton.setIcon(prevActiveIcon);
+            nextButton.setIcon(nextInactiveIcon);
+            if (highlightMap.lowerKey(curPos) == null) {
+                curPos = highlightMap.lastKey();
+            } else {
+                curPos = highlightMap.lowerKey(curPos);
+            }
             changeHighlight();
         }
     }
@@ -833,9 +982,70 @@ public final class DisplayFile extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent de) {
-            currentPos++;
+            direction = "forward";
+            prevButton.setIcon(prevInactiveIcon);
+            nextButton.setIcon(nextActiveIcon);
+            if (highlightMap.higherKey(curPos) == null) {
+                curPos = 0;
+            } else {
+                curPos = highlightMap.higherKey(curPos);
+            }
             changeHighlight();
         }
     }
+
+    /**
+     * Rendering elements in combo box "Font selection".
+     */
+    public class FontComboBoxRenderer extends JLabel implements ListCellRenderer {
+
+        /**
+         *
+         * @param list
+         * @param value
+         * @param index
+         * @param isSelected
+         * @param cellHasFocus
+         * @return
+         */
+        @Override
+        public Component getListCellRendererComponent(JList list, Object value,
+                int index, boolean isSelected, boolean cellHasFocus) {
+            String fontName = value.toString();
+            if (operatingSystem.equals("MAC")) {
+                for (String str : fontNamesMac) {
+                    if (str.equals(fontName)) {
+                        setFont(new Font(fontName, Font.PLAIN, fontSize));
+                        setText(fontName);
+                    }
+                }
+            }
+            if (operatingSystem.equals("WINDOWS")) {
+                for (String str : fontNamesWin) {
+                    if (str.equals(fontName)) {
+                        setFont(new Font(fontName, Font.PLAIN, fontSize));
+                        setText(fontName);
+                    }
+                }
+            }
+            return this;
+        }
+    }
+
+    /**
+     * Mouse listener for primary text area.
+     */
+    class TextAreaMouseListener extends MouseAdapter {
+
+        @Override
+        public void mousePressed(MouseEvent mouseEvent) {
+
+            Point pt = new Point(mouseEvent.getX(), mouseEvent.getY());
+            curPos = textArea.getUI().viewToModel(textArea, pt);
+            // Every click sets current highlight depending on the direction
+            changeHighlight();
+        }
+    }
+
 
 }

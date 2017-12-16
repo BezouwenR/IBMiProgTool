@@ -62,7 +62,7 @@ Verze 02.01:
 
 Verze 02.02
 
-- Rozdělení oblasti editoru.
+- Dělená oblast editoru.
 - Hledání a náhrada textu v samostatném okně.
 - Do okna Compile přidáno tlačítko "Last spooled file".
 - Změněny a přemístěny ovládací prvky v okně editoru.

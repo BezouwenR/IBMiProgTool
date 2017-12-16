@@ -518,7 +518,9 @@ public class MainWindow extends JFrame {
                 properties.setProperty("COMPILE_WINDOW_X", "240");
                 properties.setProperty("COMPILE_WINDOW_Y", "40");
                 properties.setProperty("EDITOR_FONT", "Monospaced");
-                properties.setProperty("FONT_SIZE", "12");
+                properties.setProperty("EDITOR_FONT_SIZE", "12");
+                properties.setProperty("DISPLAY_FONT", "Monospaced");
+                properties.setProperty("DISPLAY_FONT_SIZE", "12");
                 properties.setProperty("CARET", "Short caret"); // or "Long caret"
                 properties.setProperty("SELECTION_MODE", "Horizontal selection"); // or "Vertical selection"
                 properties.setProperty("HIGHLIGHT_BLOCKS", "*NONE");

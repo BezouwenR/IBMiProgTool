@@ -47,6 +47,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.AbstractAction;
@@ -78,7 +79,6 @@ import javax.swing.plaf.basic.BasicTextUI;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.DefaultHighlighter;
-import javax.swing.text.Document;
 import javax.swing.text.Highlighter;
 import javax.swing.text.Highlighter.HighlightPainter;
 import javax.swing.text.JTextComponent;
@@ -87,7 +87,7 @@ import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
 
 /**
- * Display and edit file - PC file, IFS file, Source Member.
+ * Edit file - PC file, IFS file, Source Member.
  *
  * @author Vladimír Župka, 2016
  */
@@ -166,9 +166,10 @@ public final class EditFile extends JFrame {
     // UndoManager that we add edits to. 
     protected UndoManager undo = new UndoManager();
 
-    // --- action implementations -----------------------------------
+    // Actions for undo and redo
     private UndoAction undoAction = new UndoAction();
     private RedoAction redoAction = new RedoAction();
+
 
     CompileButtonListener compileButtonListener;
 
@@ -180,8 +181,8 @@ public final class EditFile extends JFrame {
     JButton redoButton = new JButton("Redo");
 
     JLabel shiftLabel = new JLabel("Shift selection: ");
-    JButton leftShiftButton = new JButton("Left");
-    JButton rightShiftButton = new JButton("Right");
+    JButton leftShiftButton;
+    JButton rightShiftButton;
 
     JLabel fontLabel = new JLabel("Font:");
     JTextField fontSizeField = new JTextField();
@@ -208,7 +209,7 @@ public final class EditFile extends JFrame {
     JSplitPane splitVerticalPane;
 
     BoxLayout globalPanelBoxLayout;
-//    Container cont;
+
     JPanel globalPanel;
     JPanel rowPanel1;
     JPanel colPanel1;
@@ -218,13 +219,25 @@ public final class EditFile extends JFrame {
     JPanel rowPanel2;
     JPanel topPanel;
 
-    HighlightHandler highlightHandler = new HighlightHandler();
-    int currentPos = 0; // current highlighted position in the primary text area
-    int currentPos2 = 0; // current highlighted position in the secondary text area
-    int startOffset; // start offset of found text
-    int endOffset; // end offset of found text
-    int startOffset2; // start offset of found text
-    int endOffset2; // end offset of found text
+    HighlightListener highlightListener = new HighlightListener();
+
+    // Map containing intervals (start, end) of highligthted texts.
+    TreeMap<Integer, Integer> highlightMap = new TreeMap<>();
+    // Position set by mouse press or by program in FindWindow class (find or replace listeners).
+    // The position is searched in the highlightMap to find the startOffset of a highlight.
+    Integer curPos = 0;
+    Integer curPos2 = 0;
+
+    // Lists of starts and ends of highlighted texts taken from the highlightMap.
+    ArrayList<Integer> startOffsets = new ArrayList<>();
+    ArrayList<Integer> endOffsets = new ArrayList<>();
+
+    int sequence = 0; // sequence number of current highlighted interval in the primary text area
+    int sequence2 = 0; // sequence number of current highlighted interval in the secondary text area
+    Integer startOffset; // start offset of highlighted interval
+    Integer endOffset; // end offset of highlighted interval
+    Integer startOffset2; // start offset of highlighted interval
+    Integer endOffset2; // end offset of highlighted interval
 
     static int windowWidth;
     static int windowHeight;
@@ -234,6 +247,8 @@ public final class EditFile extends JFrame {
     int windowY;
 
     Path parPath = Paths.get(System.getProperty("user.dir"), "paramfiles", "Parameters.txt");
+    Path shiftLeftIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "shiftLeft.png");
+    Path shiftRightIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "shiftRight.png");
     Path findIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "find.png");
     Path splitIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "split.png");
     Path undoIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "undo.png");
@@ -322,7 +337,7 @@ public final class EditFile extends JFrame {
     String methodName;
     String sourceType;
 
-    // Highlighting blocks of paired statements (if, dow, etc.)
+    // Highlighting blocks of paired statements (if - endif, dow - enddo, etc.)
     ArrayList<String> stmtsBeg = new ArrayList<>();
     ArrayList<String> stmtsEnd = new ArrayList<>();
 
@@ -375,8 +390,8 @@ public final class EditFile extends JFrame {
             ibmCcsid = properties.getProperty("IBM_CCSID");
             caretShape = properties.getProperty("CARET");
             selectionMode = properties.getProperty("SELECTION_MODE");
-            fontSizeString = properties.getProperty("FONT_SIZE");
             editorFont = properties.getProperty("EDITOR_FONT");
+            fontSizeString = properties.getProperty("EDITOR_FONT_SIZE");
             progLanguage = properties.getProperty("HIGHLIGHT_BLOCKS");
             userName = properties.getProperty("USERNAME");
             try {
@@ -396,6 +411,9 @@ public final class EditFile extends JFrame {
             exc.printStackTrace();
         }
 
+        textArea.setFont(new Font(editorFont, Font.PLAIN, fontSize));
+        textArea2.setFont(new Font(editorFont, Font.PLAIN, fontSize));
+
         // Get text from the file and set it to the textArea
         if (methodName.equals("rewritePcFile")) {
             displayPcFile();
@@ -406,16 +424,22 @@ public final class EditFile extends JFrame {
         }
 
         // Create window
+        // -------------
         createWindow();
 
-        if (methodName.equals("rewritePcFile")) {
+        // Continue constructor
+        // --------------------
+        // Set caret position for the first time.
+        textArea.setCaretPosition(0);
+        caretPosition = textArea.getCaretPosition();
+        textArea.requestFocus();
 
+        // Prepare editing for different file types in primary text area.
+        if (methodName.equals("rewritePcFile")) {
             scrollPane.setBackground(VERY_LIGHT_PINK);
             textArea.setBackground(VERY_LIGHT_PINK);
-
             // Prepare editing and make editor visible
             prepareEditingAndShow();
-
             row = "Info: PC file  " + filePathString + "  is displayed using character set  "
                     + pcCharset + "  from the application parameter.";
             mainWindow.msgVector.add(row);
@@ -423,19 +447,14 @@ public final class EditFile extends JFrame {
             // Remove message scroll listener (cancel scrolling to the last message)
             mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
         } else if (methodName.equals("rewriteIfsFile")) {
-
             // Prepare editing and make editor visible
             prepareEditingAndShow();
-
             row = "Info: IFS file  " + filePathString + "  has CCSID  " + ccsidAttribute + ".";
             mainWindow.msgVector.add(row);
             mainWindow.showMessages(nodes);
-
         } else if (methodName.equals("rewriteSourceMember")) {
-
             // Prepare editing and make editor visible
             prepareEditingAndShow();
-
             row = "Info: Source member  " + filePathString + "  has CCSID  " + ccsidAttribute + ".";
             mainWindow.msgVector.add(row);
             mainWindow.showMessages(nodes);
@@ -444,7 +463,7 @@ public final class EditFile extends JFrame {
     } // End of constructor
 
     /**
-     * Create window
+     * Create window method.
      */
     protected void createWindow() {
 
@@ -471,16 +490,6 @@ public final class EditFile extends JFrame {
         redoButton.setPreferredSize(new Dimension(60, 20));
         redoButton.setMinimumSize(new Dimension(60, 20));
         redoButton.setMaximumSize(new Dimension(60, 20));
-
-        leftShiftButton.setPreferredSize(new Dimension(60, 20));
-        leftShiftButton.setMinimumSize(new Dimension(60, 20));
-        leftShiftButton.setMaximumSize(new Dimension(60, 20));
-        leftShiftButton.setToolTipText("Also Ctrl+⬅ (Cmd+⬅ in macOS).");
-
-        rightShiftButton.setPreferredSize(new Dimension(60, 20));
-        rightShiftButton.setMinimumSize(new Dimension(60, 20));
-        rightShiftButton.setMaximumSize(new Dimension(60, 20));
-        rightShiftButton.setToolTipText("Also Ctrl+➜(Cmd+➜ in macOS).");
 
         caretButton.setPreferredSize(new Dimension(90, 20));
         caretButton.setMinimumSize(new Dimension(90, 20));
@@ -517,6 +526,8 @@ public final class EditFile extends JFrame {
         fontSizeField.setMaximumSize(new Dimension(30, 20));
         fontSizeField.setToolTipText("Enter font size.");
 
+        characterSetLabel.setForeground(DIM_BLUE);
+
         highlightBlocksLabel.setToolTipText("Blocks are compound statements like IF - ENDIF, etc.");
 
         languageComboBox.setPreferredSize(new Dimension(130, 20));
@@ -536,10 +547,29 @@ public final class EditFile extends JFrame {
 
         languageComboBox.setSelectedItem(progLanguage);
 
+        // Shift left icon and button
+        ImageIcon shiftLeftImageIcon = new ImageIcon(shiftLeftIconPath.toString());
+        leftShiftButton = new JButton(shiftLeftImageIcon);
+        leftShiftButton.setToolTipText("Shift selection left. Also Ctrl+⬅ (Cmd+⬅ in macOS).");
+        leftShiftButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        leftShiftButton.setContentAreaFilled(false);
+        leftShiftButton.setPreferredSize(new Dimension(20, 20));
+        leftShiftButton.setMinimumSize(new Dimension(20, 20));
+        leftShiftButton.setMaximumSize(new Dimension(20, 20));
+
+        ImageIcon shiftRightImageIcon = new ImageIcon(shiftRightIconPath.toString());
+        rightShiftButton = new JButton(shiftRightImageIcon);
+        rightShiftButton.setToolTipText("Shift selection right. Also Ctrl+➜(Cmd+➜ in macOS).");
+        rightShiftButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        rightShiftButton.setContentAreaFilled(false);
+        rightShiftButton.setPreferredSize(new Dimension(20, 20));
+        rightShiftButton.setMinimumSize(new Dimension(20, 20));
+        rightShiftButton.setMaximumSize(new Dimension(20, 20));
+
         // Magnifying glass icon and button
         ImageIcon findImageIcon = new ImageIcon(findIconPath.toString());
         findButton = new JButton(findImageIcon);
-        findButton.setToolTipText("Find text. Also Ctrl+F (Cmd+F in macOS).");
+        findButton.setToolTipText("Find and replace text. Also Ctrl+F (Cmd+F in macOS).");
         findButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         findButton.setContentAreaFilled(false);
         findButton.setPreferredSize(new Dimension(20, 20));
@@ -559,17 +589,17 @@ public final class EditFile extends JFrame {
         // Undo icon and button
         ImageIcon undoImageIcon = new ImageIcon(undoIconPath.toString());
         undoButton = new JButton(undoImageIcon);
-        undoButton.setToolTipText("Undo.");
+        undoButton.setToolTipText("Undo. Also Ctrl+Z (Cmd+Z in macOS).");
         undoButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         undoButton.setContentAreaFilled(false);
         undoButton.setPreferredSize(new Dimension(20, 20));
         undoButton.setMinimumSize(new Dimension(20, 20));
         undoButton.setMaximumSize(new Dimension(20, 20));
 
-        // Undo icon and button
+        // Redo icon and button
         ImageIcon redoImageIcon = new ImageIcon(redoIconPath.toString());
         redoButton = new JButton(redoImageIcon);
-        redoButton.setToolTipText("Redo.");
+        redoButton.setToolTipText("Redo. Also Ctrl+Y (Cmd+Y in macOS).");
         redoButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         redoButton.setContentAreaFilled(false);
         redoButton.setPreferredSize(new Dimension(20, 20));
@@ -589,9 +619,6 @@ public final class EditFile extends JFrame {
 
         textArea2.setFont(new Font(editorFont, Font.PLAIN, fontSize));
         textArea2.setTabSize(TAB_SIZE);
-
-//        selectionHighlighter = textArea.getHighlighter();
-//        selectionHighlighter2 = textArea2.getHighlighter();
 
         textArea.setDragEnabled(true);
 
@@ -640,16 +667,18 @@ public final class EditFile extends JFrame {
 
         rowPanel1 = new JPanel();
         rowPanel1.setLayout(new BoxLayout(rowPanel1, BoxLayout.X_AXIS));
-        rowPanel1.add(shiftLabel);
-        rowPanel1.add(leftShiftButton);
-        rowPanel1.add(rightShiftButton);
-        rowPanel1.add(Box.createHorizontalStrut(10));
         rowPanel1.add(caretButton);
         rowPanel1.add(Box.createHorizontalStrut(10));
         rowPanel1.add(selectionModeButton);
         rowPanel1.add(Box.createHorizontalStrut(10));
-//        rowPanel1.add(undoButton);
-//        rowPanel1.add(redoButton);
+        // rowPanel1.add(shiftLabel);
+        rowPanel1.add(leftShiftButton);
+        rowPanel1.add(Box.createHorizontalStrut(10));
+        rowPanel1.add(rightShiftButton);
+        rowPanel1.add(Box.createHorizontalStrut(20));
+        rowPanel1.add(undoButton);
+        rowPanel1.add(Box.createHorizontalStrut(10));
+        rowPanel1.add(redoButton);
         rowPanel1.add(Box.createHorizontalStrut(20));
         rowPanel1.add(saveButton);
         // Compile button is not available in PC. 
@@ -663,31 +692,31 @@ public final class EditFile extends JFrame {
         rowPanel2Layout.setHorizontalGroup(rowPanel2Layout.createSequentialGroup()
                 .addGap(0)
                 .addComponent(splitUnsplitButton)
-                .addGap(13)
-                .addComponent(undoButton)
-                .addGap(10)
-                .addComponent(redoButton)
-                .addGap(10)
+                .addGap(20)
                 //.addComponent(fontLabel)
                 .addComponent(fontComboBox)
                 .addComponent(fontSizeField)
-                .addGap(10)
+                .addGap(20)
                 //.addComponent(highlightBlocksLabel)
                 .addComponent(languageComboBox)
-                .addGap(10)
+                //.addGap(20)
+                //.addComponent(undoButton)
+                //.addGap(20)
+                //.addComponent(redoButton)
+                .addGap(40)
                 .addComponent(findButton)
-                .addGap(10)
+                .addGap(60)
                 .addComponent(characterSetLabel)
         );
         rowPanel2Layout.setVerticalGroup(rowPanel2Layout.createParallelGroup(GroupLayout.Alignment.CENTER)
                 .addComponent(splitUnsplitButton)
-                .addComponent(undoButton)
-                .addComponent(redoButton)
                 //.addComponent(fontLabel)
                 .addComponent(fontComboBox)
                 .addComponent(fontSizeField)
                 //.addComponent(highlightBlocksLabel)
                 .addComponent(languageComboBox)
+                //.addComponent(undoButton)
+                //.addComponent(redoButton)
                 .addComponent(findButton)
                 .addComponent(characterSetLabel)
         );
@@ -696,13 +725,15 @@ public final class EditFile extends JFrame {
         globalPanel = new JPanel();
         GroupLayout topPanelLayout = new GroupLayout(globalPanel);
         topPanelLayout.setHorizontalGroup(topPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addComponent(rowPanel1)
                 .addComponent(rowPanel2)
+                .addComponent(rowPanel1)
                 .addComponent(scrollPane)
         );
         topPanelLayout.setVerticalGroup(topPanelLayout.createSequentialGroup()
-                .addComponent(rowPanel1)
                 .addComponent(rowPanel2)
+                .addGap(2)
+                .addComponent(rowPanel1)
+                .addGap(4)
                 .addComponent(scrollPane)
         );
         globalPanel.setLayout(topPanelLayout);
@@ -718,6 +749,17 @@ public final class EditFile extends JFrame {
 
         // Register listeners
         // ==================
+
+        // Listener for undoable edits
+        textArea.getDocument().addUndoableEditListener(undoHandler);
+
+        // Undo button listener
+        undoAction = new UndoAction();
+        undoButton.addActionListener(undoAction);
+
+        // Redo button listener
+        redoAction = new RedoAction();
+        redoButton.addActionListener(redoAction);
 
         // Save button listener
         // --------------------
@@ -768,7 +810,7 @@ public final class EditFile extends JFrame {
                 BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
                 // Save programming language into properties
                 properties.setProperty("EDITOR_FONT", editorFont);
-                properties.setProperty("FONT_SIZE", fontSizeString);
+                properties.setProperty("EDITOR_FONT_SIZE", fontSizeString);
                 properties.store(outfile, PROP_COMMENT);
                 outfile.close();
             } catch (Exception exc) {
@@ -799,7 +841,7 @@ public final class EditFile extends JFrame {
                 BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
                 // Save font size into properties
                 properties.setProperty("EDITOR_FONT", editorFont);
-                properties.setProperty("FONT_SIZE", fontSizeString);
+                properties.setProperty("EDITOR_FONT_SIZE", fontSizeString);
                 properties.store(outfile, PROP_COMMENT);
                 outfile.close();
             } catch (Exception exc) {
@@ -842,21 +884,40 @@ public final class EditFile extends JFrame {
                 properties.load(infile);
                 infile.close();
                 caretShape = properties.getProperty("CARET");
-                if (caretButton.getText().equals(LONG_CARET)) {
-                    // Long caret button detected
-                    caretShape = SHORT_CARET;
-                    caretButton.setText(caretShape);
-                    // For horizontal selection set basic caret - a short vertical line
-                    textArea.setCaret(basicCaret);
-                    textArea2.setCaret(basicCaret2);
+                if (selectionModeButton.getText().equals(HORIZONTAL_SELECTION)) {
+                    if (caretButton.getText().equals(LONG_CARET)) {
+                        // Long caret button detected - change it to short caret.
+                        caretShape = SHORT_CARET;
+                        caretButton.setText(caretShape);
+                        // For horizontal selection set basic caret - a short vertical line
+                        textArea.setCaret(basicCaret);
+                        textArea2.setCaret(basicCaret2);
+                    } else {
+                        // Short caret button detected - change it to long caret.
+                        caretShape = LONG_CARET;
+                        caretButton.setText(caretShape);
+                        // For horizontal selection set long caret - long vertical gray line with a short red pointer
+                        textArea.setCaret(longCaret);
+                        textArea2.setCaret(longCaret2);
+                    }
                 } else {
-                    // Short caret button detected
-                    caretShape = LONG_CARET;
-                    caretButton.setText(caretShape);
-                    // For horizontal selection set long caret - long vertical gray line with a short red pointer
-                    textArea.setCaret(longCaret);
-                    textArea2.setCaret(longCaret2);
+                    if (caretButton.getText().equals(LONG_CARET)) {
+                        // Long caret button detected - change it to short caret.
+                        caretShape = SHORT_CARET;
+                        caretButton.setText(caretShape);
+                        // For vertical selection set special caret - a short vertical line
+                        textArea.setCaret(specialCaret);
+                        textArea2.setCaret(specialCaret2);
+                    } else {
+                        // Short caret button detected - change it to long caret.
+                        caretShape = LONG_CARET;
+                        caretButton.setText(caretShape);
+                        // For vertical selection set special with long caret - long vertical gray line with a short red pointer
+                        textArea.setCaret(specialCaret);
+                        textArea2.setCaret(specialCaret2);
+                    }
                 }
+                
                 prepareEditingAndShow();
                 textArea.requestFocusInWindow();
                 textArea.setCaretPosition(currentCaretPos);
@@ -885,8 +946,15 @@ public final class EditFile extends JFrame {
                     // --------------------
                     selectionMode = HORIZONTAL_SELECTION;
                     selectionModeButton.setText(selectionMode);
-                    textArea.setCaret(basicCaret);
-                    textArea2.setCaret(basicCaret2);
+                    if (caretButton.getText().equals(SHORT_CARET)) {
+                        // Basic caret - a short vertical line
+                        textArea.setCaret(basicCaret);
+                        textArea2.setCaret(basicCaret2);
+                    } else {
+                        // Long vertical gray line with a short red pointer
+                        textArea.setCaret(longCaret);
+                        textArea2.setCaret(longCaret2);
+                    }
                     // Deactivate custom deletion in horizontal mode
                     textArea.getInputMap(JComponent.WHEN_FOCUSED)
                             .remove(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
@@ -922,6 +990,9 @@ public final class EditFile extends JFrame {
                             .put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "deleteBcksp");
                     textArea2.getActionMap().put("deleteBcksp", new CustomDelete("BACKSPACE"));
                 }
+                prepareEditingAndShow();
+                textArea.requestFocusInWindow();
+                textArea.setCaretPosition(currentCaretPos);
                 BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
                 // Save caret shape into properties
                 properties.setProperty("SELECTION_MODE", selectionMode);
@@ -936,10 +1007,29 @@ public final class EditFile extends JFrame {
         // --------------------
         findButton.addActionListener(ae -> {
             if (findWindow != null) {
-                if (!textAreaIsSplit) {
-                    findWindow.createWindow(textArea.getSelectedText());
+                if (!lowerHalfActive) {
+                    if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+                        findWindow.finishCreatingWindow(textArea.getSelectedText());
+                    } else {
+                        // Vertical selection
+                        if (!selectionStarts.isEmpty()) {
+                            textArea.select(selectionStarts.get(0), selectionEnds.get(0));
+                            findWindow.finishCreatingWindow(textArea.getSelectedText());
+                        } else {
+                            findWindow.finishCreatingWindow("");
+                        }
+                    }
                 } else {
-                    findWindow.createWindow(textArea2.getSelectedText());
+                    if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+                        findWindow.finishCreatingWindow(textArea2.getSelectedText());
+                    } else {
+                        if (!selectionStarts.isEmpty()) {
+                            textArea2.select(selectionStarts.get(0), selectionEnds.get(0));
+                            findWindow.finishCreatingWindow(textArea2.getSelectedText());
+                        } else {
+                            findWindow.finishCreatingWindow("");
+                        }
+                    }
                 }
             }
         });
@@ -972,37 +1062,61 @@ public final class EditFile extends JFrame {
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "save");
         globalPanel.getActionMap().put("save", new SaveAction());
 
-        // Enable processing of function key Ctrl + F = Focus in findField
-        globalPanel.getInputMap(JComponent.WHEN_FOCUSED)
-                .put(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "CreateFindWindow");
-        globalPanel.getActionMap().put("CreateFindWindow", new CreateFindWindow());
-        // Enable processing of function key Ctrl + F = Focus in findField
-        textArea.getInputMap(JComponent.WHEN_FOCUSED)
-                .put(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "CreateFindWindow");
-        textArea.getActionMap().put("CreateFindWindow", new CreateFindWindow());
-        // Enable processing of function key Ctrl + F = Focus in findField
-        textArea2.getInputMap(JComponent.WHEN_FOCUSED)
-                .put(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "CreateFindWindow");
-        textArea2.getActionMap().put("CreateFindWindow", new CreateFindWindow());
+        // Enable processing of function key Ctrl + Z = Undo
+        globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "undo");
+        globalPanel.getActionMap().put("undo", undoAction);
+        textArea.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "undo");
+        textArea.getActionMap().put("undo", undoAction);
+        textArea2.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "undo");
+        textArea2.getActionMap().put("undo", undoAction);
+
+        // Enable processing of function key Ctrl + Y = Redo
+        globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_Y, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "redo");
+        globalPanel.getActionMap().put("redo", redoAction);
+        textArea.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_Y, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "redo");
+        textArea.getActionMap().put("redo", redoAction);
+        textArea2.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_Y, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "redo");
+        textArea2.getActionMap().put("redo", redoAction);
+
+        // Enable processing of function key Ctrl + F = create FindWidnow
+        CreateFindWindow createFindWindow = new CreateFindWindow();
+        globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "crtFindWindow");
+        globalPanel.getActionMap().put("crtFindWindow", createFindWindow);
+
+        // Enable processing of function key Ctrl + F = create FindWidnow
+        textArea.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "crtFindWindow");
+        textArea.getActionMap().put("crtFindWindow", createFindWindow);
+        // Enable processing of function key Ctrl + F = create FindWidnow
+        textArea2.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "crtFindWindow");
+        textArea2.getActionMap().put("crtFindWindow", createFindWindow);
 
         // Enable processing of Tab key
-        globalPanel.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("TAB"), "tab");
+        globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("TAB"), "tab");
         globalPanel.getActionMap().put("tab", new TabListener());
 
-        // Enable processing of function key Ctrl + Arrow Left = Shift lines left
+        // Enable processing of function key Ctrl + Arrow Left = Shift lines or rectangle left
         textArea.getInputMap(JComponent.WHEN_FOCUSED)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "shiftLeft");
         textArea.getActionMap().put("shiftLeft", new ArrowLeft());
-        // Enable processing of function key Ctrl + Arrow Left = Shift lines left
+        // Enable processing of function key Ctrl + Arrow Right = Shift lines or rectangle right
         textArea.getInputMap(JComponent.WHEN_FOCUSED)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "shiftRight");
         textArea.getActionMap().put("shiftRight", new ArrowRight());
 
-        // Enable processing of function key Ctrl + Arrow Left = Shift lines left
+        // Enable processing of function key Ctrl + Arrow Left = Shift lines or rectangle left
         textArea2.getInputMap(JComponent.WHEN_FOCUSED)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "shiftLeft");
         textArea2.getActionMap().put("shiftLeft", new ArrowLeft());
-        // Enable processing of function key Ctrl + Arrow Left = Shift lines left
+        // Enable processing of function key Ctrl + Arrow Right = Shift lines or rectangle right
         textArea2.getInputMap(JComponent.WHEN_FOCUSED)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "shiftRight");
         textArea2.getActionMap().put("shiftRight", new ArrowRight());
@@ -1069,7 +1183,7 @@ public final class EditFile extends JFrame {
                 if (selectionMode.equals(HORIZONTAL_SELECTION)) {
                     // Horizontal selection
                     // Set custom caret - long vertical gray line with a short red pointer
-                    textArea.setCaret(basicCaret);
+                    textArea.setCaret(longCaret);
                 } else {
                     // Vertical selection
                     // Set custom caret - long vertical gray line with a short red pointer
@@ -1090,8 +1204,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Display contents of the IFS file using its CCSID attribute
-     *
+     * Display contents of the IFS file using its CCSID attribute.
      */
     protected void displayIfsFile() {
         this.setTitle("Edit IFS file  '" + filePathString + "'");
@@ -1146,7 +1259,6 @@ public final class EditFile extends JFrame {
 
     /**
      * Display PC file using the application parameter "pcCharset".
-     *
      */
     protected void displayPcFile() {
 
@@ -1197,9 +1309,8 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Display source member using its CCSID attribute; Only data part of the source record is translated (to String -
-     * UTF-16).
-     *
+     * Display source member using its CCSID attribute; Only data part of the source record is translated
+     * (to String - UTF-16).
      */
     @SuppressWarnings("UseSpecificCatch")
     Path tmpFilePath;
@@ -1285,7 +1396,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     *
+     * Write edited text back into the file; Decide what type of file it is.
      */
     protected void rewriteFile() {
         try {
@@ -1386,7 +1497,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Rewrite source member with edited text area using an intermediate temporary IFS file. This method is fast enough.
+     * Rewrite source member with edited text area using an intermediate temporary IFS file; This method is fast enough.
      *
      * @return
      */
@@ -1496,9 +1607,10 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Rewrite source member with edited text area directly, without intermediate temporary IFS file. Records are
-     * written, updated or deleted, with numbers and dates using BigDecimal objects. This method is not used because it
-     * is very slow.
+     * Rewrite source member with edited text area directly, without intermediate temporary IFS file; Records are
+     * written, updated or deleted, with numbers and dates using BigDecimal objects;
+     *
+     * THIS METHOD IS NOT USED because it is very slow.
      *
      * @return
      */
@@ -1688,15 +1800,12 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Prepare text area and set location and visibility of the window.
+     * Prepare both text areas for hihglight blocks.
      */
     private void prepareEditingAndShow() {
 
         // Set scroll bar to last caret position
         textArea.setCaretPosition(caretPosition);
-
-        // Listener for undoable edits
-        textArea.getDocument().addUndoableEditListener(undoHandler);
 
         // Get a highlighter for the primary text area
         blockHighlighter = textArea.getHighlighter();
@@ -1714,15 +1823,6 @@ public final class EditFile extends JFrame {
         if (!progLanguage.equals("*NONE")) {
             highlightBlocks(textArea2, progLanguage);
         }
-
-        // Undo button listener
-        undoButton.addActionListener(new UndoAction());
-
-        // Redo button listener
-        redoButton.addActionListener(new RedoAction());
-
-        // Show the window on the specified position
-//        setLocation(windowX - 100, windowY);
 
         try {
             BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
@@ -1772,10 +1872,11 @@ public final class EditFile extends JFrame {
                 stmtsBeg.add("DOU(");
                 stmtsBeg.add("DOUNTIL");
                 stmtsBeg.add("DO");
+                stmtsBeg.add("DO ");
                 stmtsBeg.add("WHILE");
                 stmtsBeg.add("DOWHILE");
                 stmtsBeg.add("UNTIL");
-                stmtsBeg.add("FOR");
+                stmtsBeg.add("FOR ");
                 stmtsBeg.add("FOR(");
                 stmtsBeg.add("DOFOR");
                 stmtsBeg.add("PERFORM");
@@ -2166,6 +2267,9 @@ public final class EditFile extends JFrame {
         } else if (beg && blockStmt.equals("DO ")) {
             // DO in CL, C, C++, older RPG
             blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("DO")) {
+            // DO in CL, older RPG
+            blockPainter = blockBlueLighter;
         } else if (beg && blockStmt.equals("DO(")) {
             // DO in CL, C, C++, older RPG
             blockPainter = blockBlueLighter;
@@ -2347,9 +2451,6 @@ public final class EditFile extends JFrame {
         // Inspect each line separately for ONE occurrence of the block statement.
         // Highlight only the block statement that is outside of a comment, if it is not too complex.
 
-        // C and C++ are inspected NEITHER for comments NOR for block end statements (i.e. curly brackets).
-        // It would be unacceptably complex.
-
         String text;
 
         // The *ALL option highlights all occurrences in all languages.
@@ -2520,25 +2621,21 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Find all matches and highlight it YELLOW (highlightPainter), then hihglight the match ORANGE (currentPainter) on
-     * the current position. Current positions begin with -1 and are incremented or decremented by 1 using buttons or
-     * keys. For PRIMARY text area.
+     * Find all matches and highlight it YELLOW (highlightPainter),
+     * then hihglight current match ORANGE for PRIMARY text area.
      */
     protected void changeHighlight() {
-
         Highlighter highlighter = textArea.getHighlighter();
         highlighter.removeAllHighlights();
-
         findWindow.findField.setBackground(Color.WHITE);
-        Document doc = textArea.getDocument();
+        //Document doc = textArea.getDocument();
         try {
             Pattern pattern = findWindow.getPattern();
-            //System.out.println("patternOk: " + pattern);
             if (pattern == null) {
                 return;
             }
             if (Objects.nonNull(pattern)) {
-                Matcher matcher = pattern.matcher(doc.getText(0, doc.getLength()));
+                Matcher matcher = pattern.matcher(textArea.getText(0, textArea.getText().length()));
                 int pos = 0;
                 while (matcher.find(pos)) {
                     int start = matcher.start();
@@ -2547,26 +2644,52 @@ public final class EditFile extends JFrame {
                     pos = end;
                 }
             }
-
             JLabel label = findWindow.layerUI.hint;
+            startOffsets = new ArrayList<>();
+            endOffsets = new ArrayList<>();
             Highlighter.Highlight[] array = highlighter.getHighlights();
-            int hits = array.length;
-
-            if (hits == 0) {
-                currentPos = -1;
-                label.setOpaque(true);
-            } else {
-                currentPos = (currentPos + hits) % hits;
-                label.setOpaque(false);
-                Highlighter.Highlight hh = highlighter.getHighlights()[currentPos];
-                highlighter.removeHighlight(hh);
-                highlighter.addHighlight(hh.getStartOffset(), hh.getEndOffset(), currentPainter);
-                startOffset = hh.getStartOffset();
-                endOffset = hh.getEndOffset();
-                //scrollToCenter(textArea, startOffset);
-                textArea.setCaretPosition(startOffset);
+            int hits = array.length; // number of highlighted intervals found.
+            highlightMap.clear();
+            // Put all highlighted intervals into a map.
+            for (int idx = 0; idx < hits; idx++) {
+                startOffsets.add(highlighter.getHighlights()[idx].getStartOffset());
+                endOffsets.add(highlighter.getHighlights()[idx].getEndOffset());
+                highlightMap.put(highlighter.getHighlights()[idx].getStartOffset(), highlighter.getHighlights()[idx].getEndOffset());
             }
-            label.setText(String.format("%02d / %02d%n", currentPos + 1, hits));
+            if (hits > 0) { // If at least one interval was found.
+                if (findWindow.direction.equals("forward")) {
+                    // Forward direction
+                    startOffset = highlightMap.ceilingKey(curPos); // Get next interval start - greater or equal
+                    if (startOffset == null) {
+                        startOffset = highlightMap.firstKey(); // First interval
+                    }
+                    endOffset = highlightMap.get(startOffset);     // This interval's end
+                    sequence = startOffsets.indexOf(startOffset);  // Sequence number of the interval
+                    Highlighter.Highlight hh = highlighter.getHighlights()[sequence];
+                    highlighter.removeHighlight(hh);
+                    highlighter.addHighlight(startOffset, endOffset, currentPainter);
+                    curPos = startOffset;
+                    textArea.setCaretPosition(endOffset);
+                } else {
+                    // Backward direction
+                    startOffset = highlightMap.floorKey(curPos);
+                    if (startOffset == null) {
+                        startOffset = highlightMap.lastKey(); // Last interval
+                    }
+                    endOffset = highlightMap.get(startOffset);
+                    sequence = startOffsets.indexOf(startOffset);
+                    Highlighter.Highlight hh = highlighter.getHighlights()[sequence];
+                    highlighter.removeHighlight(hh);
+                    highlighter.addHighlight(startOffset, endOffset, currentPainter);
+                    curPos = startOffset;
+                    textArea.setCaretPosition(startOffset);
+                }
+            }
+            if (hits > 0) {
+                label.setText(String.format("%02d / %02d%n", sequence + 1, hits));
+            } else {
+                label.setText("");
+            }
         } catch (BadLocationException ex) {
             ex.printStackTrace();
         }
@@ -2574,52 +2697,75 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Find all matches and highlight it YELLOW (highlightPainter), then hihglight the match ORANGE (currentPainter) on
-     * the current position. Current positions begin with -1 and are incremented or decremented by 1 using buttons or
-     * keys. For SECONDARY text area.
+     * Find all matches and highlight it YELLOW (highlightPainter),
+     * then hihglight current match ORANGE for SECONDARY text area.
      */
     protected void changeHighlight2() {
         Highlighter highlighter2 = textArea2.getHighlighter();
         highlighter2.removeAllHighlights();
-
         findWindow.findField.setBackground(Color.WHITE);
-        Document doc2 = textArea2.getDocument();
+        //Document doc = textArea2.getDocument();
         try {
             Pattern pattern = findWindow.getPattern();
-            //System.out.println("patternOk: " + pattern);
             if (pattern == null) {
                 return;
             }
             if (Objects.nonNull(pattern)) {
-                Matcher matcher2 = pattern.matcher(doc2.getText(0, doc2.getLength()));
-                int pos2 = 0;
-                while (matcher2.find(pos2)) {
-                    int start2 = matcher2.start();
-                    int end2 = matcher2.end();
-                    highlighter2.addHighlight(start2, end2, highlightPainter);
-                    pos2 = end2;
+                Matcher matcher = pattern.matcher(textArea2.getText(0, textArea2.getText().length()));
+                int pos = 0;
+                while (matcher.find(pos)) {
+                    int start = matcher.start();
+                    int end = matcher.end();
+                    highlighter2.addHighlight(start, end, highlightPainter);
+                    pos = end;
                 }
             }
-
             JLabel label = findWindow.layerUI.hint;
+            startOffsets = new ArrayList<>();
+            endOffsets = new ArrayList<>();
+
             Highlighter.Highlight[] array = highlighter2.getHighlights();
             int hits = array.length;
-            if (hits == 0) {
-                currentPos2 = -1;
-                label.setOpaque(true);
-            } else {
-                currentPos2 = (currentPos2 + hits) % hits;
-                label.setOpaque(false);
-                Highlighter.Highlight hh2 = highlighter2.getHighlights()[currentPos2];
-                highlighter2.removeHighlight(hh2);
-                highlighter2.addHighlight(hh2.getStartOffset(), hh2.getEndOffset(), currentPainter);
-                // Remember offsets of the found text for possible later replacing
-                startOffset2 = hh2.getStartOffset();
-                endOffset2 = hh2.getEndOffset();
-                //scrollToCenter(textArea2, startOffset2);
-                textArea2.setCaretPosition(startOffset2);
+            highlightMap.clear();
+            for (int idx = 0; idx < hits; idx++) {
+                startOffsets.add(highlighter2.getHighlights()[idx].getStartOffset());
+                endOffsets.add(highlighter2.getHighlights()[idx].getEndOffset());
+                highlightMap.put(highlighter2.getHighlights()[idx].getStartOffset(), highlighter2.getHighlights()[idx].getEndOffset());
             }
-            label.setText(String.format("%02d / %02d%n", currentPos2 + 1, hits));
+            if (hits > 0) {
+                if (findWindow.direction.equals("forward")) {
+                    // Forward direction
+                    startOffset2 = highlightMap.ceilingKey(curPos2);
+                    if (startOffset2 == null) {
+                        startOffset2 = highlightMap.ceilingKey(0);
+                    }
+                    endOffset2 = highlightMap.get(startOffset2);
+                    sequence2 = startOffsets.indexOf(startOffset2);
+                    Highlighter.Highlight hh = highlighter2.getHighlights()[sequence2];
+                    highlighter2.removeHighlight(hh);
+                    highlighter2.addHighlight(startOffset2, endOffset2, currentPainter);
+                    curPos2 = startOffset2;
+                    textArea2.setCaretPosition(endOffset2);
+                } else {
+                    // Backward direction
+                    startOffset2 = highlightMap.lowerKey(curPos2);
+                    if (startOffset2 == null) {
+                        startOffset2 = highlightMap.lastKey();
+                    }
+                    endOffset2 = highlightMap.get(startOffset2);
+                    sequence2 = startOffsets.indexOf(startOffset2);
+                    Highlighter.Highlight hh = highlighter2.getHighlights()[sequence2];
+                    highlighter2.removeHighlight(hh);
+                    highlighter2.addHighlight(startOffset2, endOffset2, currentPainter);
+                    curPos2 = startOffset2;
+                    textArea2.setCaretPosition(startOffset2);
+                }
+            }
+            if (hits > 0) {
+                label.setText(String.format("%02d / %02d%n", sequence2 + 1, hits));
+            } else {
+                label.setText("");
+            }
         } catch (BadLocationException ex) {
             ex.printStackTrace();
         }
@@ -2632,7 +2778,6 @@ public final class EditFile extends JFrame {
     protected void splitTextArea() {
 
         // Initially, the document listener is set for primary text area.
-        // The setting is changed when one of the document listeners is performed (on text change).
 
         // Copy text from the primary to the secondary text area
         textArea2.setText(textArea.getText());
@@ -2645,8 +2790,6 @@ public final class EditFile extends JFrame {
         }
 
         // Set caret shapes for selection modes in the secondary text area
-        // ---------------------------------------------------------------
-
         if (selectionModeButton.getText().equals(HORIZONTAL_SELECTION)) {
             // Horizontal selection
             if (caretShape.equals(LONG_CARET)) {
@@ -2694,13 +2837,15 @@ public final class EditFile extends JFrame {
         // Renew global panel layout
         GroupLayout topPanelLayout = new GroupLayout(globalPanel);
         topPanelLayout.setHorizontalGroup(topPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addComponent(rowPanel1)
                 .addComponent(rowPanel2)
+                .addComponent(rowPanel1)
                 .addComponent(splitVerticalPane)
         );
         topPanelLayout.setVerticalGroup(topPanelLayout.createSequentialGroup()
-                .addComponent(rowPanel1)
                 .addComponent(rowPanel2)
+                .addGap(2)
+                .addComponent(rowPanel1)
+                .addGap(4)
                 .addComponent(splitVerticalPane)
         );
         // Set global panel layout
@@ -2736,6 +2881,7 @@ public final class EditFile extends JFrame {
 
         // Show the window
         setVisible(true);
+        changeHighlight2();
     }
 
     /**
@@ -2750,7 +2896,7 @@ public final class EditFile extends JFrame {
         textArea2.getDocument().removeDocumentListener(textArea2DocListener);
         textArea.getDocument().removeDocumentListener(textAreaDocListener);
 
-        // Create a scroll pane
+        // Create a new scroll pane
         scrollPane = new JScrollPane(textArea);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
@@ -2762,13 +2908,15 @@ public final class EditFile extends JFrame {
         globalPanel = new JPanel();
         GroupLayout topPanelLayout = new GroupLayout(globalPanel);
         topPanelLayout.setHorizontalGroup(topPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addComponent(rowPanel1)
                 .addComponent(rowPanel2)
+                .addComponent(rowPanel1)
                 .addComponent(scrollPane)
         );
         topPanelLayout.setVerticalGroup(topPanelLayout.createSequentialGroup()
-                .addComponent(rowPanel1)
                 .addComponent(rowPanel2)
+                .addGap(2)
+                .addComponent(rowPanel1)
+                .addGap(4)
                 .addComponent(scrollPane)
         );
         globalPanel.setLayout(topPanelLayout);
@@ -2808,11 +2956,11 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Button listener for buttons Find (<,>) and Replace and Replace/Find;
+     * Button listener for buttons Find (<,>) and Replace and Replace+Find;
      * Note: "ReplaceAll" button has different action listener.
      */
 
-    class HighlightHandler implements DocumentListener {
+    class HighlightListener implements DocumentListener {
 
         @Override
         public void changedUpdate(DocumentEvent de) {
@@ -2842,13 +2990,14 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     *
+     * Undoable listener.
      */
     class UndoHandler implements UndoableEditListener {
 
         /**
          * Messaged when the Document has created an edit, the edit is added to "undo", an instance of UndoManager.
          */
+        @Override
         public void undoableEditHappened(UndoableEditEvent uee) {
             undo.addEdit(uee.getEdit());
             undoAction.update();
@@ -2857,7 +3006,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     *
+     * Undo action.
      */
     class UndoAction extends AbstractAction {
 
@@ -2866,12 +3015,12 @@ public final class EditFile extends JFrame {
             setEnabled(false);
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             try {
                 undo.undo();
-            } catch (CannotUndoException ex) {
-                // Logger.getLogger(UndoAction.class.getName()).log(Level.SEVERE,
-                // "Unable to undo", ex);
+            } catch (CannotUndoException cue) {
+                cue.printStackTrace();
             }
             update();
             redoAction.update();
@@ -2889,7 +3038,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     *
+     * Redo action.
      */
     class RedoAction extends AbstractAction {
 
@@ -2898,12 +3047,12 @@ public final class EditFile extends JFrame {
             setEnabled(false);
         }
 
+        @Override
         public void actionPerformed(ActionEvent ae) {
             try {
                 undo.redo();
             } catch (CannotRedoException cre) {
-                // Logger.getLogger(RedoAction.class.getName()).log(Level.SEVERE,
-                // "Unable to redo", cre);
+                cre.printStackTrace();
             }
             update();
             undoAction.update();
@@ -2921,7 +3070,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Inner class for Ctrl + S (Save) function key
+     * Inner class for Ctrl + S (Save) function key.
      */
     class SaveAction extends AbstractAction {
 
@@ -2957,7 +3106,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Inner class for Compile button
+     * Inner class for Compile button.
      */
     class CompileButtonListener extends AbstractAction {
 
@@ -2981,7 +3130,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Inner class for Escape function key
+     * Inner class for Escape function key.
      */
     class Escape extends AbstractAction {
 
@@ -2992,58 +3141,44 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Inner class for Ctrl + Arrow Up function key
-     */
-    class ArrowUp extends AbstractAction {
-
-        @Override
-        public void actionPerformed(ActionEvent ae) {
-            if (!lowerHalfActive) {
-                currentPos--;
-                changeHighlight();
-            } else {
-                currentPos2--;
-                changeHighlight2();
-            }
-        }
-    }
-
-    /**
-     * Inner class for Ctrl + Arrow Down function key
-     */
-    class ArrowDown extends AbstractAction {
-
-        @Override
-        public void actionPerformed(ActionEvent ae) {
-            if (!lowerHalfActive) {
-                currentPos++;
-                changeHighlight();
-            } else {
-                currentPos2++;
-                changeHighlight2();
-            }
-        }
-    }
-
-    /**
-     * Inner class for Ctrl + F function key
+     * Inner class for Ctrl + F function key.
      */
     class CreateFindWindow extends AbstractAction {
 
         @Override
         public void actionPerformed(ActionEvent ae) {
             if (findWindow != null) {
-                if (!textAreaIsSplit) {
-                    findWindow.createWindow(textArea.getSelectedText());
+                if (!lowerHalfActive) {
+                    if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+                        // Horizontal selection
+                        findWindow.finishCreatingWindow(textArea.getSelectedText());
+                    } else {
+                        // Vertical selection
+                        if (!selectionStarts.isEmpty()) {
+                            textArea.select(selectionStarts.get(0), selectionEnds.get(0));
+                            findWindow.finishCreatingWindow(textArea.getSelectedText());
+                        } else {
+                            findWindow.finishCreatingWindow("");
+                        }
+                    }
                 } else {
-                    findWindow.createWindow(textArea2.getSelectedText());
+                    if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+                        findWindow.finishCreatingWindow(textArea2.getSelectedText());
+                    } else {
+                        if (!selectionStarts.isEmpty()) {
+                            textArea2.select(selectionStarts.get(0), selectionEnds.get(0));
+                            findWindow.finishCreatingWindow(textArea2.getSelectedText());
+                        } else {
+                            findWindow.finishCreatingWindow("");
+                        }
+                    }
                 }
             }
         }
     }
 
     /**
-     *
+     * Shift selected area (primary or secondary) left by one position.
      */
     protected void shiftLeft() {
         JTextArea tArea;
@@ -3132,7 +3267,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Inner class for Ctrl + Arrow Left function key
+     * Inner class for Ctrl + Arrow Left function key (shift left by one position).
      */
     class ArrowLeft extends AbstractAction {
 
@@ -3143,7 +3278,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     *
+     * Shift selected area (primary or secondary) right by one position.
      */
     protected void shiftRight() {
         JTextArea tArea;
@@ -3206,7 +3341,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Inner class for Ctrl + Arrow Left function key
+     * Inner class for Ctrl + Arrow Right function key (shift right by one position).
      */
     class ArrowRight extends AbstractAction {
 
@@ -3217,7 +3352,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Inner class for Ctrl C - Custom copy
+     * Inner class for Ctrl C - Custom copy.
      */
     class CustomCopy extends AbstractAction {
 
@@ -3266,7 +3401,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Inner class for Ctrl + X - Custom cut
+     * Inner class for Ctrl + X - Custom cut.
      */
     class CustomCut extends AbstractAction {
 
@@ -3320,7 +3455,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Inner class for Ctrl + V - Custom paste
+     * Inner class for Ctrl + V - Custom paste.
      */
     class CustomPaste extends AbstractAction {
 
@@ -3441,10 +3576,6 @@ public final class EditFile extends JFrame {
             this.key = key;
         }
 
-        /**
-         *
-         * @param ae
-         */
         @Override
         public void actionPerformed(ActionEvent ae) {
             JTextArea tArea;
@@ -3453,7 +3584,6 @@ public final class EditFile extends JFrame {
             } else {
                 tArea = textArea2;
             }
-            System.out.println(selectionStarts);
             int cnt = selectionStarts.size();
             // When NO TEXT is selected, delete one position only (preceding or next)
             if (cnt == 0) {
@@ -3519,7 +3649,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Inner class for Tab function key. Inserts TAB_SIZE spaces in caret position
+     * Inner class for Tab function key; Inserts TAB_SIZE spaces in caret position.
      */
     class TabListener extends AbstractAction {
 
@@ -3531,7 +3661,7 @@ public final class EditFile extends JFrame {
 
     /**
      * Implements custom caret as a long vertical line with a short red line pointer
-     * for primary text area
+     * for primary text area.
      */
     public class LongCaret extends DefaultCaret {
 
@@ -3576,7 +3706,7 @@ public final class EditFile extends JFrame {
 
     /**
      * Implements custom caret as a long vertical line with a short red line pointer
-     * for secondary text area
+     * for secondary text area.
      */
     public class LongCaret2 extends DefaultCaret {
 
@@ -3613,7 +3743,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Implements vertical (rectangular) selection of text
+     * Implements vertical (rectangular) selection of text in primary area.
      */
     public class SpecialCaret extends DefaultCaret {
 
@@ -3671,7 +3801,6 @@ public final class EditFile extends JFrame {
             try {
                 selectionStarts.add(pos1);
                 selectionEnds.add(pos2);
-                //textArea.select(pos1, pos2);
                 getComponent().getHighlighter().addHighlight(pos1, pos2, DefaultHighlighter.DefaultPainter);
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -3686,7 +3815,6 @@ public final class EditFile extends JFrame {
                     try {
                         selectionStarts.add(pos1);
                         selectionEnds.add(pos2);
-                        //textArea.select(pos1, pos2);
                         getComponent().getHighlighter().addHighlight(pos1, pos2, DefaultHighlighter.DefaultPainter);
                     } catch (Exception ex) {
                         ex.printStackTrace();
@@ -3707,8 +3835,7 @@ public final class EditFile extends JFrame {
                 // ----------
                 // give values to x, y, width,height (inherited from java.awt.Rectangle)
                 x = verticalLine.x;
-                y = 0; // upper edge of the vertical line is at the upper edge
-                // of the text area
+                y = 0; // upper edge of the vertical line is at the upper edge of the text area
                 height = textArea.getHeight();
                 width = 2;
                 repaint(); // calls getComponent().repaint(x, y, width, height)
@@ -3756,7 +3883,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Implements vertical (rectangular) selection of text for secondary text area
+     * Implements vertical (rectangular) selection of text for secondary text area.
      */
     public class SpecialCaret2 extends DefaultCaret {
 
@@ -3772,12 +3899,10 @@ public final class EditFile extends JFrame {
         public void mouseClicked(MouseEvent mouseEvent) {
             if (selectionMode.equals(VERTICAL_SELECTION)) {
                 super.mouseClicked(mouseEvent);
-                //if (mouseEvent.getClickCount() == 2 || mouseEvent.getClickCount() == 3) {
                 selectionStarts.clear();
                 selectionEnds.clear();
                 selectionStarts.add(textArea2.getSelectionStart());
                 selectionEnds.add(textArea2.getSelectionEnd());
-                //}
             } else {
                 super.mouseClicked(mouseEvent);
 
@@ -3816,7 +3941,6 @@ public final class EditFile extends JFrame {
             try {
                 selectionStarts.add(pos1);
                 selectionEnds.add(pos2);
-                //textArea2.select(pos1, pos2);
                 getComponent().getHighlighter().addHighlight(pos1, pos2, DefaultHighlighter.DefaultPainter);
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -3831,7 +3955,6 @@ public final class EditFile extends JFrame {
                     try {
                         selectionStarts.add(pos1);
                         selectionEnds.add(pos2);
-                        //textArea2.select(pos1, pos2);
                         getComponent().getHighlighter().addHighlight(pos1, pos2, DefaultHighlighter.DefaultPainter);
                     } catch (Exception ex) {
                         ex.printStackTrace();
@@ -3847,13 +3970,6 @@ public final class EditFile extends JFrame {
          */
         @Override
         public void damage(Rectangle verticalLine) {
-            /*
-            if (!lowerHalfActive) {
-                tArea = textArea;
-            } else {
-                tArea = textArea2;
-            }
-             */
             if (caretShape.equals(LONG_CARET)) {
                 // Long caret
                 // ----------
@@ -3907,7 +4023,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     *
+     * Rendering elements in combo box "Font selection".
      */
     public class FontComboBoxRenderer extends JLabel implements ListCellRenderer {
 
@@ -3945,7 +4061,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     *
+     * Document listener for primary text area.
      */
     class TextAreaDocListener implements DocumentListener {
 
@@ -3978,7 +4094,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     *
+     * Document listener for secondary text area.
      */
     class TextArea2DocListener implements DocumentListener {
 
@@ -4010,13 +4126,21 @@ public final class EditFile extends JFrame {
         }
     }
 
+    /**
+     * Mouse listener for primary text area.
+     */
     class TextAreaMouseListener extends MouseAdapter {
 
         @Override
         public void mousePressed(MouseEvent mouseEvent) {
 
             lowerHalfActive = false;
+            Point pt = new Point(mouseEvent.getX(), mouseEvent.getY());
+            curPos = textArea.getUI().viewToModel(textArea, pt);
+            // Every click sets current highlight depending on the direction
+            changeHighlight();
 
+            // Highlight blocks if no pattern is in the findField
             if (findWindow.findField.getText().isEmpty()) {
                 // Get a highlighter for the primary text area
                 blockHighlighter = textArea.getHighlighter();
@@ -4030,13 +4154,21 @@ public final class EditFile extends JFrame {
         }
     }
 
+    /**
+     * Mouse listener for secondary text area.
+     */
     class TextArea2MouseListener extends MouseAdapter {
 
         @Override
         public void mousePressed(MouseEvent mouseEvent) {
 
             lowerHalfActive = true;
+            Point pt = new Point(mouseEvent.getX(), mouseEvent.getY());
+            curPos2 = textArea2.getUI().viewToModel(textArea2, pt);
+            // Every click sets current highlight depending on the direction
+            changeHighlight2();
 
+            // Highlight blocks if no pattern is in the findField
             if (findWindow.findField.getText().isEmpty()) {
                 // Get a highlighter for the secondary text area
                 blockHighlighter = textArea2.getHighlighter();
@@ -4051,7 +4183,7 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Window adapter closes the FindWindow window and also this window.
+     * Window adapter closes the FindWindow and also this window.
      */
     class WindowEditFileAdapter extends WindowAdapter {
 
