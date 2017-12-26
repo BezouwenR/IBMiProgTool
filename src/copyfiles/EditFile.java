@@ -247,12 +247,12 @@ public final class EditFile extends JFrame {
     int windowY;
 
     Path parPath = Paths.get(System.getProperty("user.dir"), "paramfiles", "Parameters.txt");
-    Path shiftLeftIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "shiftLeft.png");
-    Path shiftRightIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "shiftRight.png");
-    Path findIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "find.png");
-    Path splitIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "split.png");
-    Path undoIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "undo.png");
-    Path redoIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "redo.png");
+    Path shiftLeftIconPath = Paths.get(System.getProperty("user.dir"), "icons", "shiftLeft.png");
+    Path shiftRightIconPath = Paths.get(System.getProperty("user.dir"), "icons", "shiftRight.png");
+    Path findIconPath = Paths.get(System.getProperty("user.dir"), "icons", "find.png");
+    Path splitIconPath = Paths.get(System.getProperty("user.dir"), "icons", "split.png");
+    Path undoIconPath = Paths.get(System.getProperty("user.dir"), "icons", "undo.png");
+    Path redoIconPath = Paths.get(System.getProperty("user.dir"), "icons", "redo.png");
 
     BufferedReader infile;
     final String PROP_COMMENT = "Copy files between IBM i and PC, edit and compile.";
@@ -326,7 +326,7 @@ public final class EditFile extends JFrame {
     String row;
     boolean nodes = true;
     boolean noNodes = false;
-
+    boolean isError = false;
     JScrollPane scrollPane;
 
     // Constructor parameters
@@ -414,6 +414,7 @@ public final class EditFile extends JFrame {
         textArea.setFont(new Font(editorFont, Font.PLAIN, fontSize));
         textArea2.setFont(new Font(editorFont, Font.PLAIN, fontSize));
 
+        isError = false;
         // Get text from the file and set it to the textArea
         if (methodName.equals("rewritePcFile")) {
             displayPcFile();
@@ -425,7 +426,9 @@ public final class EditFile extends JFrame {
 
         // Create window
         // -------------
-        createWindow();
+        if (!isError) {
+            createWindow();
+        }
 
         // Continue constructor
         // --------------------
@@ -753,43 +756,6 @@ public final class EditFile extends JFrame {
         // Listener for undoable edits
         textArea.getDocument().addUndoableEditListener(undoHandler);
 
-        // Undo button listener
-        undoAction = new UndoAction();
-        undoButton.addActionListener(undoAction);
-
-        // Redo button listener
-        redoAction = new RedoAction();
-        redoButton.addActionListener(redoAction);
-
-        // Save button listener
-        // --------------------
-        saveButton.addActionListener(ae -> {
-            caretPosition = textArea.getCaretPosition();
-            rewriteFile();
-            textArea.setCaretPosition(caretPosition);
-            textArea.requestFocus();
-        });
-
-        // Left shift button listener
-        // --------------------------
-        leftShiftButton.addActionListener(ae -> {
-            textArea.requestFocusInWindow();
-            shiftLeft();
-            if (selectionMode.equals(HORIZONTAL_SELECTION) && !progLanguage.equals("*NONE")) {
-                highlightBlocks(textArea, progLanguage);
-            }
-        });
-
-        // Right shift button listener
-        // ---------------------------
-        rightShiftButton.addActionListener(ae -> {
-            textArea.requestFocusInWindow();
-            shiftRight();
-            if (selectionMode.equals(HORIZONTAL_SELECTION) && !progLanguage.equals("*NONE")) {
-                highlightBlocks(textArea, progLanguage);
-            }
-        });
-
         // Select editor font from the list in combo box - listener
         // --------------------------------------------------------
         fontComboBox.addItemListener(il -> {
@@ -1005,34 +971,8 @@ public final class EditFile extends JFrame {
 
         // Find button listener
         // --------------------
-        findButton.addActionListener(ae -> {
-            if (findWindow != null) {
-                if (!lowerHalfActive) {
-                    if (selectionMode.equals(HORIZONTAL_SELECTION)) {
-                        findWindow.finishCreatingWindow(textArea.getSelectedText());
-                    } else {
-                        // Vertical selection
-                        if (!selectionStarts.isEmpty()) {
-                            textArea.select(selectionStarts.get(0), selectionEnds.get(0));
-                            findWindow.finishCreatingWindow(textArea.getSelectedText());
-                        } else {
-                            findWindow.finishCreatingWindow("");
-                        }
-                    }
-                } else {
-                    if (selectionMode.equals(HORIZONTAL_SELECTION)) {
-                        findWindow.finishCreatingWindow(textArea2.getSelectedText());
-                    } else {
-                        if (!selectionStarts.isEmpty()) {
-                            textArea2.select(selectionStarts.get(0), selectionEnds.get(0));
-                            findWindow.finishCreatingWindow(textArea2.getSelectedText());
-                        } else {
-                            findWindow.finishCreatingWindow("");
-                        }
-                    }
-                }
-            }
-        });
+        CreateFindWindow createFindWindow = new CreateFindWindow();
+        findButton.addActionListener(createFindWindow);
 
         // Split/Unsplit button listener
         // -----------------------------
@@ -1047,20 +987,44 @@ public final class EditFile extends JFrame {
             }
         });
 
+        // Undo button listener
+        undoAction = new UndoAction();
+        undoButton.addActionListener(undoAction);
+
+        // Redo button listener
+        redoAction = new RedoAction();
+        redoButton.addActionListener(redoAction);
+
+        // Save button listener
+        // --------------------
+        SaveAction saveAction = new SaveAction();
+        saveButton.addActionListener(saveAction);
+
+        // Left shift button listener
+        // --------------------------
+        ArrowLeft arrowLeft = new ArrowLeft();
+        leftShiftButton.addActionListener(arrowLeft);
+
+        // Right shift button listener
+        // ---------------------------
+        ArrowRight arrowRight = new ArrowRight();
+        rightShiftButton.addActionListener(arrowRight);
+
+        // Compile button listener
+        // -----------------------
+        compileButtonListener = new CompileButtonListener();
+        compileButton.addActionListener(compileButtonListener);
+
         // Keyboard key listeners
         // ----------------------
         // Enable ESCAPE key to escape from editing
         globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "escapeCmd");
         globalPanel.getActionMap().put("escapeCmd", new Escape());
 
-        // Register Compile button listener
-        compileButtonListener = new CompileButtonListener();
-        compileButton.addActionListener(compileButtonListener);
-
         // Enable processing of function key Ctrl + S = Save data
         globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "save");
-        globalPanel.getActionMap().put("save", new SaveAction());
+        globalPanel.getActionMap().put("save", saveAction);
 
         // Enable processing of function key Ctrl + Z = Undo
         globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
@@ -1085,7 +1049,6 @@ public final class EditFile extends JFrame {
         textArea2.getActionMap().put("redo", redoAction);
 
         // Enable processing of function key Ctrl + F = create FindWidnow
-        CreateFindWindow createFindWindow = new CreateFindWindow();
         globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "crtFindWindow");
         globalPanel.getActionMap().put("crtFindWindow", createFindWindow);
@@ -1106,20 +1069,20 @@ public final class EditFile extends JFrame {
         // Enable processing of function key Ctrl + Arrow Left = Shift lines or rectangle left
         textArea.getInputMap(JComponent.WHEN_FOCUSED)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "shiftLeft");
-        textArea.getActionMap().put("shiftLeft", new ArrowLeft());
+        textArea.getActionMap().put("shiftLeft", arrowLeft);
         // Enable processing of function key Ctrl + Arrow Right = Shift lines or rectangle right
         textArea.getInputMap(JComponent.WHEN_FOCUSED)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "shiftRight");
-        textArea.getActionMap().put("shiftRight", new ArrowRight());
+        textArea.getActionMap().put("shiftRight", arrowRight);
 
         // Enable processing of function key Ctrl + Arrow Left = Shift lines or rectangle left
         textArea2.getInputMap(JComponent.WHEN_FOCUSED)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "shiftLeft");
-        textArea2.getActionMap().put("shiftLeft", new ArrowLeft());
+        textArea2.getActionMap().put("shiftLeft", arrowLeft);
         // Enable processing of function key Ctrl + Arrow Right = Shift lines or rectangle right
         textArea2.getInputMap(JComponent.WHEN_FOCUSED)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "shiftRight");
-        textArea2.getActionMap().put("shiftRight", new ArrowRight());
+        textArea2.getActionMap().put("shiftRight", arrowRight);
 
         // Enable custom processing of function key Ctrl C = Custom copy
         textArea.getInputMap(JComponent.WHEN_FOCUSED)
@@ -1249,6 +1212,7 @@ public final class EditFile extends JFrame {
                 }
             }
         } catch (Exception exc) {
+            isError = true;
             row = "Error in displaying IFS file: " + exc.toString();
             mainWindow.msgVector.add(row);
             mainWindow.showMessages(nodes);
@@ -1297,6 +1261,7 @@ public final class EditFile extends JFrame {
                 }
             }
         } catch (Exception exc) {
+            isError = true;
             exc.printStackTrace();
             row = "Error: File  " + filePathString
                     + "  is not a text file or has an unsuitable character set.  -  " + exc.toString();
@@ -1385,6 +1350,7 @@ public final class EditFile extends JFrame {
             // Close the file
             as400seqFile.close();
         } catch (Exception exc) {
+            isError = true;
             exc.printStackTrace();
             row = "Error in rewriting source member: " + exc.toString();
             mainWindow.msgVector.add(row);
@@ -2628,7 +2594,6 @@ public final class EditFile extends JFrame {
         Highlighter highlighter = textArea.getHighlighter();
         highlighter.removeAllHighlights();
         findWindow.findField.setBackground(Color.WHITE);
-        //Document doc = textArea.getDocument();
         try {
             Pattern pattern = findWindow.getPattern();
             if (pattern == null) {
@@ -2704,7 +2669,6 @@ public final class EditFile extends JFrame {
         Highlighter highlighter2 = textArea2.getHighlighter();
         highlighter2.removeAllHighlights();
         findWindow.findField.setBackground(Color.WHITE);
-        //Document doc = textArea2.getDocument();
         try {
             Pattern pattern = findWindow.getPattern();
             if (pattern == null) {
@@ -3077,7 +3041,10 @@ public final class EditFile extends JFrame {
         @Override
         public void actionPerformed(ActionEvent ae) {
             // Save edited data from text area back to the member
+            caretPosition = textArea.getCaretPosition();
             rewriteFile();
+            textArea.setCaretPosition(caretPosition);
+            textArea.requestFocus();
         }
     }
 

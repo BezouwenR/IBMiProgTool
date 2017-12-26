@@ -1449,8 +1449,9 @@ public class WrkSplF extends JFrame {
             } catch (Exception exc) {
                 exc.printStackTrace();
             } finally {
-                // Refresh spooled file table for the original user
-                // for whom the table was displayed
+                // Remove selection from the same number of table rows that remained after deletion.
+                rowSelectionModel.removeSelectionInterval(0, selIndexArrList.size());
+                // Refresh spooled file table for the original user for whom the table was displayed
                 refreshSpoolTable(userParSaved);
             }
         }

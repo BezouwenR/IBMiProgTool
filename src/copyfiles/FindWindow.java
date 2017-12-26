@@ -11,11 +11,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.swing.AbstractAction;
@@ -49,15 +54,18 @@ public class FindWindow extends JFrame {
     static final Color DIM_RED = Color.getHSBColor(0.00f, 0.2f, 0.98f); // red little
     static final Color WARNING_COLOR = new Color(255, 200, 200);
 
-    Path matchCaseIconPathDark = Paths.get(System.getProperty("user.dir"), "workfiles", "matchCase1.png");
-    Path matchCaseIconPathDim = Paths.get(System.getProperty("user.dir"), "workfiles", "matchCase2.png");
+    Path matchCaseIconPathDark = Paths.get(System.getProperty("user.dir"), "icons", "matchCase1.png");
+    Path matchCaseIconPathDim = Paths.get(System.getProperty("user.dir"), "icons", "matchCase2.png");
 
-    Path prevInactiveIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "prevInactive.png");
-    Path nextInactiveIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "nextInactive.png");
-    Path prevActiveIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "prevActive.png");
-    Path nextActiveIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "nextActive.png");
+    Path prevInactiveIconPath = Paths.get(System.getProperty("user.dir"), "icons", "prevInactive.png");
+    Path nextInactiveIconPath = Paths.get(System.getProperty("user.dir"), "icons", "nextInactive.png");
+    Path prevActiveIconPath = Paths.get(System.getProperty("user.dir"), "icons", "prevActive.png");
+    Path nextActiveIconPath = Paths.get(System.getProperty("user.dir"), "icons", "nextActive.png");
 
     Path parPath = Paths.get(System.getProperty("user.dir"), "paramfiles", "Parameters.txt");
+    String encoding = System.getProperty("file.encoding", "UTF-8");
+    final String PROP_COMMENT = "Copy files between IBM i and PC, edit and compile.";
+    Properties properties;
 
     Container cont;
     JLabel findLabel = new JLabel("Find what:");
@@ -103,6 +111,7 @@ public class FindWindow extends JFrame {
     JButton nextButton = new JButton(nextActiveIcon);
 
     String pathString;
+    String matchCase;
 
     /**
      * Constructor
@@ -127,9 +136,27 @@ public class FindWindow extends JFrame {
         nextButton.setContentAreaFilled(false);
         nextButton.setPreferredSize(new Dimension(25, 20));
 
-        matchCaseButton.setIcon(matchCaseIconDim);
-        matchCaseButton.setSelectedIcon(matchCaseIconDim);
-        matchCaseButton.setToolTipText("Case insensitive. Toggle Match case.");
+
+        properties = new Properties();
+        try {
+            BufferedReader infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+            properties.load(infile);
+            infile.close();
+        } catch (Exception exc) {
+            exc.printStackTrace();
+        }
+        
+        matchCase = properties.getProperty("MATCH_CASE");
+
+        if (matchCase.equals("CASE_INSENSITIVE")) {
+            matchCaseButton.setIcon(matchCaseIconDim);
+            matchCaseButton.setSelectedIcon(matchCaseIconDim);
+            matchCaseButton.setToolTipText("Case insensitive. Toggle Match case.");
+        } else {
+            matchCaseButton.setIcon(matchCaseIconDark);
+            matchCaseButton.setSelectedIcon(matchCaseIconDark);
+            matchCaseButton.setToolTipText("Match case. Toggle Case insensitive.");
+        }
         matchCaseButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         matchCaseButton.setContentAreaFilled(false);
         matchCaseButton.setPreferredSize(new Dimension(25, 20));
@@ -225,55 +252,16 @@ public class FindWindow extends JFrame {
 
         add(panel);
 
+
         // "Previous" button listener
         // --------------------------
-        prevButton.addActionListener(ae -> {
-            direction = "backward";
-            prevButton.setIcon(prevActiveIcon);
-            nextButton.setIcon(nextInactiveIcon);
-            if (!wasReplace) {
-                if (!editFile.lowerHalfActive) {
-                    if (editFile.highlightMap.lowerKey(editFile.curPos) == null) {
-                        editFile.curPos = editFile.highlightMap.lastKey();
-                    } else {
-                        editFile.curPos = editFile.highlightMap.lowerKey(editFile.curPos);
-                    }
-                    editFile.changeHighlight();
-                } else {
-                    if (editFile.highlightMap.lowerKey(editFile.curPos2) == null) {
-                        editFile.curPos2 = editFile.highlightMap.lastKey();
-                    } else {
-                        editFile.curPos2 = editFile.highlightMap.lowerKey(editFile.curPos2);
-                    }
-                    editFile.changeHighlight2();
-                }
-            }
-            wasReplace = false; // Set off Replace flag
-        });
+        PreviousMatch previousMatch = new PreviousMatch();
+        prevButton.addActionListener(previousMatch);
 
         // "Next" button listener
         // ----------------------
-        nextButton.addActionListener(ae -> {
-            direction = "forward";
-            prevButton.setIcon(prevInactiveIcon);
-            nextButton.setIcon(nextActiveIcon);
-            if (!editFile.lowerHalfActive) {
-                if (editFile.highlightMap.higherKey(editFile.curPos) == null) {
-                    editFile.curPos = editFile.highlightMap.firstKey();
-                } else {
-                    editFile.curPos = editFile.highlightMap.higherKey(editFile.curPos);
-                }
-                editFile.changeHighlight();
-            } else {
-                if (editFile.highlightMap.higherKey(editFile.curPos2) == null) {
-                    editFile.curPos2 = editFile.highlightMap.firstKey();
-                } else {
-                    editFile.curPos2 = editFile.highlightMap.higherKey(editFile.curPos2);
-                }
-                editFile.changeHighlight2();
-            }
-            wasReplace = false; // Set off Replace flag
-        });
+        NextMatch nextMatch = new NextMatch();
+        nextButton.addActionListener(nextMatch);
 
         // "Match case" button listener
         // ----------------------------
@@ -281,14 +269,25 @@ public class FindWindow extends JFrame {
             if (matchCaseButton.getSelectedIcon().equals(matchCaseIconDark)) {
                 matchCaseButton.setSelectedIcon(matchCaseIconDim);
                 matchCaseButton.setToolTipText("Case insensitive. Toggle Match case.");
+                matchCase = "CASE_INSENSITIVE";
             } else {
                 matchCaseButton.setSelectedIcon(matchCaseIconDark);
                 matchCaseButton.setToolTipText("Match case. Toggle Case insensitive.");
+                matchCase = "CASE_SENSITIVE";
             }
             if (!editFile.lowerHalfActive) {
                 editFile.changeHighlight();
             } else {
                 editFile.changeHighlight2();
+            }
+            try {
+                BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                // Save programming language into properties
+                properties.setProperty("MATCH_CASE", matchCase);
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+            } catch (Exception exc) {
+                exc.printStackTrace();
             }
         });
 
@@ -459,21 +458,19 @@ public class FindWindow extends JFrame {
         });
 
         // Set input maps and actions for Ctrl + Arrow UP and Ctrl + Arrow DOWN on different buttons and text areas.
-        ArrowUp arrowUp = new ArrowUp();
-        ArrowDown arrowDown = new ArrowDown();
         Arrays.asList(prevButton, nextButton, findField, replaceField, replaceButton, replaceFindButton,
                 editFile.textArea, editFile.textArea2).stream().map((object) -> {
                     return object;
                 }).forEachOrdered((object) -> {
             // Enable processing of function key Ctrl + Arrow UP = Find next hit upwards
             object.getInputMap(JComponent.WHEN_FOCUSED)
-                    .put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "arrowUp");
-            object.getActionMap().put("arrowUp", arrowUp);
+                    .put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "prev");
+            object.getActionMap().put("prev", previousMatch);
 
             // Enable processing of function key Ctrl + Arrow DOWN = Find next hit downwards
             object.getInputMap(JComponent.WHEN_FOCUSED)
-                    .put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "arrowDown");
-            object.getActionMap().put("arrowDown", arrowDown);
+                    .put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "next");
+            object.getActionMap().put("next", nextMatch);
         });
 
         // Register document listener for the "findField" when hihglighting matched patterns.
@@ -608,9 +605,9 @@ public class FindWindow extends JFrame {
     }
 
     /**
-     * Inner class for Ctrl + Arrow Up function key (Previous match).
+     * Inner class for "previous match" button and Ctrl + Arrow Up function key.
      */
-    class ArrowUp extends AbstractAction {
+    class PreviousMatch extends AbstractAction {
 
         @Override
         public void actionPerformed(ActionEvent ae) {
@@ -639,9 +636,9 @@ public class FindWindow extends JFrame {
     }
 
     /**
-     * Inner class for Ctrl + Arrow Down function key (Next match).
+     * Inner class for "next match" button and Ctrl + Arrow Down function key.
      */
-    class ArrowDown extends AbstractAction {
+    class NextMatch extends AbstractAction {
 
         @Override
         public void actionPerformed(ActionEvent ae) {

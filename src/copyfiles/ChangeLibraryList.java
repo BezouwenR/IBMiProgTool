@@ -119,13 +119,13 @@ public class ChangeLibraryList extends JFrame {
         }
 
         // Start window construction
-        Font titleFont = new Font("Helvetica", Font.PLAIN, 20);
-        title.setFont(titleFont);
+        title.setFont(title.getFont().deriveFont(Font.BOLD, 20));
         prompt1.setForeground(new Color(50, 60, 160)); // Dim blue
         libraryPatternLabel.setForeground(new Color(50, 60, 160)); // Dim blue
         currentLibraryLabel.setForeground(new Color(50, 60, 160)); // Dim blue
 
         libraryPatternTextField = new JTextField();
+        libraryPatternTextField.setToolTipText("Library search pattern. Can use * and ? wild cards.");
         libraryPattern = ((String) properties.get("LIBRARY_PATTERN")).toUpperCase();
         libraryPatternTextField.setText(libraryPattern);
         libraryPatternTextField.setPreferredSize(new Dimension(100, 20));
@@ -133,12 +133,18 @@ public class ChangeLibraryList extends JFrame {
         libraryPatternTextField.setMaximumSize(new Dimension(100, 20));
 
         curentLibraryComboBox = new JComboBox<>();
+        curentLibraryComboBox.setToolTipText("Select a library or *CRTDFT from the list of possible entries.");
         curentLibraryComboBox.setPreferredSize(new Dimension(120, 20));
         curentLibraryComboBox.setMinimumSize(new Dimension(120, 20));
         curentLibraryComboBox.setMaximumSize(new Dimension(120, 20));
         curentLibraryComboBox.setEditable(true);
         curentLibraryComboBox.setSelectedItem("*CRTDFT");
 
+        copyButton.setToolTipText("Copy selected libraries from left to right. Also by drag and drop.");
+        removeButton.setToolTipText("Remove selected libraries from the right side.");
+        clearButton.setToolTipText("Remove all libraries from the right side.");
+        saveButton.setToolTipText("Create user library list and current library. Return to the previous window.");
+                
         // Retrieve library names beginning with a prefix    
         librariesForCurlib = getListOfLibraries(libraryPattern);
 

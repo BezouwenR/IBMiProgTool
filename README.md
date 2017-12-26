@@ -36,6 +36,12 @@ Version 02.02
 - Different control elements redesigned in editor widnow.
 - Bugs fixed. 
 
+Version 03.01
+
+- Searching pattern in multiple files.
+- Saving user chosen attributes (source type and compile command) for compiled files.
+- Bugs fixed.
+
 - - - - - - - - - - 
 
 Tento projekt se neinstaluje, je okamžitě k použití jako Java aplikace v adresáři projektu. Aplikace vyžaduje Javu SE 8 instalovanou v PC.
@@ -67,3 +73,9 @@ Verze 02.02
 - Do okna Compile přidáno tlačítko "Last spooled file".
 - Změněny a přemístěny ovládací prvky v okně editoru.
 - Opraveny chyby. 
+
+Verze 03.01
+
+- Hledání vzorku ve více souborech.
+- Ukládání uživatelem zvolených atributů (zdrojového typu a kompilačního příkazu) pro kompilované soubory.
+- Oprava chyb.

@@ -121,7 +121,7 @@ public final class DisplayFile extends JFrame {
     JTextField findField = new JTextField();
     JLayer fieldLayer;
 
-    JToggleButton matchCaseButton;
+    JToggleButton matchCaseButton = new JToggleButton();
     ImageIcon matchCaseIconDark;
     ImageIcon matchCaseIconDim;
 
@@ -146,6 +146,8 @@ public final class DisplayFile extends JFrame {
     String direction = "forward";
 
     MainWindow mainWindow;
+    AS400 remoteServer;
+
     static int windowWidth;
     static int windowHeight;
     int screenWidth;
@@ -153,13 +155,15 @@ public final class DisplayFile extends JFrame {
     int windowX;
     int windowY;
 
-    Path matchCaseIconPathDark = Paths.get(System.getProperty("user.dir"), "workfiles", "matchCase1.png");
-    Path matchCaseIconPathDim = Paths.get(System.getProperty("user.dir"), "workfiles", "matchCase2.png");
+    Path matchCaseIconPathDark = Paths.get(System.getProperty("user.dir"), "icons", "matchCase1.png");
+    Path matchCaseIconPathDim = Paths.get(System.getProperty("user.dir"), "icons", "matchCase2.png");
 
-    Path prevInactiveIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "prevInactive.png");
-    Path nextInactiveIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "nextInactive.png");
-    Path prevActiveIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "prevActive.png");
-    Path nextActiveIconPath = Paths.get(System.getProperty("user.dir"), "workfiles", "nextActive.png");
+    String matchCase;
+
+    Path prevInactiveIconPath = Paths.get(System.getProperty("user.dir"), "icons", "prevInactive.png");
+    Path nextInactiveIconPath = Paths.get(System.getProperty("user.dir"), "icons", "nextInactive.png");
+    Path prevActiveIconPath = Paths.get(System.getProperty("user.dir"), "icons", "prevActive.png");
+    Path nextActiveIconPath = Paths.get(System.getProperty("user.dir"), "icons", "nextActive.png");
 
     ImageIcon prevInactiveIcon = new ImageIcon(prevInactiveIconPath.toString());
     ImageIcon nextInactiveIcon = new ImageIcon(nextInactiveIconPath.toString());
@@ -254,6 +258,7 @@ public final class DisplayFile extends JFrame {
         }
 
         displayFont = properties.getProperty("DISPLAY_FONT");
+        matchCase = properties.getProperty("MATCH_CASE");
 
         fontComboBox.setPreferredSize(new Dimension(140, 20));
         fontComboBox.setMaximumSize(new Dimension(140, 20));
@@ -276,6 +281,7 @@ public final class DisplayFile extends JFrame {
         }
 
         fontSizeField.setText(fontSizeString);
+        fontSizeField.setToolTipText("Enter font size.");
         fontSizeField.setPreferredSize(new Dimension(30, 20));
         fontSizeField.setMaximumSize(new Dimension(30, 20));
 
@@ -315,10 +321,16 @@ public final class DisplayFile extends JFrame {
         matchCaseIconDark = new ImageIcon(matchCaseIconPathDark.toString());
         matchCaseIconDim = new ImageIcon(matchCaseIconPathDim.toString());
 
-        matchCaseButton = new JToggleButton();
-        matchCaseButton.setIcon(matchCaseIconDim);
-        matchCaseButton.setSelectedIcon(matchCaseIconDim);
-        matchCaseButton.setToolTipText("Case insensitive.");
+        if (matchCase.equals("CASE_INSENSITIVE")) {
+            matchCaseButton.setIcon(matchCaseIconDim);
+            matchCaseButton.setSelectedIcon(matchCaseIconDim);
+            matchCaseButton.setToolTipText("Case insensitive.");
+        } else {
+            matchCaseButton.setIcon(matchCaseIconDark);
+            matchCaseButton.setSelectedIcon(matchCaseIconDark);
+            matchCaseButton.setToolTipText("Match case.");
+        }
+
         matchCaseButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         matchCaseButton.setContentAreaFilled(false);
         matchCaseButton.setPreferredSize(new Dimension(20, 20));
@@ -329,6 +341,7 @@ public final class DisplayFile extends JFrame {
         findField.setPreferredSize(new Dimension(300, 20));
         findField.setMaximumSize(new Dimension(300, 20));
         findField.setToolTipText("Enter text to find.");
+
         // Set document listener for the search field
         findField.getDocument().addDocumentListener(highlightListener);
 
@@ -417,13 +430,26 @@ public final class DisplayFile extends JFrame {
         // ----------------------------
         matchCaseButton.addActionListener(ae -> {
             if (matchCaseButton.getSelectedIcon().equals(matchCaseIconDark)) {
+                matchCaseButton.setIcon(matchCaseIconDim);
                 matchCaseButton.setSelectedIcon(matchCaseIconDim);
                 matchCaseButton.setToolTipText("Case insensitive. Toggle Match case.");
+                matchCase = "CASE_INSENSITIVE";
             } else {
+                matchCaseButton.setIcon(matchCaseIconDark);
                 matchCaseButton.setSelectedIcon(matchCaseIconDark);
                 matchCaseButton.setToolTipText("Match case. Toggle Case insensitive.");
+                matchCase = "CASE_SENSITIVE";
             }
             changeHighlight();
+            try {
+                BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                // Save programming language into properties
+                properties.setProperty("MATCH_CASE", matchCase);
+                properties.store(outfile, PROP_COMMENT);
+                outfile.close();
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
         });
 
         // Select display font from the list in combo box - listener
@@ -545,8 +571,7 @@ public final class DisplayFile extends JFrame {
                         // Copy input byte to output byte
                         workBuffer[idx] = inputBuffer[idx];
                     }
-                    // Copy the printable part of the work array
-                    // to a new buffer that will be written out.
+                    // Copy the printable part of the work array to a new buffer that will be written out.
                     byte[] bufferToWrite = new byte[bytesRead];
                     // Copy bytes from the work buffer to the new buffer
                     for (int indx = 0; indx < bytesRead; indx++) {
@@ -623,9 +648,6 @@ public final class DisplayFile extends JFrame {
                 // Use PC charset parameter for conversion
                 List<String> list = Files.readAllLines(filePath, Charset.forName(pcCharset));
                 if (list != null) {
-                    // Concatenate all text lines from the list obtained from the file
-                    //String text = list.stream().reduce("", (a, b) -> a + b + NEW_LINE);
-                    //textArea.setText(text);
                     Object[] obj = (Object[]) list.stream().toArray();
                     for (int idx = 0; idx < obj.length; idx++) {
                         String text = obj[idx].toString();
@@ -644,9 +666,7 @@ public final class DisplayFile extends JFrame {
 
             // Display the window.
             setVisible(true);
-            row = "Info: PC file  " + pcPathString
-                    + "  is displayed using character set  "
-                    + pcCharset
+            row = "Info: PC file  " + pcPathString + "  is displayed using character set  " + pcCharset
                     + "  from the application parameter.";
             mainWindow.msgVector.add(row);
             mainWindow.showMessages(nodes);
@@ -779,7 +799,6 @@ public final class DisplayFile extends JFrame {
      */
     protected Pattern getPattern() {
         String pattern = findField.getText();
-
         if (Objects.isNull(pattern) || pattern.isEmpty()) {
             return null;
         }
@@ -804,7 +823,7 @@ public final class DisplayFile extends JFrame {
             int flags = matchCaseButton.getSelectedIcon().equals(matchCaseIconDark) ? 0
                     : Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
             return Pattern.compile(pattern, flags);
-        } catch (PatternSyntaxException ex) {
+        } catch (PatternSyntaxException exc) {
             findField.setBackground(WARNING_COLOR);
             return null;
         }
@@ -814,7 +833,7 @@ public final class DisplayFile extends JFrame {
      * Find all matches and highlight it YELLOW (highlightPainter),
      * then hihglight current match ORANGE for the text area.
      */
-    private void changeHighlight() {
+    protected void changeHighlight() {
         Highlighter highlighter = textArea.getHighlighter();
         highlighter.removeAllHighlights();
         findField.setBackground(Color.WHITE);

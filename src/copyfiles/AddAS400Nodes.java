@@ -7,14 +7,13 @@ package copyfiles;
 
 import com.ibm.as400.access.IFSFile;
 import java.awt.Cursor;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
 import javax.swing.SwingWorker;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
- *
- * @author vzupka
+ * This SwingWorker class adds nodes to the right tree.
+ * 
+ * @author Vladimír Župka 2017
  */
 public class AddAS400Nodes extends SwingWorker<String, String> {
 
