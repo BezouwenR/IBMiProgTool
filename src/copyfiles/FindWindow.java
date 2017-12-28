@@ -425,7 +425,7 @@ public class FindWindow extends JFrame {
             ArrayList<Integer> arrListStart = new ArrayList<>();
             ArrayList<Integer> arrListEnd = new ArrayList<>();
             Highlighter highlighter = editFile.textArea.getHighlighter();
-            highlighter.removeAllHighlights();
+//            highlighter.removeAllHighlights();
             try {
                 String text = editFile.textArea.getText();
                 String pattern = findField.getText();

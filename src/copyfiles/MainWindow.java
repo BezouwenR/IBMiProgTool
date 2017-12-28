@@ -694,6 +694,7 @@ public class MainWindow extends JFrame {
             diskLabelWin = new JLabel("");
             disksComboBoxWin = new JLabel("");
         }
+        disksComboBox.setToolTipText("List of root directories.");
 
         // Lay out components in panelTop
         panelTopLayout.setAutoCreateGaps(false);

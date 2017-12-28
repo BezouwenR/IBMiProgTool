@@ -82,6 +82,7 @@ import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
 import javax.swing.text.Highlighter.HighlightPainter;
 import javax.swing.text.JTextComponent;
+import javax.swing.text.LayeredHighlighter;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
@@ -696,16 +697,10 @@ public final class EditFile extends JFrame {
                 .addGap(0)
                 .addComponent(splitUnsplitButton)
                 .addGap(20)
-                //.addComponent(fontLabel)
                 .addComponent(fontComboBox)
                 .addComponent(fontSizeField)
                 .addGap(20)
-                //.addComponent(highlightBlocksLabel)
                 .addComponent(languageComboBox)
-                //.addGap(20)
-                //.addComponent(undoButton)
-                //.addGap(20)
-                //.addComponent(redoButton)
                 .addGap(40)
                 .addComponent(findButton)
                 .addGap(60)
@@ -713,13 +708,9 @@ public final class EditFile extends JFrame {
         );
         rowPanel2Layout.setVerticalGroup(rowPanel2Layout.createParallelGroup(GroupLayout.Alignment.CENTER)
                 .addComponent(splitUnsplitButton)
-                //.addComponent(fontLabel)
                 .addComponent(fontComboBox)
                 .addComponent(fontSizeField)
-                //.addComponent(highlightBlocksLabel)
                 .addComponent(languageComboBox)
-                //.addComponent(undoButton)
-                //.addComponent(redoButton)
                 .addComponent(findButton)
                 .addComponent(characterSetLabel)
         );
@@ -826,6 +817,11 @@ public final class EditFile extends JFrame {
             int currentCaretPos = textArea.getCaretPosition();
             JComboBox<String> source = (JComboBox) il.getSource();
             progLanguage = (String) source.getSelectedItem();
+            if (progLanguage.equals("*NONE")) {
+                blockHighlighter.removeAllHighlights();
+                changeHighlight();
+                changeHighlight2();
+            }
             try {
                 BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
                 // Save programming language into properties
@@ -883,7 +879,7 @@ public final class EditFile extends JFrame {
                         textArea2.setCaret(specialCaret2);
                     }
                 }
-                
+
                 prepareEditingAndShow();
                 textArea.requestFocusInWindow();
                 textArea.setCaretPosition(currentCaretPos);
@@ -1775,16 +1771,12 @@ public final class EditFile extends JFrame {
 
         // Get a highlighter for the primary text area
         blockHighlighter = textArea.getHighlighter();
-        // Remove all preceding highlights
-        blockHighlighter.removeAllHighlights();
         // Hightlight only if the option is not *NONE
         if (!progLanguage.equals("*NONE")) {
             highlightBlocks(textArea, progLanguage);
         }
         // Get a highlighter for the primary text area
         blockHighlighter = textArea2.getHighlighter();
-        // Remove all preceding highlights
-        blockHighlighter.removeAllHighlights();
         // Hightlight only if the option is not *NONE
         if (!progLanguage.equals("*NONE")) {
             highlightBlocks(textArea2, progLanguage);
@@ -1848,6 +1840,7 @@ public final class EditFile extends JFrame {
                 stmtsBeg.add("PERFORM");
                 // Conditions
                 stmtsBeg.add("IF");
+                stmtsBeg.add("IF ");
                 stmtsBeg.add("IF(");
                 stmtsBeg.add("ELSEIF");
                 stmtsBeg.add("ELSEIF(");
@@ -1914,9 +1907,11 @@ public final class EditFile extends JFrame {
                 stmtsBeg.add("FOR(");
                 // Conditions
                 stmtsBeg.add("IF");
+                stmtsBeg.add("IF ");
                 stmtsBeg.add("IF(");
                 stmtsBeg.add("ELSEIF");
                 stmtsBeg.add("ELSEIF(");
+                stmtsBeg.add("ELSE");
                 stmtsBeg.add("SELECT");
                 stmtsBeg.add("WHEN");
                 stmtsBeg.add("WHEN(");
@@ -1962,9 +1957,11 @@ public final class EditFile extends JFrame {
                 stmtsBeg.add("FOR(");
                 // Conditions
                 stmtsBeg.add("IF");
+                stmtsBeg.add("IF ");
                 stmtsBeg.add("IF(");
                 stmtsBeg.add("ELSEIF");
                 stmtsBeg.add("ELSEIF(");
+                stmtsBeg.add("ELSE");
                 stmtsBeg.add("SELECT");
                 stmtsBeg.add("WHEN");
                 stmtsBeg.add("WHEN(");
@@ -2005,8 +2002,7 @@ public final class EditFile extends JFrame {
                 stmtsBeg.add("DOU(");
                 // Conditions
                 stmtsBeg.add("IF");
-                stmtsBeg.add("IF(");
-                stmtsBeg.add("ELSEIF");
+                stmtsBeg.add("ELSE");
                 stmtsBeg.add("SELECT");
                 stmtsBeg.add("WHEN");
                 stmtsBeg.add("WHEN(");
@@ -2041,6 +2037,7 @@ public final class EditFile extends JFrame {
                 stmtsBeg.add("DOU");
                 // Conditions
                 stmtsBeg.add("IF");
+                stmtsBeg.add("ELSE");
                 stmtsBeg.add("SELEC");
                 stmtsBeg.add("CAS");
                 stmtsBeg.add("WH");
@@ -2197,6 +2194,7 @@ public final class EditFile extends JFrame {
     /**
      * Highlight block statements
      *
+     * @param textArea
      * @param blockStmt
      * @param beg
      */
@@ -2267,13 +2265,13 @@ public final class EditFile extends JFrame {
             // PERFORM in COBOL
             blockPainter = blockBlueLighter;
         } else if (beg && blockStmt.equals("IF ")) {
-            // IF in RPG, CL, C, C++
+            // IF in RPG, COBOL, CL, C, C++
             blockPainter = blockGreenLighter;
         } else if (beg && blockStmt.equals("IF(")) {
-            // IF( in RPG **FREE
+            // IF( in RPG **FREE and RPG /free
             blockPainter = blockGreenLighter;
-        } else if (beg && blockStmt.equals("IF ")) {
-            // IF in COBOL (with a space at the end)
+        } else if (beg && blockStmt.equals("IF")) {
+            // IF in RPG III and RPG IV
             blockPainter = blockGreenLighter;
         } else if (beg && blockStmt.equals("ELSEIF")) {
             // ELSEIF in RPG
@@ -2591,8 +2589,8 @@ public final class EditFile extends JFrame {
      * then hihglight current match ORANGE for PRIMARY text area.
      */
     protected void changeHighlight() {
-        Highlighter highlighter = textArea.getHighlighter();
-        highlighter.removeAllHighlights();
+        LayeredHighlighter layeredHighlighter = (LayeredHighlighter) textArea.getHighlighter();
+        layeredHighlighter.removeAllHighlights();
         findWindow.findField.setBackground(Color.WHITE);
         try {
             Pattern pattern = findWindow.getPattern();
@@ -2605,21 +2603,21 @@ public final class EditFile extends JFrame {
                 while (matcher.find(pos)) {
                     int start = matcher.start();
                     int end = matcher.end();
-                    highlighter.addHighlight(start, end, highlightPainter);
+                    layeredHighlighter.addHighlight(start, end, highlightPainter);
                     pos = end;
                 }
             }
             JLabel label = findWindow.layerUI.hint;
             startOffsets = new ArrayList<>();
             endOffsets = new ArrayList<>();
-            Highlighter.Highlight[] array = highlighter.getHighlights();
+            LayeredHighlighter.Highlight[] array = layeredHighlighter.getHighlights();
             int hits = array.length; // number of highlighted intervals found.
             highlightMap.clear();
             // Put all highlighted intervals into a map.
             for (int idx = 0; idx < hits; idx++) {
-                startOffsets.add(highlighter.getHighlights()[idx].getStartOffset());
-                endOffsets.add(highlighter.getHighlights()[idx].getEndOffset());
-                highlightMap.put(highlighter.getHighlights()[idx].getStartOffset(), highlighter.getHighlights()[idx].getEndOffset());
+                startOffsets.add(layeredHighlighter.getHighlights()[idx].getStartOffset());
+                endOffsets.add(layeredHighlighter.getHighlights()[idx].getEndOffset());
+                highlightMap.put(layeredHighlighter.getHighlights()[idx].getStartOffset(), layeredHighlighter.getHighlights()[idx].getEndOffset());
             }
             if (hits > 0) { // If at least one interval was found.
                 if (findWindow.direction.equals("forward")) {
@@ -2630,9 +2628,9 @@ public final class EditFile extends JFrame {
                     }
                     endOffset = highlightMap.get(startOffset);     // This interval's end
                     sequence = startOffsets.indexOf(startOffset);  // Sequence number of the interval
-                    Highlighter.Highlight hh = highlighter.getHighlights()[sequence];
-                    highlighter.removeHighlight(hh);
-                    highlighter.addHighlight(startOffset, endOffset, currentPainter);
+                    LayeredHighlighter.Highlight hh = layeredHighlighter.getHighlights()[sequence];
+                    layeredHighlighter.removeHighlight(hh);
+                    layeredHighlighter.addHighlight(startOffset, endOffset, currentPainter);
                     curPos = startOffset;
                     textArea.setCaretPosition(endOffset);
                 } else {
@@ -2643,9 +2641,9 @@ public final class EditFile extends JFrame {
                     }
                     endOffset = highlightMap.get(startOffset);
                     sequence = startOffsets.indexOf(startOffset);
-                    Highlighter.Highlight hh = highlighter.getHighlights()[sequence];
-                    highlighter.removeHighlight(hh);
-                    highlighter.addHighlight(startOffset, endOffset, currentPainter);
+                    LayeredHighlighter.Highlight hh = layeredHighlighter.getHighlights()[sequence];
+                    layeredHighlighter.removeHighlight(hh);
+                    layeredHighlighter.addHighlight(startOffset, endOffset, currentPainter);
                     curPos = startOffset;
                     textArea.setCaretPosition(startOffset);
                 }
@@ -2666,8 +2664,8 @@ public final class EditFile extends JFrame {
      * then hihglight current match ORANGE for SECONDARY text area.
      */
     protected void changeHighlight2() {
-        Highlighter highlighter2 = textArea2.getHighlighter();
-        highlighter2.removeAllHighlights();
+        LayeredHighlighter layeredHighlighter2 = (LayeredHighlighter)textArea2.getHighlighter();
+        layeredHighlighter2.removeAllHighlights();
         findWindow.findField.setBackground(Color.WHITE);
         try {
             Pattern pattern = findWindow.getPattern();
@@ -2680,7 +2678,7 @@ public final class EditFile extends JFrame {
                 while (matcher.find(pos)) {
                     int start = matcher.start();
                     int end = matcher.end();
-                    highlighter2.addHighlight(start, end, highlightPainter);
+                    layeredHighlighter2.addHighlight(start, end, highlightPainter);
                     pos = end;
                 }
             }
@@ -2688,13 +2686,13 @@ public final class EditFile extends JFrame {
             startOffsets = new ArrayList<>();
             endOffsets = new ArrayList<>();
 
-            Highlighter.Highlight[] array = highlighter2.getHighlights();
+            LayeredHighlighter.Highlight[] array = layeredHighlighter2.getHighlights();
             int hits = array.length;
             highlightMap.clear();
             for (int idx = 0; idx < hits; idx++) {
-                startOffsets.add(highlighter2.getHighlights()[idx].getStartOffset());
-                endOffsets.add(highlighter2.getHighlights()[idx].getEndOffset());
-                highlightMap.put(highlighter2.getHighlights()[idx].getStartOffset(), highlighter2.getHighlights()[idx].getEndOffset());
+                startOffsets.add(layeredHighlighter2.getHighlights()[idx].getStartOffset());
+                endOffsets.add(layeredHighlighter2.getHighlights()[idx].getEndOffset());
+                highlightMap.put(layeredHighlighter2.getHighlights()[idx].getStartOffset(), layeredHighlighter2.getHighlights()[idx].getEndOffset());
             }
             if (hits > 0) {
                 if (findWindow.direction.equals("forward")) {
@@ -2705,9 +2703,9 @@ public final class EditFile extends JFrame {
                     }
                     endOffset2 = highlightMap.get(startOffset2);
                     sequence2 = startOffsets.indexOf(startOffset2);
-                    Highlighter.Highlight hh = highlighter2.getHighlights()[sequence2];
-                    highlighter2.removeHighlight(hh);
-                    highlighter2.addHighlight(startOffset2, endOffset2, currentPainter);
+                    LayeredHighlighter.Highlight hh = layeredHighlighter2.getHighlights()[sequence2];
+                    layeredHighlighter2.removeHighlight(hh);
+                    layeredHighlighter2.addHighlight(startOffset2, endOffset2, currentPainter);
                     curPos2 = startOffset2;
                     textArea2.setCaretPosition(endOffset2);
                 } else {
@@ -2718,9 +2716,9 @@ public final class EditFile extends JFrame {
                     }
                     endOffset2 = highlightMap.get(startOffset2);
                     sequence2 = startOffsets.indexOf(startOffset2);
-                    Highlighter.Highlight hh = highlighter2.getHighlights()[sequence2];
-                    highlighter2.removeHighlight(hh);
-                    highlighter2.addHighlight(startOffset2, endOffset2, currentPainter);
+                    LayeredHighlighter.Highlight hh = layeredHighlighter2.getHighlights()[sequence2];
+                    layeredHighlighter2.removeHighlight(hh);
+                    layeredHighlighter2.addHighlight(startOffset2, endOffset2, currentPainter);
                     curPos2 = startOffset2;
                     textArea2.setCaretPosition(startOffset2);
                 }
@@ -2820,8 +2818,6 @@ public final class EditFile extends JFrame {
 
         // Get a highlighter for the primary text area
         blockHighlighter = textArea.getHighlighter();
-        // Remove all preceding highlights
-        blockHighlighter.removeAllHighlights();
         // Hightlight only if the option is not *NONE
         if (!progLanguage.equals("*NONE")) {
             highlightBlocks(textArea, progLanguage);
@@ -2829,8 +2825,6 @@ public final class EditFile extends JFrame {
 
         // Get a highlighter for the secondary text area
         blockHighlighter = textArea2.getHighlighter();
-        // Remove all preceding highlights
-        blockHighlighter.removeAllHighlights();
         // Hightlight only if the option is not *NONE
         if (!progLanguage.equals("*NONE")) {
             highlightBlocks(textArea2, progLanguage);
@@ -2894,8 +2888,6 @@ public final class EditFile extends JFrame {
         if (findWindow.findField.getText().isEmpty()) {
             // Get a highlighter for the secondary text area
             blockHighlighter = textArea.getHighlighter();
-            // Remove all preceding highlights
-            blockHighlighter.removeAllHighlights();
             // Hightlight only if the option is not *NONE
             if (!progLanguage.equals("*NONE")) {
                 highlightBlocks(textArea, progLanguage);
@@ -2939,7 +2931,7 @@ public final class EditFile extends JFrame {
             } else {
                 changeHighlight2();
             }
-            changeHighlight();
+            //changeHighlight();
         }
 
         @Override
@@ -3511,18 +3503,11 @@ public final class EditFile extends JFrame {
                         lineStart = tArea.getLineStartOffset(lineNbr);
                         caretPos = lineStart + offset;
                     }
-                    // Remove all preceding highlights
-                    blockHighlighter.removeAllHighlights();
+                    // Get a highlighter for the secondary text area
+                    blockHighlighter = tArea.getHighlighter();
                     // Hightlight only if the option is not *NONE
                     if (!progLanguage.equals("*NONE")) {
-                        // Get a highlighter for the secondary text area
-                        blockHighlighter = tArea.getHighlighter();
-                        // Remove all preceding highlights
-                        blockHighlighter.removeAllHighlights();
-                        // Hightlight only if the option is not *NONE
-                        if (!progLanguage.equals("*NONE")) {
-                            highlightBlocks(tArea, progLanguage);
-                        }
+                        highlightBlocks(tArea, progLanguage);
                     }
                 } catch (Exception exc) {
                     exc.printStackTrace();
@@ -3595,18 +3580,11 @@ public final class EditFile extends JFrame {
                     tArea.setCaretPosition(startSel0);
                     selectionStarts.clear();
 
-                    // Remove all preceding highlights
-                    blockHighlighter.removeAllHighlights();
+                    // Get a highlighter for the secondary text area
+                    blockHighlighter = tArea.getHighlighter();
                     // Hightlight only if the option is not *NONE
                     if (!progLanguage.equals("*NONE")) {
-                        // Get a highlighter for the secondary text area
-                        blockHighlighter = tArea.getHighlighter();
-                        // Remove all preceding highlights
-                        blockHighlighter.removeAllHighlights();
-                        // Hightlight only if the option is not *NONE
-                        if (!progLanguage.equals("*NONE")) {
-                            highlightBlocks(tArea, progLanguage);
-                        }
+                        highlightBlocks(tArea, progLanguage);
                     }
                 } catch (Exception exc) {
                     exc.printStackTrace();
@@ -3758,7 +3736,7 @@ public final class EditFile extends JFrame {
             selectionStarts.clear();
             selectionEnds.clear();
 
-            getComponent().getHighlighter().removeAllHighlights();
+//            getComponent().getHighlighter().removeAllHighlights();
             int y = start.y;
             int firstX = start.x;
             int lastX = end.x;
@@ -3897,7 +3875,7 @@ public final class EditFile extends JFrame {
             selectionStarts.clear();
             selectionEnds.clear();
 
-            getComponent().getHighlighter().removeAllHighlights();
+//            getComponent().getHighlighter().removeAllHighlights();
             int y = start.y;
             int firstX = start.x;
             int lastX = end.x;
@@ -4108,15 +4086,10 @@ public final class EditFile extends JFrame {
             changeHighlight();
 
             // Highlight blocks if no pattern is in the findField
-            if (findWindow.findField.getText().isEmpty()) {
-                // Get a highlighter for the primary text area
-                blockHighlighter = textArea.getHighlighter();
-                // Remove all preceding highlights
-                blockHighlighter.removeAllHighlights();
-                // Hightlight only if the option is not *NONE
-                if (!progLanguage.equals("*NONE")) {
-                    highlightBlocks(textArea, progLanguage);
-                }
+            blockHighlighter = textArea.getHighlighter();
+            // Hightlight only if the option is not *NONE
+            if (!progLanguage.equals("*NONE")) {
+                highlightBlocks(textArea, progLanguage);
             }
         }
     }
@@ -4136,16 +4109,12 @@ public final class EditFile extends JFrame {
             changeHighlight2();
 
             // Highlight blocks if no pattern is in the findField
-            if (findWindow.findField.getText().isEmpty()) {
-                // Get a highlighter for the secondary text area
-                blockHighlighter = textArea2.getHighlighter();
-                // Remove all preceding highlights
-                blockHighlighter.removeAllHighlights();
-                // Hightlight only if the option is not *NONE
-                if (!progLanguage.equals("*NONE")) {
-                    highlightBlocks(textArea2, progLanguage);
-                }
+            blockHighlighter = textArea2.getHighlighter();
+            // Hightlight only if the option is not *NONE
+            if (!progLanguage.equals("*NONE")) {
+                highlightBlocks(textArea2, progLanguage);
             }
+//            }
         }
     }
 
