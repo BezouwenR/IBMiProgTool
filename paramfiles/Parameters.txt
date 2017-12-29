@@ -1,11 +1,11 @@
 #Copy files between IBM i and PC, edit and compile.
-#Thu Dec 28 12:57:35 CET 2017
+#Fri Dec 29 16:52:09 CET 2017
 DISPLAY_FONT_SIZE=12
 OVERWRITE_FILE=
 CARET=Short caret
 PC_CHARSET=UTF-8
 RIGHT_PATH=/
-LEFT_PATH=/Users/vzupka/Moje dokumenty/Zdroje z ASSIST
+LEFT_PATH=/
 AUTHOR=© Vladimír Župka, 2017 
 USERNAME=VZUPKA
 EDITOR_FONT=Monospaced

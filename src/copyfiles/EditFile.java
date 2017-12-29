@@ -2619,10 +2619,16 @@ public final class EditFile extends JFrame {
                 endOffsets.add(layeredHighlighter.getHighlights()[idx].getEndOffset());
                 highlightMap.put(layeredHighlighter.getHighlights()[idx].getStartOffset(), layeredHighlighter.getHighlights()[idx].getEndOffset());
             }
+
             if (hits > 0) { // If at least one interval was found.
+
                 if (findWindow.direction.equals("forward")) {
                     // Forward direction
-                    startOffset = highlightMap.ceilingKey(curPos); // Get next interval start - greater or equal
+                    if (curPos == null) {
+                        startOffset = null;
+                    } else {
+                        startOffset = highlightMap.ceilingKey(curPos); // Get next interval start - greater or equal
+                    }
                     if (startOffset == null) {
                         startOffset = highlightMap.firstKey(); // First interval
                     }
@@ -2635,7 +2641,11 @@ public final class EditFile extends JFrame {
                     textArea.setCaretPosition(endOffset);
                 } else {
                     // Backward direction
-                    startOffset = highlightMap.floorKey(curPos);
+                    if (curPos == null) {
+                        startOffset = null;
+                    } else {
+                        startOffset = highlightMap.floorKey(curPos); // Get previous interval start - less or equal
+                    }
                     if (startOffset == null) {
                         startOffset = highlightMap.lastKey(); // Last interval
                     }
@@ -2648,6 +2658,7 @@ public final class EditFile extends JFrame {
                     textArea.setCaretPosition(startOffset);
                 }
             }
+
             if (hits > 0) {
                 label.setText(String.format("%02d / %02d%n", sequence + 1, hits));
             } else {
@@ -2664,7 +2675,7 @@ public final class EditFile extends JFrame {
      * then hihglight current match ORANGE for SECONDARY text area.
      */
     protected void changeHighlight2() {
-        LayeredHighlighter layeredHighlighter2 = (LayeredHighlighter)textArea2.getHighlighter();
+        LayeredHighlighter layeredHighlighter2 = (LayeredHighlighter) textArea2.getHighlighter();
         layeredHighlighter2.removeAllHighlights();
         findWindow.findField.setBackground(Color.WHITE);
         try {
@@ -2697,7 +2708,11 @@ public final class EditFile extends JFrame {
             if (hits > 0) {
                 if (findWindow.direction.equals("forward")) {
                     // Forward direction
-                    startOffset2 = highlightMap.ceilingKey(curPos2);
+                    if (curPos2 == null) {
+                        startOffset2 = null;
+                    } else {
+                        startOffset2 = highlightMap.ceilingKey(curPos2); // Get next interval start - greater or equal
+                    }
                     if (startOffset2 == null) {
                         startOffset2 = highlightMap.ceilingKey(0);
                     }
@@ -2710,7 +2725,11 @@ public final class EditFile extends JFrame {
                     textArea2.setCaretPosition(endOffset2);
                 } else {
                     // Backward direction
-                    startOffset2 = highlightMap.lowerKey(curPos2);
+                    if (curPos2 == null) {
+                        startOffset2 = null;
+                    } else {
+                        startOffset2 = highlightMap.lowerKey(curPos2); // Get previous interval start - less or equal
+                    }
                     if (startOffset2 == null) {
                         startOffset2 = highlightMap.lastKey();
                     }
