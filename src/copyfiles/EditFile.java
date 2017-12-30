@@ -2967,7 +2967,6 @@ public final class EditFile extends JFrame {
             } else {
                 changeHighlight2();
             }
-            //changeHighlight();
         }
 
         @Override
@@ -3320,7 +3319,6 @@ public final class EditFile extends JFrame {
                     String selectedText = tArea.getText(startSel, endSel - startSel);
                     // Process non-empty lines, empty lines are skipped.
                     if (!selectedText.isEmpty()) {
-                        //tArea.insert(" ", endSel); // Insert a space at the end of row selection.
                         // Insert a space plus selected text at the selection start.
                         tArea.replaceRange(" " + selectedText, startSel, endSel + 1);
                         //tArea.select(startSel + 1, endSel + 1);
