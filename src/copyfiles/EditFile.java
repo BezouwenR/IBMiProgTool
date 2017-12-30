@@ -70,6 +70,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.ListCellRenderer;
+import javax.swing.border.Border;
 import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -108,52 +109,54 @@ public final class EditFile extends JFrame {
 
     WindowEditFileAdapter windowEditFileListener;
 
-    final Color VERY_LIGHT_BLUE = Color.getHSBColor(0.60f, 0.020f, 0.99f);
-    final Color VERY_LIGHT_GREEN = Color.getHSBColor(0.52f, 0.020f, 0.99f);
-    final Color VERY_LIGHT_PINK = Color.getHSBColor(0.025f, 0.008f, 0.99f);
+    static Color originalButtonColor;
 
-    final Color WARNING_COLOR = new Color(255, 200, 200);
-    final Color DIM_BLUE = Color.getHSBColor(0.60f, 0.2f, 0.5f); // blue little saturated dim (gray)
-    final Color DIM_RED = Color.getHSBColor(0.00f, 0.2f, 0.98f); // red little saturated bright
-    final Color VERY_LIGHT_GRAY = Color.getHSBColor(0.50f, 0.01f, 0.90f);
+    static final Color VERY_LIGHT_BLUE = Color.getHSBColor(0.60f, 0.020f, 0.99f);
+    static final Color VERY_LIGHT_GREEN = Color.getHSBColor(0.52f, 0.020f, 0.99f);
+    static final Color VERY_LIGHT_PINK = Color.getHSBColor(0.025f, 0.008f, 0.99f);
+
+    static final Color WARNING_COLOR = new Color(255, 200, 200);
+    static final Color DIM_BLUE = Color.getHSBColor(0.60f, 0.2f, 0.5f); // blue little saturated dim (gray)
+    static final Color DIM_RED = Color.getHSBColor(0.00f, 0.2f, 0.98f); // red little saturated bright
+    static final Color VERY_LIGHT_GRAY = Color.getHSBColor(0.50f, 0.01f, 0.90f);
 
     HighlightPainter currentPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.ORANGE);
     HighlightPainter highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
     Highlighter blockHighlighter;
 
-    final Color BLUE_DARKER = Color.getHSBColor(0.60f, 0.20f, 0.95f);
+    static final Color BLUE_DARKER = Color.getHSBColor(0.60f, 0.20f, 0.95f);
     HighlightPainter blockBlueDarker = new DefaultHighlighter.DefaultHighlightPainter(BLUE_DARKER);
-    final Color BLUE_LIGHTER = Color.getHSBColor(0.60f, 0.15f, 0.998f);
+    static final Color BLUE_LIGHTER = Color.getHSBColor(0.60f, 0.15f, 0.998f);
     HighlightPainter blockBlueLighter = new DefaultHighlighter.DefaultHighlightPainter(BLUE_LIGHTER);
 
-    final Color GREEN_DARKER = Color.getHSBColor(0.35f, 0.15f, 0.90f);
+    static final Color GREEN_DARKER = Color.getHSBColor(0.35f, 0.15f, 0.90f);
     HighlightPainter blockGreenDarker = new DefaultHighlighter.DefaultHighlightPainter(GREEN_DARKER);
-    final Color GREEN_LIGHTER = Color.getHSBColor(0.35f, 0.10f, 0.98f);
+    static final Color GREEN_LIGHTER = Color.getHSBColor(0.35f, 0.10f, 0.98f);
     HighlightPainter blockGreenLighter = new DefaultHighlighter.DefaultHighlightPainter(GREEN_LIGHTER);
 
-    final Color RED_DARKER = Color.getHSBColor(0.95f, 0.12f, 0.92f);
+    static final Color RED_DARKER = Color.getHSBColor(0.95f, 0.12f, 0.92f);
     HighlightPainter blockRedDarker = new DefaultHighlighter.DefaultHighlightPainter(RED_DARKER);
-    final Color RED_LIGHTER = Color.getHSBColor(0.95f, 0.09f, 0.98f);
+    static final Color RED_LIGHTER = Color.getHSBColor(0.95f, 0.09f, 0.98f);
     HighlightPainter blockRedLighter = new DefaultHighlighter.DefaultHighlightPainter(RED_LIGHTER);
 
-    final Color YELLOW_DARKER = Color.getHSBColor(0.20f, 0.15f, 0.90f);
+    static final Color YELLOW_DARKER = Color.getHSBColor(0.20f, 0.15f, 0.90f);
     HighlightPainter blockYellowDarker = new DefaultHighlighter.DefaultHighlightPainter(YELLOW_DARKER);
-    final Color YELLOW_LIGHTER = Color.getHSBColor(0.20f, 0.15f, 0.96f);
+    static final Color YELLOW_LIGHTER = Color.getHSBColor(0.20f, 0.15f, 0.96f);
     HighlightPainter blockYellowLighter = new DefaultHighlighter.DefaultHighlightPainter(YELLOW_LIGHTER);
 
-    final Color BROWN_DARKER = Color.getHSBColor(0.13f, 0.15f, 0.86f);
+    static final Color BROWN_DARKER = Color.getHSBColor(0.13f, 0.15f, 0.86f);
     HighlightPainter blockBrownDarker = new DefaultHighlighter.DefaultHighlightPainter(BROWN_DARKER);
-    final Color BROWN_LIGHTER = Color.getHSBColor(0.13f, 0.15f, 0.92f);
+    static final Color BROWN_LIGHTER = Color.getHSBColor(0.13f, 0.15f, 0.92f);
     HighlightPainter blockBrownLighter = new DefaultHighlighter.DefaultHighlightPainter(BROWN_LIGHTER);
 
-    final Color GRAY_DARKER = Color.getHSBColor(0.25f, 0.015f, 0.82f);
+    static final Color GRAY_DARKER = Color.getHSBColor(0.25f, 0.015f, 0.82f);
     HighlightPainter blockGrayDarker = new DefaultHighlighter.DefaultHighlightPainter(GRAY_DARKER);
-    final Color GRAY_LIGHTER = Color.getHSBColor(0.25f, 0.015f, 0.88f);
+    static final Color GRAY_LIGHTER = Color.getHSBColor(0.25f, 0.015f, 0.88f);
     HighlightPainter blockGrayLighter = new DefaultHighlighter.DefaultHighlightPainter(GRAY_LIGHTER);
 
-    final Color CURLY_BRACKETS_DARKER = Color.getHSBColor(0.25f, 0.020f, 0.75f);
+    static final Color CURLY_BRACKETS_DARKER = Color.getHSBColor(0.25f, 0.020f, 0.75f);
     HighlightPainter curlyBracketsDarker = new DefaultHighlighter.DefaultHighlightPainter(CURLY_BRACKETS_DARKER);
-    final Color CURLY_BRACKETS_LIGHTER = Color.getHSBColor(0.25f, 0.020f, 0.86f);
+    static final Color CURLY_BRACKETS_LIGHTER = Color.getHSBColor(0.25f, 0.020f, 0.86f);
     HighlightPainter curlyBracketsLighter = new DefaultHighlighter.DefaultHighlightPainter(CURLY_BRACKETS_LIGHTER);
 
     // Block painter
@@ -176,7 +179,7 @@ public final class EditFile extends JFrame {
 
     FindWindow findWindow;
 
-    JButton saveButton = new JButton("Save");
+    static JButton saveButton = new JButton("Save");
 
     JButton undoButton = new JButton("Undo");
     JButton redoButton = new JButton("Redo");
@@ -344,6 +347,8 @@ public final class EditFile extends JFrame {
 
     String operatingSystem;
 
+    static boolean textChanged;
+
     /**
      * Constructor
      *
@@ -481,12 +486,18 @@ public final class EditFile extends JFrame {
 
         windowX = screenWidth / 2 - windowWidth / 2;
         windowY = 0;
+        
+        originalButtonColor = new JButton().getBackground();
 
-        saveButton.setPreferredSize(new Dimension(60, 20));
-        saveButton.setMinimumSize(new Dimension(60, 20));
-        saveButton.setMaximumSize(new Dimension(60, 20));
+        saveButton.setPreferredSize(new Dimension(80, 20));
+        saveButton.setMinimumSize(new Dimension(80, 20));
+        saveButton.setMaximumSize(new Dimension(80, 20));
         saveButton.setToolTipText("Also Ctrl+S (Cmd+S in macOS).");
+        saveButton.setFont(saveButton.getFont().deriveFont(Font.BOLD, 12));
 
+        textChanged = false;
+        checkTextChanged();
+        
         undoButton.setPreferredSize(new Dimension(60, 20));
         undoButton.setMinimumSize(new Dimension(60, 20));
         undoButton.setMaximumSize(new Dimension(60, 20));
@@ -511,8 +522,12 @@ public final class EditFile extends JFrame {
         compileButton.setPreferredSize(new Dimension(80, 20));
         compileButton.setMinimumSize(new Dimension(80, 20));
         compileButton.setMaximumSize(new Dimension(80, 20));
-        compileButton.setFont(new Font("SansSerif", Font.BOLD, 12));
+        compileButton.setFont(compileButton.getFont().deriveFont(Font.BOLD, 12));
         compileButton.setToolTipText("Open window with compile settings.");
+        compileButton.setContentAreaFilled(true);
+        compileButton.setOpaque(true);
+        compileButton.setBorderPainted(true);
+        compileButton.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
 
         fontComboBox.setPreferredSize(new Dimension(140, 20));
         fontComboBox.setMaximumSize(new Dimension(140, 20));
@@ -743,6 +758,8 @@ public final class EditFile extends JFrame {
 
         // Register listeners
         // ==================
+        TextAreaInitDocListener textAreaInitDocListener = new TextAreaInitDocListener();
+        textArea.getDocument().addDocumentListener(textAreaInitDocListener);
 
         // Listener for undoable edits
         textArea.getDocument().addUndoableEditListener(undoHandler);
@@ -2758,7 +2775,7 @@ public final class EditFile extends JFrame {
      */
     protected void splitTextArea() {
 
-        // Initially, the document listener is set for primary text area.
+        // Initially, the document listener for the primary text area is not set.
 
         // Copy text from the primary to the secondary text area
         textArea2.setText(textArea.getText());
@@ -3054,6 +3071,10 @@ public final class EditFile extends JFrame {
             // Save edited data from text area back to the member
             caretPosition = textArea.getCaretPosition();
             rewriteFile();
+            
+            textChanged = false;
+            checkTextChanged();
+
             textArea.setCaretPosition(caretPosition);
             textArea.requestFocus();
         }
@@ -3094,14 +3115,14 @@ public final class EditFile extends JFrame {
                 if (mainWindow.compile == null) {
                     mainWindow.compile = new Compile(remoteServer, mainWindow, filePathString, false);
                 }
-                // "false" means NOT IFS file (it is a source member)
+                // "false" means NOT IFS file. (It is a source member.)
                 mainWindow.compile.compile(filePathString, false);
 
             } else {
                 if (mainWindow.compile == null) {
                     mainWindow.compile = new Compile(remoteServer, mainWindow, filePathString, true);
                 }
-                // "true" means IFS file
+                // "true" means IFS file.
                 mainWindow.compile.compile(filePathString, true);
             }
         }
@@ -4025,6 +4046,47 @@ public final class EditFile extends JFrame {
     }
 
     /**
+     * Check if text was changed; if so, color Save button light red,
+     * if not, color Save button gray (original button color).
+     */
+    protected static void checkTextChanged() {
+        if (textChanged) {
+            saveButton.setBackground(RED_LIGHTER);
+            saveButton.setText("Save!");
+        saveButton.setToolTipText("Save text before compiling.");
+        } else {
+            saveButton.setBackground(originalButtonColor);
+            saveButton.setText("Save");
+        }
+        saveButton.setContentAreaFilled(true);
+        saveButton.setOpaque(true);
+        saveButton.setBorderPainted(true);
+        saveButton.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+    }
+
+    /**
+     * Initial document listener for primary text area.
+     */
+    class TextAreaInitDocListener implements DocumentListener {
+
+        @Override
+        public void changedUpdate(DocumentEvent de) {
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent de) {
+            textChanged = true;
+            checkTextChanged();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent de) {
+            textChanged = true;
+            checkTextChanged();
+        }
+    }
+
+    /**
      * Document listener for primary text area.
      */
     class TextAreaDocListener implements DocumentListener {
@@ -4035,6 +4097,9 @@ public final class EditFile extends JFrame {
 
         @Override
         public void insertUpdate(DocumentEvent de) {
+            textChanged = true;
+            checkTextChanged();
+
             textArea2.getDocument().removeDocumentListener(textArea2DocListener);
             int offset = de.getOffset();
             int length = de.getLength();
@@ -4047,6 +4112,9 @@ public final class EditFile extends JFrame {
 
         @Override
         public void removeUpdate(DocumentEvent de) {
+            textChanged = true;
+            checkTextChanged();
+
             textArea2.getDocument().removeDocumentListener(textArea2DocListener);
             int offset = de.getOffset();
             int length = de.getLength();
@@ -4068,6 +4136,9 @@ public final class EditFile extends JFrame {
 
         @Override
         public void insertUpdate(DocumentEvent de) {
+            textChanged = true;
+            checkTextChanged();
+
             textArea.getDocument().removeDocumentListener(textAreaDocListener);
             int offset = de.getOffset();
             int length = de.getLength();
@@ -4080,6 +4151,9 @@ public final class EditFile extends JFrame {
 
         @Override
         public void removeUpdate(DocumentEvent de) {
+            textChanged = true;
+            checkTextChanged();
+
             textArea.getDocument().removeDocumentListener(textAreaDocListener);
             int offset = de.getOffset();
             int length = de.getLength();

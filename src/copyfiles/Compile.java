@@ -66,7 +66,7 @@ public class Compile extends JFrame {
     final Color DIM_PINK = new Color(170, 58, 128);
 
     // Path to UserLibraryList.lib file
-    Path libraryListPath = Paths.get(System.getProperty("user.dir"), "workfiles","UserLibraryList.lib");
+    Path libraryListPath = Paths.get(System.getProperty("user.dir"), "workfiles", "UserLibraryList.lib");
     // Path to CurrentLibrary.lib file
     Path currentLibraryPath = Paths.get(System.getProperty("user.dir"), "workfiles", "CurrentLibrary.lib");
     // Path to SourceFileAttributes.lib file
@@ -346,7 +346,7 @@ public class Compile extends JFrame {
         sourceTypeComboBox.setMinimumSize(new Dimension(100, 20));
         sourceTypeComboBox.setMaximumSize(new Dimension(100, 20));
         sourceTypeComboBox.setEditable(true);
-        
+
         // Get application parameters from "Parameters.txt" file.
         getAppProperties();
 
@@ -397,7 +397,7 @@ public class Compile extends JFrame {
                         .addGap(5)
                         .addComponent(compileCommandLabel)
                         .addComponent(compileCommandsComboBox)
-                        .addGap(5)                        
+                        .addGap(5)
                         .addComponent(sourceAttributesButton)
                         .addComponent(clearSrcAttribButton)
                         .addGap(10)
@@ -448,7 +448,7 @@ public class Compile extends JFrame {
         editButton.setToolTipText("Edit the file to be compiled.");
         jobLogButton.setToolTipText("Print actual contents of job log.");
         clearButton.setToolTipText("Delete all messages from the message area.");
-        
+
         // Set result object library and object name.
         getObjectNames();
 
@@ -517,7 +517,7 @@ public class Compile extends JFrame {
                 return component;
             }
         });
-        
+
         // Build list of messages
         buildMessageList();
 
@@ -728,6 +728,7 @@ public class Compile extends JFrame {
      */
 
     public void compile(String pathString, boolean ifs) {
+
         super.setTitle("Compile  '" + pathString + "'");
 
         this.pathString = pathString;
@@ -754,7 +755,6 @@ public class Compile extends JFrame {
             ArrayList<String> commandNames = getSourceFileAttributes(sourceType);
             // Get default (first) command name
             compileCommandName = commandNames.get(0);
-            System.out.println("srcType ORIG: " + sourceType);
             setCommandNames(sourceType);
             compileCommandsComboBox.setSelectedItem(compileCommandName);
         }
@@ -826,60 +826,43 @@ public class Compile extends JFrame {
             if (!items.isEmpty()) {
                 // Read all pairs (<file-path>, <source-type, command-name>) from the file and write them in a map.
                 for (String item : items) {
-                    System.out.println("ITEM U0:       " + item);
                     String filePath = item.substring(0, item.indexOf(","));
                     pair = item.substring(item.indexOf(",") + 1);
-                    System.out.println("pair U0: " + pair);
                     compileCommandsMap.put(filePath, pair); // Adds or updates the pair.
-                    System.out.println("compileCommandsMap U0: " + compileCommandsMap);
                 }
             }
             if (compileCommandsMap.containsKey(pathString)) {
-                System.out.println("ITEM FOUND:   " + pathString + "," + compileCommandsMap.get(pathString));
                 // Item for pathString was found
                 pair = compileCommandsMap.get(pathString);
                 if (whenCalled.equals("compile")) {
-                    System.out.println("  *****" + whenCalled + "*****");
                     srcType = pair.substring(0, pair.indexOf(","));
                     cmdName = pair.substring(pair.indexOf(",") + 1);
                     pair = srcType + "," + cmdName;
-                    System.out.println("srcType U1: " + srcType);
                     compileCommandsMap.put(pathString, pair);
                     compileCommandsComboBox.setSelectedItem(cmdName);
                 } else if (whenCalled.equals("sourceType")) {
-                    System.out.println("  *****" + whenCalled + "*****");
                     srcType = (String) sourceTypeComboBox.getSelectedItem();
                     setCommandNames(srcType);
                     cmdName = compileCommands.get(0);
                     pair = srcType + "," + cmdName;
-                    System.out.println("srcType U2: " + srcType);
                     compileCommandsMap.put(pathString, pair);
                     compileCommandsComboBox.setSelectedItem(cmdName);
                 } else if (whenCalled.equals("commands")) {
-                    System.out.println("  *****" + whenCalled + "*****");
                     srcType = pair.substring(0, pair.indexOf(","));
                     cmdName = compileCommandName;
                     pair = srcType + "," + cmdName;
-                    System.out.println("srcType U3: " + srcType);
-                    System.out.println("cmdName U3: " + cmdName);
-                    System.out.println("pair U3: " + pair);
                     compileCommandsMap.put(pathString, pair);
                     compileCommandsComboBox.setSelectedItem(cmdName);
                 }
             } else {
                 // Item for pathString was NOT found
-                System.out.println("  *****" + whenCalled + "*****");
-                System.out.println("ITEM NOT Found: " + pathString + "," + compileCommandsMap.get(pathString));
                 srcType = setDefaultSourceType();
                 ArrayList<String> commandNames = getSourceFileAttributes(srcType);
                 // Get default (first) command name
                 cmdName = commandNames.get(0);
-                System.out.println("srcType UNF: " + srcType);
                 setCommandNames(srcType);
                 //cmdName = (String) compileCommandsComboBox.getSelectedItem();
-                System.out.println("cmdName UNF: " + cmdName);
                 pair = srcType + "," + cmdName;
-                System.out.println("pair UNF: " + pair);
 
                 compileCommandsMap.put(pathString, pair);
                 compileCommandsComboBox.setSelectedItem(cmdName);
@@ -891,10 +874,7 @@ public class Compile extends JFrame {
             if (!compileCommandsMap.isEmpty()) {
                 String filePath = compileCommandsMap.firstKey();
                 while (filePath != null) {
-                    System.out.println("compileCommandsMap UK: " + compileCommandsMap);
-                    System.out.println("filePath UK: " + filePath);
                     pair2 = compileCommandsMap.get(filePath);
-                    System.out.println("pair UK: " + pair2);
                     compileCommandsArr.add(filePath + "," + pair2);
                     filePath = compileCommandsMap.higherKey(filePath);
                 }
@@ -904,7 +884,6 @@ public class Compile extends JFrame {
         } catch (Exception ioe) {
             ioe.printStackTrace();
         }
-        System.out.println("pair U4: " + pair);
         return pair;
     }
 
@@ -931,11 +910,9 @@ public class Compile extends JFrame {
     protected void setCommandNames(String sourceType) {
         // Default values of command names for given sourceType.
         // Set predefined commands (one or more) corresponing to the source type to the command combo box.
-        System.out.println("compileCommandsComboBox.getItemCount() N: " + compileCommandsComboBox.getItemCount());
         compileCommands = getSourceFileAttributes(sourceType);
         compileCommandsComboBox.removeAllItems();
         for (int idx = 0; idx < compileCommands.size(); idx++) {
-            System.out.println("setCmdNames N: " + compileCommands.get(idx));
             compileCommandsComboBox.addItem(compileCommands.get(idx));
         }
         compileCommandsComboBox.setSelectedItem(compileCommands.get(0));
@@ -950,13 +927,10 @@ public class Compile extends JFrame {
     protected ArrayList<String> getSourceFileAttributes(String sourceType) {
         ArrayList<String> commandNamesArrayList;
         commandNamesArrayList = sourceTypesAndCommands.get(sourceType);
-        System.out.println("getSourceFileAttributes arrList: " + commandNamesArrayList);
         if (commandNamesArrayList == null) {
             commandNamesArrayList = new ArrayList<>();
             commandNamesArrayList.add("CRTCLPGM");
         }
-//        String[] compileCommandNames = new String[commandNamesArrayList.size()];
-//        compileCommandNames = (String[]) commandNamesArrayList.toArray(compileCommandNames);
         return commandNamesArrayList;
     }
 
@@ -1204,29 +1178,11 @@ public class Compile extends JFrame {
             Job currentJob = new Job();
             currentJob = cmdCall.getServerJob();
 
-            /*
-          * System.out.println(currentJob.getUser());
-          * System.out.println(currentJob.getName());
-          * System.out.println(currentJob.getNumber());
-          * System.out.println(currentJob.getLoggingLevel());
-          * System.out.println(currentJob.getLoggingCLPrograms());
-          * System.out.println(currentJob.getLoggingSeverity());
-          * System.out.println(currentJob.getLoggingText());
-             */
             // Set job attributes
             currentJob.setLoggingLevel(4);
             currentJob.setLoggingCLPrograms("*YES");
             currentJob.setLoggingSeverity(0);
             currentJob.setLoggingText(Job.LOGGING_TEXT_SECLVL);
-            /*
-          * System.out.println(currentJob.getUser());
-          * System.out.println(currentJob.getName());
-          * System.out.println(currentJob.getNumber());
-          * System.out.println(currentJob.getLoggingLevel());
-          * System.out.println(currentJob.getLoggingCLPrograms());
-          * System.out.println(currentJob.getLoggingSeverity());
-          * System.out.println(currentJob.getLoggingText());
-             */
 
             // Get library list from the file "UserLibraryList.lib"
             String liblParameter = "";
@@ -1351,7 +1307,6 @@ public class Compile extends JFrame {
                 exc.printStackTrace();
             }
         }
-        //System.out.println("libraryNameVector: " + libraryNameVector);
 
         String[] libraryArray = new String[libraryNameVector.size()];
         libraryArray = libraryNameVector.toArray(libraryArray);
@@ -1445,7 +1400,6 @@ public class Compile extends JFrame {
             compileCommandsComboBox.removeActionListener(commandsComboBoxListener);
 
             String sourceType = (String) sourceTypeComboBox.getSelectedItem();
-            System.out.println("sourceType S        : " + sourceType);
 
             if (sourceTypes.indexOf(sourceType) == -1) {
                 sourceType = getDefaultSourceType(pathString);
@@ -1456,7 +1410,6 @@ public class Compile extends JFrame {
 
             setCommandNames(sourceType);
             ArrayList<String> commandNames = getSourceFileAttributes(sourceType);
-            System.out.println("commandNames S: " + commandNames);
             compileCommandName = commandNames.get(0);
             compileCommandsComboBox.setSelectedIndex(0);
 
@@ -1496,8 +1449,6 @@ public class Compile extends JFrame {
             compileCommandsComboBox.removeActionListener(commandsComboBoxListener);
             compileCommandName = (String) compileCommandsComboBox.getSelectedItem();
             sourceType = (String) sourceTypeComboBox.getSelectedItem();
-            System.out.println("sourceType A        : " + sourceType);
-            System.out.println("compileCommandName A: " + compileCommandName);
 
             if (sourceAttributes.equals("SAVE_SOURCE_ATTRIBUTES")) {
                 updateModifiedAttributes("commands");
