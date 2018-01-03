@@ -486,7 +486,7 @@ public final class EditFile extends JFrame {
 
         windowX = screenWidth / 2 - windowWidth / 2;
         windowY = 0;
-        
+
         originalButtonColor = new JButton().getBackground();
 
         saveButton.setPreferredSize(new Dimension(80, 20));
@@ -497,7 +497,7 @@ public final class EditFile extends JFrame {
 
         textChanged = false;
         checkTextChanged();
-        
+
         undoButton.setPreferredSize(new Dimension(60, 20));
         undoButton.setMinimumSize(new Dimension(60, 20));
         undoButton.setMaximumSize(new Dimension(60, 20));
@@ -1453,9 +1453,8 @@ public final class EditFile extends JFrame {
 
         try {
             // Open output text file
-            BufferedWriter outputFile
-                    = Files.newBufferedWriter(filePath, Charset.forName(pcCharset),
-                            StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+            BufferedWriter outputFile = Files.newBufferedWriter(filePath, Charset.forName(pcCharset),
+                    StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
             // Write contents of data area to the file
             outputFile.write(textArea.getText());
             // Close file
@@ -3070,7 +3069,7 @@ public final class EditFile extends JFrame {
             // Save edited data from text area back to the member
             caretPosition = textArea.getCaretPosition();
             rewriteFile();
-            
+
             textChanged = false;
             checkTextChanged();
 
@@ -3186,6 +3185,8 @@ public final class EditFile extends JFrame {
             tArea = textArea2;
         }
         if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+
+            // Horizontal selection
             selectedText = tArea.getSelectedText();
             selectionStart = tArea.getSelectionStart();
             int numberOfLines = 0;
@@ -3234,6 +3235,7 @@ public final class EditFile extends JFrame {
                 }
             }
         } else {
+
             // Vertical selection
             int cnt = selectionStarts.size();
             int idx = 0;
@@ -3286,6 +3288,8 @@ public final class EditFile extends JFrame {
             tArea = textArea2;
         }
         if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+
+            // Horizontal selection
             selectedText = tArea.getSelectedText();
             selectionStart = tArea.getSelectionStart();
             int lineNbr = 0;
@@ -3309,13 +3313,37 @@ public final class EditFile extends JFrame {
                 tArea.select(selectionStart, selectionStart + shiftedText.length());
             }
         } else {
+
             // Vertical selection
             int cnt = selectionStarts.size();
-            int idx = 0;
+            boolean eol = false;
             try {
+                
+                // Check if at least one selected text end at line end.
+                int lineNbr = tArea.getLineOfOffset(selectionStarts.get(0));
+                int lineStart = tArea.getLineStartOffset(lineNbr);
+                int lineEnd = tArea.getText().indexOf("\n", lineStart);
+                for (int jdx = 0; jdx < cnt; jdx++) {
+                    endSel = selectionEnds.get(jdx);
+                    if (endSel == lineEnd) {
+                        eol = true;
+                    }
+                    lineNbr++;
+                    lineStart = tArea.getLineStartOffset(lineNbr);
+                    lineEnd = tArea.getText().indexOf("\n", lineStart);
+                }
+                // If the rectangleat is at end of any line, it stops shifting.
+                if (eol) {
+                    return;
+                }
+                // If the rectangle is not at end lines it is shifted one position right. 
+                int idx = 0;
                 while (idx < cnt) {
                     startSel = selectionStarts.get(idx);
                     endSel = selectionEnds.get(idx);
+                    if (endSel == lineEnd) {
+                        break;
+                    }
                     String selectedText = tArea.getText(startSel, endSel - startSel);
                     // Process non-empty lines, empty lines are skipped.
                     if (!selectedText.isEmpty()) {
@@ -3331,9 +3359,10 @@ public final class EditFile extends JFrame {
                 textArea.setCaretPosition(endSel + 1);
                 textArea2.setCaretPosition(endSel + 1);
             } catch (Exception exc) {
-                System.out.println("Error in 'selections[idx].getStartOffset();': " + exc.toString());
+                System.out.println("Error: " + exc.toString());
                 exc.printStackTrace();
             }
+
         }
     }
 
@@ -3511,7 +3540,7 @@ public final class EditFile extends JFrame {
                     for (cnt = 0; cnt < selectedArray.length; cnt++) {
                         lineEnd = tArea.getText().indexOf("\n", lineStart);
                         int selLen = selectedArray[cnt].length(); // Length of selected text in the source line
-                        int selPosMax = caretPos + selLenMax; // Maximum position of a character to be wasReplaced
+                        int selPosMax = caretPos + selLenMax; // Maximum position of a character to be replaced
                         // Get maximum length of selected texts from all lines selected.                                               
                         String sel = selectedArray[cnt]; // Text of the idx-th selection 
                         // Number of spaces to pad 
@@ -4051,7 +4080,7 @@ public final class EditFile extends JFrame {
         if (textChanged) {
             saveButton.setBackground(RED_LIGHTER);
             saveButton.setText("Save!");
-        saveButton.setToolTipText("Save text before compiling.");
+            saveButton.setToolTipText("Save text before compiling.");
         } else {
             saveButton.setBackground(originalButtonColor);
             saveButton.setText("Save");
