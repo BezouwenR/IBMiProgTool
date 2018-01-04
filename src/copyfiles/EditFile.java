@@ -3357,8 +3357,7 @@ public final class EditFile extends JFrame {
                     }
                     idx++;
                 }
-                textArea.setCaretPosition(endSel + 1);
-                textArea2.setCaretPosition(endSel + 1);
+                tArea.setCaretPosition(endSel + 1);
             } catch (Exception exc) {
                 System.out.println("Error: " + exc.toString());
                 exc.printStackTrace();
