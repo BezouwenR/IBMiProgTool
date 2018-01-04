@@ -3319,20 +3319,21 @@ public final class EditFile extends JFrame {
             boolean eol = false;
             try {
                 
-                // Check if at least one selected text end at line end.
+                // Check if at least one selection end is at line end (excluding empty lines).
                 int lineNbr = tArea.getLineOfOffset(selectionStarts.get(0));
                 int lineStart = tArea.getLineStartOffset(lineNbr);
                 int lineEnd = tArea.getText().indexOf("\n", lineStart);
                 for (int jdx = 0; jdx < cnt; jdx++) {
                     endSel = selectionEnds.get(jdx);
-                    if (endSel == lineEnd) {
+                    if (lineEnd > lineStart && endSel == lineEnd) {
+                        // Line is not empty and rectangle end is at end of the shortest line
                         eol = true;
                     }
                     lineNbr++;
                     lineStart = tArea.getLineStartOffset(lineNbr);
                     lineEnd = tArea.getText().indexOf("\n", lineStart);
                 }
-                // If the rectangleat is at end of any line, it stops shifting.
+                // If the rectangle is at end of any line, it stops shifting.
                 if (eol) {
                     return;
                 }
