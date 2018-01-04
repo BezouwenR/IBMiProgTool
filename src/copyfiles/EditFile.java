@@ -2107,18 +2107,18 @@ public final class EditFile extends JFrame {
                 // Beginnings of block statements
 
                 // Declarations
-                stmtsBeg.add("SECTION");
+                stmtsBeg.add(" SECTION");
                 stmtsBeg.add("INPUT-OUTPUT");
                 stmtsBeg.add("WORKING-STORAGE");
-                stmtsBeg.add("LINKAGE");
-                stmtsBeg.add("DIVISION");
-                stmtsBeg.add("ENVIRONMENT");
-                stmtsBeg.add("IDENTIFICATION");
-                stmtsBeg.add("DATA ");
-                stmtsBeg.add("PROCEDURE");
+                stmtsBeg.add(" LINKAGE");
+                stmtsBeg.add(" DIVISION");
+                stmtsBeg.add(" ENVIRONMENT");
+                stmtsBeg.add(" IDENTIFICATION");
+                stmtsBeg.add(" DATA ");
+                stmtsBeg.add(" PROCEDURE ");
                 // Loops
-                stmtsBeg.add("PERFORM");
-                stmtsBeg.add("UNTIL");
+                stmtsBeg.add(" PERFORM ");
+                stmtsBeg.add(" UNTIL ");
                 // Conditions
                 stmtsBeg.add("IF ");
                 stmtsBeg.add("THEN");
@@ -2277,7 +2277,7 @@ public final class EditFile extends JFrame {
         } else if (beg && blockStmt.equals("DOFOR")) {
             // DOFOR in CL
             blockPainter = blockBlueLighter;
-        } else if (beg && blockStmt.equals("PERFORM")) {
+        } else if (beg && blockStmt.equals(" PERFORM ")) {
             // PERFORM in COBOL
             blockPainter = blockBlueLighter;
         } else if (beg && blockStmt.equals("IF ")) {
@@ -2299,7 +2299,7 @@ public final class EditFile extends JFrame {
             // ELSE in RPG, CL, COBOL, C, C++
             blockPainter = blockGreenLighter;
         } else if (beg && blockStmt.equals("SELECT")) {
-            // SELECT in RPG IV
+            // SELECT in RPG IV (and COBOL - not a block, only file selection)
             blockPainter = blockYellowLighter;
         } else if (beg && blockStmt.equals("SELEC")) {
             // SELEC in RPG III
@@ -2322,7 +2322,7 @@ public final class EditFile extends JFrame {
         } else if (beg && blockStmt.equals("CASE")) {
             // case in switch in C or C++
             blockPainter = blockYellowLighter;
-        } else if (beg && blockStmt.equals("EVALUATE")) {
+        } else if (beg && blockStmt.equals(" EVALUATE ")) {
             // EVALUATE in COBOL
             blockPainter = blockYellowLighter;
         } else if (beg && blockStmt.equals("MONITOR")) {
@@ -2343,7 +2343,7 @@ public final class EditFile extends JFrame {
         } else if (beg && blockStmt.equals("BEGSR")) {
             // BEGSR in RPG
             blockPainter = blockGrayLighter;
-        } else if (beg && blockStmt.equals("SECTION")) {
+        } else if (beg && blockStmt.equals(" SECTION")) {
             // SECTION in COBOL
             blockPainter = blockGrayLighter;
         } else if (beg && blockStmt.equals("INPUT-OUTPUT")) {
@@ -2352,22 +2352,22 @@ public final class EditFile extends JFrame {
         } else if (beg && blockStmt.equals("WORKING-STORAGE")) {
             // INPUT-OUTPUT in COBOL
             blockPainter = blockGrayLighter;
-        } else if (beg && blockStmt.equals("LINKAGE")) {
+        } else if (beg && blockStmt.equals(" LINKAGE")) {
             // LINKAGE in COBOL
             blockPainter = blockGrayLighter;
-        } else if (beg && blockStmt.equals("DIVISION")) {
+        } else if (beg && blockStmt.equals(" DIVISION")) {
             // DIVISION in COBOL
             blockPainter = blockRedDarker;
-        } else if (beg && blockStmt.equals("ENVIRONMENT")) {
+        } else if (beg && blockStmt.equals(" ENVIRONMENT")) {
             // ENVIRONMENT in COBOL
             blockPainter = blockRedDarker;
-        } else if (beg && blockStmt.equals("IDENTIFICATION")) {
+        } else if (beg && blockStmt.equals(" IDENTIFICATION")) {
             // IDENTIFICATION in COBOL
             blockPainter = blockRedDarker;
-        } else if (beg && blockStmt.equals("DATA ")) {
+        } else if (beg && blockStmt.equals(" DATA ")) {
             // DATA in COBOL
             blockPainter = blockRedDarker;
-        } else if (beg && blockStmt.equals("PROCEDURE")) {
+        } else if (beg && blockStmt.equals(" PROCEDURE ")) {
             // PROCEDURE in COBOL
             blockPainter = blockRedDarker;
         } else if (beg && blockStmt.equals("{")) {
