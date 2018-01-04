@@ -121,7 +121,7 @@ public final class EditFile extends JFrame {
     static final Color DIM_RED = Color.getHSBColor(0.00f, 0.2f, 0.98f); // red little saturated bright
     static final Color VERY_LIGHT_GRAY = Color.getHSBColor(0.50f, 0.01f, 0.90f);
 
-    static final Color DARK_RED = Color.getHSBColor(0.95f, 0.95f, 0.60f); 
+    static final Color DARK_RED = Color.getHSBColor(0.95f, 0.95f, 0.60f);
 
     HighlightPainter currentPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.ORANGE);
     HighlightPainter highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
@@ -182,7 +182,7 @@ public final class EditFile extends JFrame {
 
     FindWindow findWindow;
 
-    static JButton saveButton = new JButton("Save");
+    JButton saveButton = new JButton("Save");
 
     JButton undoButton = new JButton("Undo");
     JButton redoButton = new JButton("Redo");
@@ -499,8 +499,9 @@ public final class EditFile extends JFrame {
         saveButton.setToolTipText("Also Ctrl+S (Cmd+S in macOS).");
         saveButton.setFont(saveButton.getFont().deriveFont(Font.BOLD, 12));
 
+        // Sets original color of the Save button
         textChanged = false;
-        checkTextChanged();
+        //checkTextChanged();
 
         undoButton.setPreferredSize(new Dimension(60, 20));
         undoButton.setMinimumSize(new Dimension(60, 20));
@@ -528,10 +529,6 @@ public final class EditFile extends JFrame {
         compileButton.setMaximumSize(new Dimension(80, 20));
         compileButton.setFont(compileButton.getFont().deriveFont(Font.BOLD, 12));
         compileButton.setToolTipText("Open window with compile settings.");
-        compileButton.setContentAreaFilled(true);
-        compileButton.setOpaque(true);
-        compileButton.setBorderPainted(true);
-        compileButton.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
 
         fontComboBox.setPreferredSize(new Dimension(140, 20));
         fontComboBox.setMaximumSize(new Dimension(140, 20));
@@ -709,6 +706,8 @@ public final class EditFile extends JFrame {
             rowPanel1.add(Box.createHorizontalStrut(20));
             rowPanel1.add(compileButton);
         }
+
+        saveButton.setSelected(true);
 
         rowPanel2 = new JPanel();
         GroupLayout rowPanel2Layout = new GroupLayout(rowPanel2);
@@ -3322,7 +3321,7 @@ public final class EditFile extends JFrame {
             int cnt = selectionStarts.size();
             boolean eol = false;
             try {
-                
+
                 // Check if at least one selection end is at line end (excluding empty lines).
                 int lineNbr = tArea.getLineOfOffset(selectionStarts.get(0));
                 int lineStart = tArea.getLineStartOffset(lineNbr);
@@ -4077,24 +4076,19 @@ public final class EditFile extends JFrame {
     }
 
     /**
-     * Check if text was changed; if so, color Save button light red,
-     * if not, color Save button gray (original button color).
+     * Check if text was changed; if so, color Save button text dark red,
+     * if not, color Save button text with original button color.
      */
-    protected static void checkTextChanged() {
+    protected void checkTextChanged() {
         if (textChanged) {
-            //saveButton.setBackground(RED_LIGHTER);
             saveButton.setText("Save!");
             saveButton.setForeground(DARK_RED);
             saveButton.setToolTipText("Save text before compiling.");
         } else {
             saveButton.setForeground(originalButtonForeground);
-            saveButton.setBackground(originalButtonBackground);
             saveButton.setText("Save");
         }
-        saveButton.setContentAreaFilled(true);
-        saveButton.setOpaque(true);
-        saveButton.setBorderPainted(true);
-        saveButton.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+        saveButton.setSelected(true);
     }
 
     /**
