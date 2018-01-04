@@ -1,0 +1,14 @@
+Right click IBMi: /QSYS.LIB/VZC.LIB/QCSRC.FILE/DQDBMAINT.MBR
+Error in 'tArea.getLineOfOffset(startSel)': java.lang.IllegalArgumentException: bad position: 1627
+Error in 'tArea.getLineOfOffset(startSel)': java.lang.IllegalArgumentException: bad position: 1626
+Error in 'tArea.getLineOfOffset(startSel)': java.lang.IllegalArgumentException: bad position: 1625
+Error in 'tArea.getLineOfOffset(startSel)': java.lang.IllegalArgumentException: bad position: 1624
+Error in 'tArea.getLineOfOffset(startSel)': java.lang.IllegalArgumentException: bad position: 1623
+Error in 'tArea.getLineOfOffset(startSel)': java.lang.IllegalArgumentException: bad position: 1622
+Error in 'tArea.getLineOfOffset(startSel)': java.lang.IllegalArgumentException: bad position: 1621
+Error in 'tArea.getLineOfOffset(startSel)': java.lang.IllegalArgumentException: bad position: 1620
+Error in 'tArea.getLineOfOffset(startSel)': java.lang.IllegalArgumentException: bad position: 1619
+Error in 'tArea.getLineOfOffset(startSel)': java.lang.IllegalArgumentException: bad position: 1618
+Error in 'tArea.getLineOfOffset(startSel)': java.lang.IllegalArgumentException: bad position: 1617
+Error in 'tArea.getLineOfOffset(startSel)': java.lang.IllegalArgumentException: bad position: 1616
+Error in 'tArea.getLineOfOffset(startSel)': java.lang.IllegalArgumentException: bad position: 3255

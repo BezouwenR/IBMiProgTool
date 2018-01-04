@@ -834,14 +834,13 @@ public final class EditFile extends JFrame {
         // Select programming language from the list in combo box - listener
         // -----------------------------------------------------------------
         languageComboBox.addItemListener(il -> {
+            // Remember caret position
             int currentCaretPos = textArea.getCaretPosition();
             JComboBox<String> source = (JComboBox) il.getSource();
             progLanguage = (String) source.getSelectedItem();
-            if (progLanguage.equals("*NONE")) {
-                blockHighlighter.removeAllHighlights();
+                // Highlight possible matched patterns in both primary and secondary areas 
                 changeHighlight();
                 changeHighlight2();
-            }
             try {
                 BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
                 // Save programming language into properties
@@ -851,9 +850,14 @@ public final class EditFile extends JFrame {
             } catch (Exception exc) {
                 exc.printStackTrace();
             }
-            // Prepare text area with highlighting blocks and show
+            // Prepare both text areas:
+            // - Set caret position in primary text area.
+            // - Highlight blocks.
+            // - Update progLanguage property in parameters.
             prepareEditingAndShow();
+            
             textArea.requestFocusInWindow();
+            // Set remembered caret position 
             textArea.setCaretPosition(currentCaretPos);
         });
 
@@ -1836,12 +1840,12 @@ public final class EditFile extends JFrame {
                 stmtsBeg.add("SECTION");
                 stmtsBeg.add("INPUT-OUTPUT");
                 stmtsBeg.add("WORKING-STORAGE");
-                stmtsBeg.add("LINKAGE");
-                stmtsBeg.add("DIVISION");
-                stmtsBeg.add("ENVIRONMENT");
-                stmtsBeg.add("IDENTIFICATION");
-                stmtsBeg.add("DATA");
-                stmtsBeg.add("PROCEDURE");
+                stmtsBeg.add(" LINKAGE");
+                stmtsBeg.add(" DIVISION");
+                stmtsBeg.add(" ENVIRONMENT");
+                stmtsBeg.add(" IDENTIFICATION");
+                stmtsBeg.add(" DATA ");
+                stmtsBeg.add(" PROCEDURE ");
                 // Loops
                 stmtsBeg.add("DOW");
                 stmtsBeg.add("DOW(");
