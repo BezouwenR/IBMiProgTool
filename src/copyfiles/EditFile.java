@@ -3461,6 +3461,7 @@ public final class EditFile extends JFrame {
             } else {
                 // Vertical selection
                 selectedText = "";
+                int origCaretPos = selectionStarts.get(0);
                 try {
                     int cnt = selectionStarts.size();
                     selectedArray = new String[cnt];
@@ -3476,9 +3477,8 @@ public final class EditFile extends JFrame {
                         tArea.replaceRange(String.valueOf(charArr), start, end);
                     }
                     // In order to paste the cut area again with cut text
-                    // set caret to its original position that it has before the operation
-                    int caretPos = selectionStarts.get(0);
-                    tArea.setCaretPosition(caretPos - selectedArray[0].length());
+                    // set caret to its original position that it has before the operation.
+                    tArea.setCaretPosition(origCaretPos);
                     selectionStarts.clear();
                 } catch (Exception exc) {
                     exc.printStackTrace();

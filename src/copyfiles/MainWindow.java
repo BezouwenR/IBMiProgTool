@@ -593,10 +593,10 @@ public class MainWindow extends JFrame {
             pcCharComboBox.setSelectedItem(pcCharset);
             
             sourceRecordPrefixCheckBox.setSelected(properties.getProperty("SOURCE_RECORD_PREFIX").isEmpty() ? false : true);
-            sourceRecordPrefixCheckBox.setToolTipText("Whether sequence number and date (12 characters) is prepended.");
+            sourceRecordPrefixCheckBox.setToolTipText("Whether to prepend sequence number and date (12 characters).");
             
             overwriteOutputFileCheckBox.setSelected(properties.getProperty("OVERWRITE_FILE").isEmpty() ? false : true);
-            overwriteOutputFileCheckBox.setToolTipText("Whether data in file may be overwritten.");
+            overwriteOutputFileCheckBox.setToolTipText("Whether to allow overwriting data in file.");
             
             libraryPatternTextField.setText(properties.getProperty("LIBRARY_PATTERN"));
             libraryPatternTextField.setPreferredSize(new Dimension(110, 20));
@@ -620,7 +620,7 @@ public class MainWindow extends JFrame {
             sourceRecordLengthTextField.setPreferredSize(new Dimension(60, 20));
             sourceRecordLengthTextField.setMinimumSize(new Dimension(60, 20));
             sourceRecordLengthTextField.setMaximumSize(new Dimension(60, 20));
-            sourceRecordLengthTextField.setToolTipText("Length of text line in source member. For creating source physical file.");
+            sourceRecordLengthTextField.setToolTipText("Length of text line in source member. When creating source physical file.");
 
             // Correct path strings and update them in properties
             leftPathString = correctLeftPathString(properties.getProperty("LEFT_PATH"));
@@ -835,11 +835,6 @@ public class MainWindow extends JFrame {
         // Create left tree showing local file system
         // ----------------
         leftRoot = properties.getProperty("LEFT_PATH");
-
-        // Set left path string as selected in the left combo box
-//        leftPathComboBox.setSelectedItem(leftPathString);
-        // Set ALSO RIGHT PATH string in the right combo box
-//        rightPathComboBox.setSelectedItem(rightPathString);
 
         // ----------------------------------------------
         // Create new left side
