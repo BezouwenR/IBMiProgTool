@@ -109,7 +109,8 @@ public final class EditFile extends JFrame {
 
     WindowEditFileAdapter windowEditFileListener;
 
-    static Color originalButtonColor;
+    static Color originalButtonBackground;
+    static Color originalButtonForeground;
 
     static final Color VERY_LIGHT_BLUE = Color.getHSBColor(0.60f, 0.020f, 0.99f);
     static final Color VERY_LIGHT_GREEN = Color.getHSBColor(0.52f, 0.020f, 0.99f);
@@ -119,6 +120,8 @@ public final class EditFile extends JFrame {
     static final Color DIM_BLUE = Color.getHSBColor(0.60f, 0.2f, 0.5f); // blue little saturated dim (gray)
     static final Color DIM_RED = Color.getHSBColor(0.00f, 0.2f, 0.98f); // red little saturated bright
     static final Color VERY_LIGHT_GRAY = Color.getHSBColor(0.50f, 0.01f, 0.90f);
+
+    static final Color DARK_RED = Color.getHSBColor(0.95f, 0.95f, 0.60f); 
 
     HighlightPainter currentPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.ORANGE);
     HighlightPainter highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
@@ -487,7 +490,8 @@ public final class EditFile extends JFrame {
         windowX = screenWidth / 2 - windowWidth / 2;
         windowY = 0;
 
-        originalButtonColor = new JButton().getBackground();
+        originalButtonBackground = new JButton().getBackground();
+        originalButtonForeground = new JButton().getForeground();
 
         saveButton.setPreferredSize(new Dimension(80, 20));
         saveButton.setMinimumSize(new Dimension(80, 20));
@@ -4078,11 +4082,13 @@ public final class EditFile extends JFrame {
      */
     protected static void checkTextChanged() {
         if (textChanged) {
-            saveButton.setBackground(RED_LIGHTER);
+            //saveButton.setBackground(RED_LIGHTER);
             saveButton.setText("Save!");
+            saveButton.setForeground(DARK_RED);
             saveButton.setToolTipText("Save text before compiling.");
         } else {
-            saveButton.setBackground(originalButtonColor);
+            saveButton.setForeground(originalButtonForeground);
+            saveButton.setBackground(originalButtonBackground);
             saveButton.setText("Save");
         }
         saveButton.setContentAreaFilled(true);
