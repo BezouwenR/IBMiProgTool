@@ -3798,6 +3798,7 @@ public final class EditFile extends JFrame {
                 Point start = new Point(Math.min(lastPoint.x, pt.x), Math.min(lastPoint.y, pt.y));
                 Point end = new Point(Math.max(lastPoint.x, pt.x), Math.max(lastPoint.y, pt.y));
                 customHighlight(start, end);
+                textArea.setCaretPosition(selectionStarts.get(0));
             }
         }
 
