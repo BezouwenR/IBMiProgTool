@@ -3264,8 +3264,7 @@ public final class EditFile extends JFrame {
                     }
                     idx++;
                 }
-                textArea.setCaretPosition(startSel - 1);
-                textArea2.setCaretPosition(startSel - 1);
+                tArea.setCaretPosition(startSel - 1);
             } catch (Exception exc) {
                 System.out.println("Error in 'tArea.getLineOfOffset(startSel)': " + exc.toString());
                 exc.printStackTrace();

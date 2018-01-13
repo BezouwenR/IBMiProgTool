@@ -1,6 +1,7 @@
 package copyfiles;
 
 import com.ibm.as400.access.AS400;
+import com.ibm.as400.access.AS400JPing;
 import com.ibm.as400.access.IFSFile;
 import com.ibm.as400.access.SystemValue;
 
@@ -74,6 +75,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.TransferHandler;
 import javax.swing.UIManager;
 import javax.swing.event.TreeExpansionEvent;
@@ -107,30 +109,30 @@ public class MainWindow extends JFrame {
     String operatingSystem;
     final String WINDOWS = "WINDOWS";
     final String UNIX = "UNIX";
-    
+
     final Color DIM_BLUE = new Color(50, 60, 160);
     final Color DIM_RED = new Color(190, 60, 50);
     final Color DIM_PINK = new Color(170, 58, 128);
-    
+
     int mainWindowX;
     int mainWindowY;
     int compileWindowX;
     int compileWindowY;
-    
+
     int windowWidth = 1100;
     int windowHeight = 745;
-    
+
     int borderWidth = 10;
-    
+
     int splitPaneInnerWidth = windowWidth;
-    
+
     Container cont;
-    
+
     GroupLayout globalPanelLayout;
     GroupLayout panelTopLayout;
-    
+
     JPanel globalPanel;
-    
+
     JMenuBar menuBar;
     JMenu helpMenu;
     JMenuItem helpMenuItemEN;
@@ -139,20 +141,20 @@ public class MainWindow extends JFrame {
     JMenuItem helpMenuItemRPGIV;
     JMenuItem helpMenuItemCOBOL;
     JMenuItem helpMenuItemDDS;
-    
+
     JPanel panelTop;
     JPanel panelPathLeft;
     JPanel panelPathRight;
-    
+
     JScrollPane scrollPaneLeft;
     JScrollPane scrollPaneRight;
-    
+
     JPanel panelLeft;
     JPanel panelRight;
-    
+
     JSplitPane splitPaneInner;
     JSplitPane splitPaneOuter;
-    
+
     JTree leftTree;
     DefaultMutableTreeNode leftTopNode;
     DefaultTreeModel leftTreeModel;
@@ -161,10 +163,10 @@ public class MainWindow extends JFrame {
     TreePath leftSelectedPath;
     TreePath targetTreePath;
     Integer leftRow;
-    
+
     boolean nodes = true;
     boolean noNodes = false;
-    
+
     JTree rightTree;
     DefaultMutableTreeNode rightTopNode;
     DefaultTreeModel rightTreeModel;
@@ -172,41 +174,41 @@ public class MainWindow extends JFrame {
     TreeMap<String, Integer> rightTreeMap = new TreeMap<>();
     TreePath rightSelectedPath;
     Integer rightRow;
-    
+
     JTree copySourceTree;
     JTree dragSourceTree;
-    
+
     JList<String> messageList;
     Vector<String> msgVector = new Vector<>();
     String msgText;
     String row;
     MessageScrollPaneAdjustmentListenerMax messageScrollPaneAdjustmentListenerMax;
-    
+
     DefaultMutableTreeNode leftNode;
     TransferHandler.TransferSupport leftInfo;
-    
+
     IFSFile ifsFile;
-    
+
     DefaultMutableTreeNode rightNode;
     TransferHandler.TransferSupport rightInfo;
-    
+
     DefaultMutableTreeNode targetNode;
     DefaultMutableTreeNode nodeLevel2;
     DefaultMutableTreeNode nodeLevel3;
-    
+
     AS400 remoteServer;
-    
+
     String language = "cs-CZ";
-    
+
     JLabel userNameLabel = new JLabel("User name:");
     JTextField userNameTextField = new JTextField();
-    
+
     JLabel hostLabel = new JLabel("IBM i server:");
     JTextField hostTextField = new JTextField();
-    
+
     JLabel disksLabel = new JLabel("Windows disks:");
     JComboBox<String> disksComboBox = new JComboBox<>();
-    
+
     ArrayList<String> charsets;
     String pcCharset;
     JComboBox<String> pcCharComboBox;
@@ -261,7 +263,7 @@ public class MainWindow extends JFrame {
         "IBM864", "IBM865", "IBM866", "IBM868", "IBM869", "IBM870", "IBM871", "IBM918", "IBM1025",
         "IBM1026", "IBM01140", "IBM01141", "IBM01142", "IBM01143", "IBM01144", "IBM01145",
         "IBM01146", "IBM01147", "IBM01148", "IBM01149",};
-    
+
     ArrayList<String> ccsids;
     String ibmCcsid;
     int ibmCcsidInt;
@@ -290,7 +292,7 @@ public class MainWindow extends JFrame {
         // UNICODE
         "UNICODE:", "--------", "1200" /* UTF-16 */, "1208" /* UTF-8 */,
         "13488" /* UCS-2 */,};
-    
+
     ArrayList<String> sourceTypes;
     String sourceType;
     JComboBox<String> sourceTypeComboBox;
@@ -298,36 +300,36 @@ public class MainWindow extends JFrame {
     String[] sourceFileTypes = {"*DEFAULT", "C", "CBL", "CBLLE", "CLLE", "CLP", "CMD", "CPP",
         "DSPF", "LF", "MNU", "MNUCMD", "MNUDDS", "PF", "PLI", "PRTF", "REXX", "RPG", "RPGLE",
         "SQLC", "SQLCPP", "SQLCBL", "SQLCBLLE", "SQLPLI", "SQLRPG", "SQLRPGLE", "TBL", "TXT",};
-    
+
     JLabel sourceRecordLengthLabel = new JLabel("Source line length:");
     JTextField sourceRecordLengthTextField = new JTextField();
-    
+
     JLabel sourceRecordPrefixLabel = new JLabel("Complete source record:");
     JCheckBox sourceRecordPrefixCheckBox = new JCheckBox();
-    
+
     JLabel overwriteOutputFileLabel = new JLabel("Overwrite data:");
     JCheckBox overwriteOutputFileCheckBox = new JCheckBox();
-    
+
     JLabel libraryPatternLabel = new JLabel("LIB:");
     JTextField libraryPatternTextField = new JTextField();
-    
+
     JLabel filePatternLabel = new JLabel("FILE:");
     JTextField filePatternTextField = new JTextField();
-    
+
     JLabel memberPatternLabel = new JLabel("MBR:");
     JTextField memberPatternTextField = new JTextField();
-    
+
     JLabel leftPathLabel = new JLabel("Local Path:");
     JComboBox<String> leftPathComboBox = new JComboBox<>();
     LeftPathActionListener leftPathActionListener = new LeftPathActionListener();
-    
+
     JLabel rightPathLabel = new JLabel("Remote Path:");
     JComboBox<String> rightPathComboBox = new JComboBox<>();
-    
+
     JScrollPane scrollMessagePane = new JScrollPane(messageList);
-    
+
     JButton connectReconnectButton = new JButton("Connect/Reconnect");
-    
+
     Compile compile;
 
     // Menu items for PC
@@ -368,10 +370,10 @@ public class MainWindow extends JFrame {
     JMenuItem findInIfsFiles = new JMenuItem("Find in IFS files");
     JMenuItem renameIfsFile = new JMenuItem("Rename");
     JMenuItem compileIfsFile = new JMenuItem("Compile IFS file");
-    
+
     JPopupMenu leftTreePopupMenu = new JPopupMenu();
     JPopupMenu rightTreePopupMenu = new JPopupMenu();
-    
+
     FileSystem fileSystem = FileSystems.getDefault();
     Iterable<Path> rootDirectories;
     String pcFileSep; // PC file separator ( / in unix, \ in Windows )
@@ -379,31 +381,31 @@ public class MainWindow extends JFrame {
     boolean leftRootChanged;
     String firstLeftRootSymbol; // / in unix, C:\ in Windows
     String rightRoot;
-    
+
     String leftPathString;
     String[] leftPathStrings;
     RowMapper leftRowMapper;
-    
+
     String rightPathString;
     String[] rightPathStrings;
     String qsyslib;
     String libraryName;
     String fileName;
     String memberName;
-    
+
     RowMapper rightRowMapper;
-    
+
     String sourcePathString;
     String targetPathString;
     String clipboardPathString;
     String[] clipboardPathStrings;
-    
+
     String ifsPathStringPattern;
     String pcPathStringPattern;
-    
+
     MouseListener leftTreeMouseListener;
     TreeSelectionListener leftTreeSelectionListener;
-    
+
     MouseListener rightTreeMouseListener;
 
     // Tree expansion listener for right tree
@@ -416,12 +418,12 @@ public class MainWindow extends JFrame {
 
     // Constant for properties
     final String PROP_COMMENT = "Copy files between IBM i and PC, edit and compile.";
-    
+
     Path paramfilesPath = Paths.get(System.getProperty("user.dir"), "paramfiles");
     Path workfilesPath = Paths.get(System.getProperty("user.dir"), "workfiles");
     Path iconsPath = Paths.get(System.getProperty("user.dir"), "icons");
     Path logfilesPath = Paths.get(System.getProperty("user.dir"), "logfiles");
-    
+
     Path parPath = Paths.get(System.getProperty("user.dir"), "paramfiles", "Parameters.txt");
     Path errPath = Paths.get(System.getProperty("user.dir"), "logfiles", "err.txt");
     Path outPath = Paths.get(System.getProperty("user.dir"), "logfiles", "out.txt");
@@ -429,7 +431,7 @@ public class MainWindow extends JFrame {
     Properties properties;
     BufferedWriter outfile;
     BufferedReader infile;
-    
+
     OutputStream errStream;
     OutputStream outStream;
 
@@ -437,7 +439,7 @@ public class MainWindow extends JFrame {
      * Constructor.
      */
     public MainWindow() {
-        
+
         try {
             // If "workfiles" directory doesn't exist, create one
             if (!Files.exists(workfilesPath)) {
@@ -550,16 +552,16 @@ public class MainWindow extends JFrame {
             hostTextField.setPreferredSize(new Dimension(150, 20));
             hostTextField.setMinimumSize(new Dimension(150, 20));
             hostTextField.setMaximumSize(new Dimension(150, 20));
-            
+
             userNameTextField.setText(properties.getProperty("USERNAME"));
             userNameTextField.setPreferredSize(new Dimension(90, 20));
             userNameTextField.setMinimumSize(new Dimension(90, 20));
             userNameTextField.setMaximumSize(new Dimension(90, 20));
-            
+
             disksComboBox.setPreferredSize(new Dimension(40, 20));
             disksComboBox.setMinimumSize(new Dimension(40, 20));
             disksComboBox.setMaximumSize(new Dimension(40, 20));
-            
+
             ibmCcsid = properties.getProperty("IBM_CCSID");
             ccsids = new ArrayList<>();
             ccsids.addAll(Arrays.asList(ibmCcsids));
@@ -569,7 +571,7 @@ public class MainWindow extends JFrame {
             ibmCcsidComboBox.setMaximumSize(new Dimension(100, 20));
             ibmCcsidComboBox.setEditable(true);
             ibmCcsidComboBox.setSelectedItem(ibmCcsid);
-            
+
             sourceType = properties.getProperty("SOURCE_TYPE");
             sourceTypes = new ArrayList<>();
             sourceTypes.addAll(Arrays.asList(sourceFileTypes));
@@ -591,31 +593,31 @@ public class MainWindow extends JFrame {
             pcCharComboBox.setMaximumSize(new Dimension(180, 20));
             pcCharComboBox.setEditable(true);
             pcCharComboBox.setSelectedItem(pcCharset);
-            
+
             sourceRecordPrefixCheckBox.setSelected(properties.getProperty("SOURCE_RECORD_PREFIX").isEmpty() ? false : true);
             sourceRecordPrefixCheckBox.setToolTipText("Whether to prepend sequence number and date (12 characters).");
-            
+
             overwriteOutputFileCheckBox.setSelected(properties.getProperty("OVERWRITE_FILE").isEmpty() ? false : true);
             overwriteOutputFileCheckBox.setToolTipText("Whether to allow overwriting data in file.");
-            
+
             libraryPatternTextField.setText(properties.getProperty("LIBRARY_PATTERN"));
             libraryPatternTextField.setPreferredSize(new Dimension(110, 20));
             libraryPatternTextField.setMinimumSize(new Dimension(110, 20));
             libraryPatternTextField.setMaximumSize(new Dimension(110, 20));
             libraryPatternTextField.setToolTipText("Library search pattern. Can use * and ? wild cards.");
-            
+
             filePatternTextField.setText(properties.getProperty("FILE_PATTERN"));
             filePatternTextField.setPreferredSize(new Dimension(110, 20));
             filePatternTextField.setMinimumSize(new Dimension(110, 20));
             filePatternTextField.setMaximumSize(new Dimension(110, 20));
             filePatternTextField.setToolTipText("Source file search pattern. Can use * and ? wild cards.");
-            
+
             memberPatternTextField.setText(properties.getProperty("MEMBER_PATTERN"));
             memberPatternTextField.setPreferredSize(new Dimension(110, 20));
             memberPatternTextField.setMinimumSize(new Dimension(110, 20));
             memberPatternTextField.setMaximumSize(new Dimension(110, 20));
             memberPatternTextField.setToolTipText("Member search pattern. Can use * and ? wild cards.");
-            
+
             sourceRecordLengthTextField.setText(properties.getProperty("SOURCE_RECORD_LENGTH"));
             sourceRecordLengthTextField.setPreferredSize(new Dimension(60, 20));
             sourceRecordLengthTextField.setMinimumSize(new Dimension(60, 20));
@@ -625,13 +627,13 @@ public class MainWindow extends JFrame {
             // Correct path strings and update them in properties
             leftPathString = correctLeftPathString(properties.getProperty("LEFT_PATH"));
             rightPathString = correctRightPathString(properties.getProperty("RIGHT_PATH"));
-            
+
             rightRoot = properties.getProperty("RIGHT_PATH");
 
             // Set window coordinates from application properties
             mainWindowX = new Integer((String) properties.get("MAIN_WINDOW_X"));
             mainWindowY = new Integer((String) properties.get("MAIN_WINDOW_Y"));
-            
+
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
@@ -645,7 +647,7 @@ public class MainWindow extends JFrame {
         cont = getContentPane();
         globalPanel = new JPanel();
         globalPanelLayout = new GroupLayout(globalPanel);
-        
+
         menuBar = new JMenuBar();
         helpMenu = new JMenu("Help");
         helpMenuItemEN = new JMenuItem("Help English");
@@ -654,7 +656,7 @@ public class MainWindow extends JFrame {
         helpMenuItemRPGIV = new JMenuItem("RPG IV forms");
         helpMenuItemCOBOL = new JMenuItem("COBOL form");
         helpMenuItemDDS = new JMenuItem("DDS forms");
-        
+
         helpMenu.add(helpMenuItemEN);
         helpMenu.add(helpMenuItemCZ);
         helpMenu.add(helpMenuItemRPGIII);
@@ -662,23 +664,23 @@ public class MainWindow extends JFrame {
         helpMenu.add(helpMenuItemCOBOL);
         helpMenu.add(helpMenuItemDDS);
         menuBar.add(helpMenu);
-        
+
         setJMenuBar(menuBar); // In macOS on the main system menu bar above, in Windows on the window menu bar
 
         panelTop = new JPanel();
-        
+
         panelTopLayout = new GroupLayout(panelTop);
         panelTop.setLayout(panelTopLayout);
-        
+
         panelPathLeft = new JPanel();
         panelPathLeft.setLayout(new BoxLayout(panelPathLeft, BoxLayout.LINE_AXIS));
-        
+
         scrollPaneLeft = new JScrollPane();
         scrollPaneLeft.setBorder(BorderFactory.createEmptyBorder());
-        
+
         panelPathRight = new JPanel();
         panelPathRight.setLayout(new BoxLayout(panelPathRight, BoxLayout.LINE_AXIS));
-        
+
         scrollPaneRight = new JScrollPane();
         scrollPaneRight.setBorder(BorderFactory.createEmptyBorder());
 
@@ -766,22 +768,22 @@ public class MainWindow extends JFrame {
                         .addComponent(diskLabelWin)
                         .addComponent(disksComboBoxWin)));
         panelTop.setLayout(panelTopLayout);
-        
+
         panelPathLeft.add(leftPathLabel);
-        
+
         leftPathComboBox.setEditable(true);
         panelPathLeft.add(leftPathComboBox);
-        
+
         panelPathRight.add(rightPathLabel);
-        
+
         rightPathComboBox.setEditable(true);
         panelPathRight.add(rightPathComboBox);
-        
+
         panelLeft = new JPanel();
         panelLeft.setLayout(new BorderLayout());
         panelLeft.add(panelPathLeft, BorderLayout.NORTH);
         panelLeft.add(scrollPaneLeft, BorderLayout.CENTER);
-        
+
         panelRight = new JPanel();
         panelRight.setLayout(new BorderLayout());
         panelRight.add(panelPathRight, BorderLayout.NORTH);
@@ -846,7 +848,7 @@ public class MainWindow extends JFrame {
         // -----------------------------
         globalPanelLayout.setAutoCreateGaps(false);
         globalPanelLayout.setAutoCreateContainerGaps(false);
-        
+
         globalPanelLayout.setHorizontalGroup(globalPanelLayout.createSequentialGroup().addGroup(globalPanelLayout
                 .createParallelGroup().addComponent(panelTop).addComponent(splitPaneOuter)));
         globalPanelLayout.setVerticalGroup(globalPanelLayout.createParallelGroup().addGroup(globalPanelLayout
@@ -861,7 +863,7 @@ public class MainWindow extends JFrame {
         double splitPaneInnerDividerLoc = 0.50d; // 50 %
         // Percentage to reveal the first message line height when the scroll pane is full
         double splitPaneOuterDividerLoc = 0.835d;
-        
+
         splitPaneInner.setDividerLocation(splitPaneInnerDividerLoc);
         splitPaneOuter.setDividerLocation(splitPaneOuterDividerLoc);
 
@@ -1053,9 +1055,9 @@ public class MainWindow extends JFrame {
                 outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
                 properties.store(outfile, PROP_COMMENT);
                 outfile.close();
-                
+
                 connectReconnectRefresh();
-                
+
             } catch (Exception exc) {
                 exc.printStackTrace();
             }
@@ -1074,9 +1076,9 @@ public class MainWindow extends JFrame {
                 outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
                 properties.store(outfile, PROP_COMMENT);
                 outfile.close();
-                
+
                 connectReconnectRefresh();
-                
+
             } catch (Exception exc) {
                 exc.printStackTrace();
             }
@@ -1095,9 +1097,9 @@ public class MainWindow extends JFrame {
                 outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
                 properties.store(outfile, PROP_COMMENT);
                 outfile.close();
-                
+
                 connectReconnectRefresh();
-                
+
             } catch (Exception exc) {
                 exc.printStackTrace();
             }
@@ -1361,7 +1363,7 @@ public class MainWindow extends JFrame {
             // ------------------------------
             // Set clipboard path strings for paste operation
             clipboardPathStrings = leftPathStrings;
-            
+
             for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
                 // Set path string for the following class
                 leftPathString = clipboardPathStrings[idx];
@@ -1413,16 +1415,16 @@ public class MainWindow extends JFrame {
                 row = "Wait: Copying from IBM i to IBM i . . .";
                 msgVector.add(row);
                 showMessages();
-                
+
                 ParallelCopy_IBMi_IBMi parallelCopy_IMBI_IBMI = new ParallelCopy_IBMi_IBMi(remoteServer, clipboardPathStrings, targetPathString, null, this);
                 parallelCopy_IMBI_IBMI.execute();
-                
+
             } else if (copySourceTree == leftTree) {
                 // Paste from PC to IBM i
                 row = "Wait: Copying from PC to IBM i . . .";
                 msgVector.add(row);
                 showMessages();
-                
+
                 ParallelCopy_PC_IBMi parallelCopy_PC_IBMI = new ParallelCopy_PC_IBMi(remoteServer, clipboardPathStrings, targetPathString, null, this);
                 parallelCopy_PC_IBMI.execute();
             }
@@ -1445,7 +1447,7 @@ public class MainWindow extends JFrame {
 
             // Set clipboard path strings for paste operation
             clipboardPathStrings = rightPathStrings;
-            
+
             for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
                 rightPathString = clipboardPathStrings[idx];
                 ifsFile = new IFSFile(remoteServer, rightPathString);
@@ -1470,7 +1472,7 @@ public class MainWindow extends JFrame {
 
             // Set clipboard path strings for paste operation
             clipboardPathStrings = rightPathStrings;
-            
+
             for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
                 rightPathString = clipboardPathStrings[idx];
                 ifsFile = new IFSFile(remoteServer, rightPathString);
@@ -1555,11 +1557,11 @@ public class MainWindow extends JFrame {
             // -----------------------
             // Set clipboard path strings for paste operation
             clipboardPathStrings = rightPathStrings;
-            
+
             for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
                 rightPathString = clipboardPathStrings[idx];
                 ifsFile = new IFSFile(remoteServer, rightPathString);
-                
+
                 CreateAndDeleteInIBMi crtdlt = new CreateAndDeleteInIBMi(remoteServer, ifsFile, this, "deleteIfsObject", currentX, currentY);
                 crtdlt.createAndDeleteInIBMi(currentX, currentY);
             }
@@ -1578,7 +1580,7 @@ public class MainWindow extends JFrame {
 
             // Set clipboard path strings for paste operation
             clipboardPathStrings = rightPathStrings;
-            
+
             for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
                 rightPathString = clipboardPathStrings[idx];
                 ifsFile = new IFSFile(remoteServer, rightPathString);
@@ -1604,7 +1606,7 @@ public class MainWindow extends JFrame {
 
             // Set clipboard path strings for paste operation
             clipboardPathStrings = rightPathStrings;
-            
+
             for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
                 rightPathString = clipboardPathStrings[idx];
                 ifsFile = new IFSFile(remoteServer, rightPathString);
@@ -1630,7 +1632,7 @@ public class MainWindow extends JFrame {
 
             // Set clipboard path strings for paste operation
             clipboardPathStrings = rightPathStrings;
-            
+
             for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
                 rightPathString = clipboardPathStrings[idx];
                 ifsFile = new IFSFile(remoteServer, rightPathString);
@@ -1755,7 +1757,7 @@ public class MainWindow extends JFrame {
                 leftPathComboBox = new JComboBox<>();
                 leftPathComboBox.setEditable(true);
                 panelPathLeft.add(leftPathComboBox);
-                
+
                 leftPathComboBox.addItem(leftPathString);
                 leftPathComboBox.setSelectedIndex(0);
 
@@ -1837,16 +1839,14 @@ public class MainWindow extends JFrame {
             msgVector.add(row);
             // Reload LEFT side. Do not use Right side! It would enter a loop.
             showMessages(noNodes);
-            
+
             remoteServer.connectService(AS400.FILE);
-            
+
             SystemValue sysVal = new SystemValue(remoteServer, "QCCSID");
-            //if ((Integer) sysVal.getValue() == 65535) {
             row = "Info: System value QCCSID is " + sysVal.getValue() + ".";
             msgVector.add(row);
             // Reload LEFT side. Do not use Right side! It would enter a loop.
             showMessages(noNodes);
-            //}
 
             try {
                 infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
@@ -1886,7 +1886,12 @@ public class MainWindow extends JFrame {
         setCursor(Cursor.getDefaultCursor());
         // Remove setting last element of messages
         scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-        //refreshWindow();
+
+        // Check connection and keep connection alive in background.
+        CheckConnection chkConn = new CheckConnection(remoteServer);
+        chkConn.execute();
+
+
         return true;
     }
 
@@ -1926,7 +1931,7 @@ public class MainWindow extends JFrame {
      * @param nodeParam
      */
     protected void addPCNodes(Path pathParam, DefaultMutableTreeNode nodeParam) {
-        
+
         if (nodeParam == null) {
             return;
         }
@@ -2061,15 +2066,15 @@ public class MainWindow extends JFrame {
         // Tree expansion listener for left tree
         TreeExpansionListener leftTreeExpansionListener = new LeftTreeExpansionListener();
         leftTree.addTreeExpansionListener(leftTreeExpansionListener);
-        
+
         leftTree.setDragEnabled(true);
         leftTree.setDropMode(DropMode.USE_SELECTION);
         leftTree.setTransferHandler(new LeftTreeTransferHandler(this));
-        
+
         leftTreeSelModel = leftTree.getSelectionModel();
         leftTreeSelModel.setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
         leftRowMapper = leftTreeSelModel.getRowMapper();
-        
+
         leftTree.setRootVisible(true);
         leftTree.setShowsRootHandles(true);
         leftTree.setSelectionRow(0);
@@ -2122,19 +2127,19 @@ public class MainWindow extends JFrame {
         // left or right click
         rightTreeMouseListener = new RightTreeMouseAdapter();
         rightTree.addMouseListener(rightTreeMouseListener);
-        
+
         rightTree.setDragEnabled(true);
         rightTree.setDropMode(DropMode.USE_SELECTION);
         rightTree.setTransferHandler(new RightTreeTransferHandler(this));
-        
+
         rightTreeSelModel = rightTree.getSelectionModel();
         rightTreeSelModel.setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
         rightRowMapper = rightTreeSelModel.getRowMapper();
-        
+
         rightTree.setRootVisible(true);
         rightTree.setShowsRootHandles(true);
         rightTree.setSelectionRow(0);
-        
+
         rightPathString = correctRightPathString(rightPathString);
 
         // Right root must start with a slash
@@ -2152,7 +2157,7 @@ public class MainWindow extends JFrame {
                     .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
             return;
         }
-        
+
         if (remoteServer == null) {
             row = "Error: Connection to server  " + properties.getProperty("HOST") + "  failed!!!!!!.";
             msgVector.add(row);
@@ -2182,7 +2187,7 @@ public class MainWindow extends JFrame {
      * @return
      */
     protected String correctLeftPathString(String pathString) {
-        
+
         if (pathString.lastIndexOf(pcFileSep) > 0 && !pathString.equals(firstLeftRootSymbol)) {
             // Get path pattern (parent)
             pathString = pathString.substring(0, pathString.lastIndexOf(pcFileSep));
@@ -2217,11 +2222,11 @@ public class MainWindow extends JFrame {
 
         // Set application properties using input values from text fields
         properties.setProperty("HOST", hostTextField.getText());
-        
+
         String userName = userNameTextField.getText().toUpperCase();
         userNameTextField.setText(userName);
         properties.setProperty("USERNAME", userName);
-        
+
         if (!pcCharset.equals("*DEFAULT")) {
             // Check if charset is valid
             try {
@@ -2233,7 +2238,7 @@ public class MainWindow extends JFrame {
             }
             properties.setProperty("PC_CHARSET", pcCharset);
         }
-        
+
         if (!ibmCcsid.equals("*DEFAULT")) {
             try {
                 ibmCcsidInt = Integer.parseInt(ibmCcsid);
@@ -2256,15 +2261,15 @@ public class MainWindow extends JFrame {
         }
         sourceRecordLengthTextField.setText(srcRecLen);
         properties.setProperty("SOURCE_RECORD_LENGTH", srcRecLen);
-        
+
         properties.setProperty("SOURCE_TYPE", sourceType);
-        
+
         libraryPatternTextField.setText(libraryPatternTextField.getText().toUpperCase());
         properties.setProperty("LIBRARY_PATTERN", libraryPatternTextField.getText());
-        
+
         filePatternTextField.setText(filePatternTextField.getText().toUpperCase());
         properties.setProperty("FILE_PATTERN", filePatternTextField.getText());
-        
+
         memberPatternTextField.setText(memberPatternTextField.getText().toUpperCase());
         properties.setProperty("MEMBER_PATTERN", memberPatternTextField.getText());
 
@@ -2284,12 +2289,12 @@ public class MainWindow extends JFrame {
 
         // Register Action listener for RIGHT ComboBox which reacts on text change in its input field
         rightPathComboBox.addActionListener(new RightPathActionListener());
-        
+
         createNewRightSide(rightRoot);
 
         // Unregister Action listener for RIGHT ComboBox which reacts on text change in its input field
         rightPathComboBox.removeActionListener(new RightPathActionListener());
-        
+
     }
 
     /**
@@ -2304,7 +2309,7 @@ public class MainWindow extends JFrame {
         // reloadLeftSide(addChildNodes);
 
         buildMessageList();
-        
+
         scrollMessagePane.getVerticalScrollBar()
                 .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
 
@@ -2317,7 +2322,7 @@ public class MainWindow extends JFrame {
      * @param addChildNodes
      */
     protected void reloadLeftSide(boolean addChildNodes) {
-        
+
         if (addChildNodes) {
             if (leftNode != null) {
                 // Add children to the node
@@ -2335,11 +2340,11 @@ public class MainWindow extends JFrame {
     /**
      * Reload node structure in the right side of the window and show messages.
      */
-    
+
     protected void showMessages() {
         scrollMessagePane.getVerticalScrollBar()
                 .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-        
+
         buildMessageList();
 
         // Reload node structure in the right side of the window
@@ -2349,14 +2354,14 @@ public class MainWindow extends JFrame {
                 .removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
         // Make the message table visible in the message scroll pane
         scrollMessagePane.setViewportView(messageList);
-        
+
     }
 
     /**
      * Reload node structure in the right side of the window.
      */
     protected void reloadRightSide() {
-        
+
         ifsFile = new IFSFile(remoteServer, rightPathString);
 
         // Add IFS nodes (children) for the right tree in parallel background process
@@ -2481,7 +2486,7 @@ public class MainWindow extends JFrame {
      */
     protected TreePath getTreePathFromString(String pathString, String root) {
         TreePath treePath = null;
-        
+
         if (pathString.equals(pcFileSep) || pathString.equals("")) {
             Object ob = new DefaultMutableTreeNode(pathString);
             treePath = new TreePath(ob);
@@ -2489,10 +2494,10 @@ public class MainWindow extends JFrame {
         }
         String pathBeg = root;
         String pathEnd = leftPathString.substring(pathBeg.length());
-        
+
         String[] strs = pathEnd.split(pcFileSep);
         Object[] obj = new Object[strs.length];
-        
+
         obj[0] = new DefaultMutableTreeNode(pathBeg);
         if (pathEnd.length() > 0) {
             for (int idx = 1; idx < strs.length; idx++) {
@@ -2509,13 +2514,13 @@ public class MainWindow extends JFrame {
      *
      */
     class LeftTreeExpansionListener implements TreeExpansionListener, TreeWillExpandListener {
-        
+
         public void treeExpanded(TreeExpansionEvent treeExpansionEvent) {
 
             // Get tree path from the event
             // leftSelectedPath = treeExpansionEvent.getPath();
             JTree tree = (JTree) treeExpansionEvent.getSource();
-            
+
             leftRow = tree.getMinSelectionRow();
             leftSelectedPath = tree.getPathForRow(leftRow);
 
@@ -2532,13 +2537,13 @@ public class MainWindow extends JFrame {
             // Reload children of the node
             reloadLeftSide(nodes);
         }
-        
+
         public void treeCollapsed(TreeExpansionEvent treeExpansionEvent) {
         }
-        
+
         public void treeWillExpand(TreeExpansionEvent treeExpansionEvent) {
         }
-        
+
         public void treeWillCollapse(TreeExpansionEvent treeExpansionEvent) {
         }
     }
@@ -2549,12 +2554,12 @@ public class MainWindow extends JFrame {
      *
      */
     class RightTreeExpansionListener implements TreeExpansionListener, TreeWillExpandListener {
-        
+
         public void treeExpanded(TreeExpansionEvent treeExpansionEvent) {
 
             // Get tree path from the event
             JTree tree = (JTree) treeExpansionEvent.getSource();
-            
+
             rightRow = tree.getMinSelectionRow();
             rightSelectedPath = tree.getPathForRow(rightRow);
 
@@ -2570,13 +2575,13 @@ public class MainWindow extends JFrame {
             // Reload children of the node
             reloadRightSide();
         }
-        
+
         public void treeCollapsed(TreeExpansionEvent treeExpansionEvent) {
         }
-        
+
         public void treeWillExpand(TreeExpansionEvent treeExpansionEvent) {
         }
-        
+
         public void treeWillCollapse(TreeExpansionEvent treeExpansionEvent) {
         }
     }
@@ -2585,9 +2590,9 @@ public class MainWindow extends JFrame {
      * Mouse adapter for left tree.
      */
     class LeftTreeMouseAdapter extends MouseAdapter {
-        
+
         private void popupEvent(MouseEvent mouseEvent) {
-            
+
             Component component = mouseEvent.getComponent();
             Point pt = mouseEvent.getPoint();
             SwingUtilities.convertPointToScreen(pt, component);
@@ -2635,7 +2640,7 @@ public class MainWindow extends JFrame {
                 pathStrings[idx] = correctLeftPathString(pathStrings[idx]);
                 // Get row number from the rows array (not actually used)
                 leftRow = leftPathsRows[idx];
-                
+
                 leftPathStrings[idx] = pathStrings[idx];
                 // System.out.println("leftPathStrings[" + idx + "]: " + leftPathStrings[idx]);
 
@@ -2697,7 +2702,7 @@ public class MainWindow extends JFrame {
                 leftTreePopupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
             }
         }
-        
+
         public void mousePressed(MouseEvent mouseEvent) {
             if ((mouseEvent.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK) == MouseEvent.BUTTON1_DOWN_MASK
                     || (mouseEvent.getModifiersEx() & InputEvent.BUTTON3_DOWN_MASK) == MouseEvent.BUTTON3_DOWN_MASK) {
@@ -2713,9 +2718,9 @@ public class MainWindow extends JFrame {
      * Mouse adapter for ritht tree.
      */
     public class RightTreeMouseAdapter extends MouseAdapter {
-        
+
         private void popupEvent(MouseEvent mouseEvent) {
-            
+
             Component component = mouseEvent.getComponent();
             Point pt = mouseEvent.getPoint();
             SwingUtilities.convertPointToScreen(pt, component);
@@ -2772,7 +2777,7 @@ public class MainWindow extends JFrame {
                 pathStrings[idx] = correctRightPathString(pathStrings[idx]);
                 // Get row number from the rows array (not actually used)
                 rightRow = rightPathsRows[idx];
-                
+
                 rightPathStrings[idx] = pathStrings[idx];
                 // System.out.println("rightPathStrings[" + idx + "]: " + rightPathStrings[idx]);
 
@@ -2786,7 +2791,7 @@ public class MainWindow extends JFrame {
 
             // Set row number to the map (path string, row number) for possible later scrolling to the path node
             rightTreeMap.put(rightPathString, rightRow);
-            
+
             try {
                 ifsFile = new IFSFile(remoteServer, rightPathString);
 
@@ -2843,7 +2848,7 @@ public class MainWindow extends JFrame {
                     rightTreePopupMenu.add(compileSourceMember);
                     rightTreePopupMenu.add(findInSourceMembers);
                     rightTreePopupMenu.add("");
-                    
+
                     rightTreePopupMenu.add(deleteSourceMember);
 
                     // On double click run "editSourceMember"
@@ -2857,7 +2862,7 @@ public class MainWindow extends JFrame {
                         JTextArea textArea2 = new JTextArea();
                         EditFile edtf = new EditFile(remoteServer, MainWindow.this, textArea, textArea2, rightPathString, "rewriteSourceMember");
                     }
-                    
+
                 } //
                 // Save file
                 else if (rightPathString.startsWith("/QSYS.LIB") && rightPathString.endsWith(".SAVF")) {
@@ -2914,7 +2919,7 @@ public class MainWindow extends JFrame {
                         JTextArea textArea2 = new JTextArea();
                         EditFile edtf = new EditFile(remoteServer, MainWindow.this, textArea, textArea2, rightPathString, "rewriteIfsFile");
                     }
-                    
+
                     rightTreePopupMenu.add(findInIfsFiles);
                     rightTreePopupMenu.add("");
                     rightTreePopupMenu.add(deleteIfsObject);
@@ -2929,7 +2934,7 @@ public class MainWindow extends JFrame {
                 exc.printStackTrace();
             }
         }
-        
+
         @Override
         public void mousePressed(MouseEvent mouseEvent) {
             if ((mouseEvent.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK) == MouseEvent.BUTTON1_DOWN_MASK
@@ -2947,19 +2952,19 @@ public class MainWindow extends JFrame {
      * field.
      */
     class LeftPathActionListener implements ActionListener {
-        
+
         @Override
         public void actionPerformed(ActionEvent ae) {
             JComboBox<String> source = (JComboBox) ae.getSource();
             // Get path string from the item typed in combo box text field
             leftPathString = (String) source.getSelectedItem();
-            
+
             if (leftPathString.isEmpty()) {
                 leftPathString = firstLeftRootSymbol;
             }
-            
+
             source.setSelectedItem(leftPathString);
-            
+
             leftTreeMap.put(leftPathString, leftRow);
 
             // Update "LEFT_PATH" property in Parameters.txt file
@@ -2983,7 +2988,7 @@ public class MainWindow extends JFrame {
      * field.
      */
     class RightPathActionListener implements ActionListener {
-        
+
         @Override
         public void actionPerformed(ActionEvent ae) {
             JComboBox<String> source = (JComboBox) ae.getSource();
@@ -2995,13 +3000,13 @@ public class MainWindow extends JFrame {
             if (rightPathString.isEmpty()) {
                 rightPathString = "/";
             }
-            
+
             if (rightPathString.toUpperCase().startsWith("/QSYS.LIB")) {
                 rightPathString = rightPathString.toUpperCase();
             }
             rightPathString = correctRightPathString(rightPathString);
             source.setSelectedItem(rightPathString);
-            
+
             rightTreeMap.put(rightPathString, rightRow);
 
             // Update "RIGHT_PATH" property in Parameters.txt file
@@ -3021,14 +3026,14 @@ public class MainWindow extends JFrame {
             // Create new right side from the selected rightPathString
             createNewRightSide(rightPathString);
         }
-        
+
     }
 
     /**
      * Adjustment listener for MESSAGE scroll pane.
      */
     class MessageScrollPaneAdjustmentListenerMax implements AdjustmentListener {
-        
+
         @Override
         public void adjustmentValueChanged(AdjustmentEvent ae) {
             // Set scroll pane to the bottom - the last element
@@ -3040,23 +3045,23 @@ public class MainWindow extends JFrame {
      * Drag and drop from right to left (or left to left) - transfer handler
      */
     public class LeftTreeTransferHandler extends TransferHandler {
-        
+
         MainWindow mainWindow;
-        
+
         LeftTreeTransferHandler(MainWindow mainWindow) {
             this.mainWindow = mainWindow;
         }
-        
+
         @Override
         public int getSourceActions(JComponent component) {
             return TransferHandler.COPY;
         }
-        
+
         @Override
         protected Transferable createTransferable(JComponent component) {
             return new StringSelection("");
         }
-        
+
         @Override
         public boolean canImport(TransferHandler.TransferSupport info) {
             if (!info.isDrop()) {
@@ -3065,19 +3070,19 @@ public class MainWindow extends JFrame {
                 return true;
             }
         }
-        
+
         @Override
         public boolean importData(TransferHandler.TransferSupport info) {
             if (!info.isDrop()) {
                 return false;
             }
-            
+
             leftInfo = info;
-            
+
             JTree.DropLocation dl = (JTree.DropLocation) info.getDropLocation();
             // Target path
             targetTreePath = dl.getPath();
-            
+
             targetPathString = getStringFromLeftPath(targetTreePath);
 
             // Remove trailing file separator from the path string
@@ -3148,31 +3153,31 @@ public class MainWindow extends JFrame {
         leftTree.expandRow(leftRow);
         // Note that the children were added
         leftTreeModel.nodeStructureChanged(targetNode);
-        
-        
+
+
     }
 
     /**
      * Drag and drop from left to right - transfer handler.
      */
     class RightTreeTransferHandler extends TransferHandler {
-        
+
         MainWindow mainWindow;
-        
+
         RightTreeTransferHandler(MainWindow mainWindow) {
             this.mainWindow = mainWindow;
         }
-        
+
         @Override
         public int getSourceActions(JComponent component) {
             return TransferHandler.COPY;
         }
-        
+
         @Override
         protected Transferable createTransferable(JComponent component) {
             return new StringSelection("");
         }
-        
+
         @Override
         public boolean canImport(TransferHandler.TransferSupport info) {
             if (!info.isDrop()) {
@@ -3181,21 +3186,21 @@ public class MainWindow extends JFrame {
                 return true;
             }
         }
-        
+
         @Override
         public boolean importData(TransferHandler.TransferSupport info) {
             if (!info.isDrop()) {
                 return false;
             }
-            
+
             rightInfo = info;
-            
+
             JTree.DropLocation dl = (JTree.DropLocation) info.getDropLocation();
             // Target path
             rightSelectedPath = dl.getPath();
             // Target node
             rightNode = (DefaultMutableTreeNode) rightTree.getLastSelectedPathComponent();
-            
+
             rightPathString = getStringFromRightPath(rightSelectedPath);
 
             // Remove trailing file separator from the path string
@@ -3248,7 +3253,7 @@ public class MainWindow extends JFrame {
      * @param info
      */
     protected void expandRightTreeNode(TransferHandler.TransferSupport info) {
-        
+
         IFSFile targetPath = new IFSFile(remoteServer, targetPathString);
 
         // Target node
@@ -3279,7 +3284,7 @@ public class MainWindow extends JFrame {
      * Window adapter setting current coordinates of the window to properties.
      */
     class MainWindowAdapter extends WindowAdapter {
-        
+
         @Override
         public void windowClosing(WindowEvent we) {
             // Get actual main window coordinates
@@ -3302,6 +3307,81 @@ public class MainWindow extends JFrame {
                 exc.printStackTrace();
             }
             System.exit(0);
+        }
+    }
+
+    /**
+     * Check connection by ping; In failure try to connect sevices.
+     */
+    public class CheckConnection extends SwingWorker<Void, Void> {
+        AS400JPing pingObject;
+        boolean ping_FILE;
+        boolean ping_COMMAND;
+        boolean ping_RECORDACCESS;
+        /**
+         * Constructor.
+         */
+        CheckConnection(AS400 remoteServer) {
+            pingObject = new AS400JPing(properties.getProperty("HOST"));
+        }
+
+        /**
+         * This method performs the background task:
+         * Checking AS400 connection by ping to the server and keeping connection alive.
+         *
+         * @return
+         */
+        @Override
+        @SuppressWarnings("UseSpecificCatch")
+        public Void doInBackground() {
+            while (true) {
+                // Ping to the server for FILE and COMMAND services.
+                ping_FILE = pingObject.ping(AS400.FILE);
+                ping_COMMAND = pingObject.ping(AS400.COMMAND);
+                ping_RECORDACCESS = pingObject.ping(AS400.RECORDACCESS);
+                
+                if (!ping_FILE) {
+                    row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting service FILE.";
+                    msgVector.add(row);
+                    showMessages(noNodes);
+                    try {
+                        remoteServer.connectService(AS400.FILE);
+                    } catch (Exception exc) {
+                        row = "Error: getting connection: " + exc.toString();
+                        msgVector.add(row);
+                        showMessages(noNodes);
+                        exc.printStackTrace();
+                    }
+                }
+                
+                if (!ping_COMMAND) {
+                    row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting service COMMAND.";
+                    msgVector.add(row);
+                    showMessages(noNodes);
+                    try {
+                        remoteServer.connectService(AS400.COMMAND);
+                    } catch (Exception exc) {
+                        row = "Error: getting connection: " + exc.toString();
+                        msgVector.add(row);
+                        showMessages(noNodes);
+                        exc.printStackTrace();
+                    }
+                }
+                
+                if (!ping_RECORDACCESS) {
+                    row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting service RECORDACCESS.";
+                    msgVector.add(row);
+                    showMessages(noNodes);
+                    try {
+                        remoteServer.connectService(AS400.RECORDACCESS);
+                    } catch (Exception exc) {
+                        row = "Error: getting connection: " + exc.toString();
+                        msgVector.add(row);
+                        showMessages(noNodes);
+                        exc.printStackTrace();
+                    }
+                }
+            }
         }
     }
 

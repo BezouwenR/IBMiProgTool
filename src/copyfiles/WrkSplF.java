@@ -781,8 +781,6 @@ public class WrkSplF extends JFrame {
 
                     // If selection parameters are satisfied, select the spooled file characteristics
                     // to the array lists for the table
-                    System.out.println("namePar 1: " + namePar);
-                    System.out.println("splf.getName() 1: " + splf.getName());
                     if (splf.getName().contains(namePar)
                             && splfFileNumberChar.contains(numberPar)
                             && splfFilePagesChar.contains(pagesPar)
@@ -791,16 +789,16 @@ public class WrkSplF extends JFrame {
                             && splf.getJobNumber().contains(jobNumberPar)
                             && splf.getCreateDate().contains(datePar)
                             && splf.getCreateTime().contains(timePar)) {
-                        System.out.println("namePar 2: " + namePar);
-                        System.out.println("splf.getName() 2: " + splf.getName());
-                        System.out.print("File name selectSpoolFiles2: " + splf.getName());
-                        System.out.print(" \tFile number: " + splfFileNumberChar);
-                        System.out.print(" \tJob name: " + splf.getJobName());
-                        System.out.print(" \tUser name: " + splf.getJobUser());
-                        System.out.print(" \tJob number: " + splf.getJobNumber());
-                        System.out.print(" \tDate: " + splf.getCreateDate());
-                        System.out.print(" \tTime: " + splf.getCreateTime());
-                        System.out.println();
+                        //System.out.println("namePar 2: " + namePar);
+                        //System.out.println("splf.getName() 2: " + splf.getName());
+                        //System.out.print("File name selectSpoolFiles2: " + splf.getName());
+                        //System.out.print(" \tFile number: " + splfFileNumberChar);
+                        //System.out.print(" \tJob name: " + splf.getJobName());
+                        //System.out.print(" \tUser name: " + splf.getJobUser());
+                        //System.out.print(" \tJob number: " + splf.getJobNumber());
+                        //System.out.print(" \tDate: " + splf.getCreateDate());
+                        //System.out.print(" \tTime: " + splf.getCreateTime());
+                        //System.out.println();
                         nameArrList.add(splf.getName());
                         numberArrList.add(splfFileNumberChar);
                         pagesArrList.add(splfFilePagesChar);
