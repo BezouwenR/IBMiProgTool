@@ -395,7 +395,7 @@ public final class DisplayFile extends JFrame {
         globalPanel.setLayout(globalPanelLayout);
         globalPanel.setBackground(VERY_LIGHT_GRAY);
 
-        scrollPane.setPreferredSize(new Dimension(windowWidth, windowHeight - 140));
+        scrollPane.setPreferredSize(new Dimension(windowWidth, windowHeight));
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
         // "Previous" button listener
