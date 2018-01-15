@@ -843,27 +843,27 @@ public final class DisplayFile extends JFrame {
                 return;
             }
             if (Objects.nonNull(pattern)) {
+                startOffsets = new ArrayList<>();
+                endOffsets = new ArrayList<>();
+                highlightMap.clear();
                 Matcher matcher = pattern.matcher(textArea.getText(0, textArea.getText().length()));
                 int pos = 0;
+                int start = 0;
+                int end = 0;
                 while (matcher.find(pos)) {
-                    int start = matcher.start();
-                    int end = matcher.end();
+                    start = matcher.start();
+                    end = matcher.end();
                     highlighter.addHighlight(start, end, highlightPainter);
+                    startOffsets.add(start);
+                    endOffsets.add(end);
+                    highlightMap.put(start, end);
                     pos = end;
                 }
+                System.out.println("start: '" + start + "'");
             }
             JLabel label = layerUI.hint;
-            startOffsets = new ArrayList<>();
-            endOffsets = new ArrayList<>();
             Highlighter.Highlight[] array = highlighter.getHighlights();
             int hits = array.length; // number of highlighted intervals found.
-            highlightMap.clear();
-            // Put all highlighted intervals into a map.
-            for (int idx = 0; idx < hits; idx++) {
-                startOffsets.add(highlighter.getHighlights()[idx].getStartOffset());
-                endOffsets.add(highlighter.getHighlights()[idx].getEndOffset());
-                highlightMap.put(highlighter.getHighlights()[idx].getStartOffset(), highlighter.getHighlights()[idx].getEndOffset());
-            }
             if (hits > 0) { // If at least one interval was found.
                 if (direction.equals("forward")) {
                     // Forward direction

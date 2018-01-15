@@ -1,6 +1,7 @@
 package copyfiles;
 
 import com.ibm.as400.access.AS400;
+import com.ibm.as400.access.AS400JPing;
 import com.ibm.as400.access.AS400Text;
 import com.ibm.as400.access.PrintObject;
 import com.ibm.as400.access.PrintObjectTransformedInputStream;
@@ -164,6 +165,8 @@ public class WrkSplF extends JFrame {
     JTextArea spoolTextArea;
 
     SpooledFile splf;
+    AS400JPing pingObject;
+    boolean ping_PRINT;
 
     String namePar;
     String numberPar;
@@ -258,9 +261,17 @@ public class WrkSplF extends JFrame {
         } else {
             userPar = "";
         }
+        /*
         // Select all spooled files
-        selectSpooledFiles("", "", "", "", userPar, "", "", "");
-
+        SpooledFile splf = selectSpooledFiles("", "", "", "", userPar, "", "", "");
+        if (splf == null) {
+            row = "Error: Spooled file list cannot be obtained. Check for connection to the server.";
+            mainWindow.msgVector.add(row);
+            mainWindow.showMessages(noNodes); // do not add child nodes
+            mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
+            return;
+        }
+         */
         panelTop = new JPanel();
         panelTop.setPreferredSize(new Dimension(windowWidth, 60));
         panelTop.setMinimumSize(new Dimension(windowWidth, 60));
@@ -376,11 +387,39 @@ public class WrkSplF extends JFrame {
         globalPanelLayout.setAutoCreateGaps(true);
         globalPanelLayout.setAutoCreateContainerGaps(true);
 
-        // Create spool table
-        // ==================
+        // Check connection to PRINT service before creating a spool table.
+        // ================================================================
+        pingObject = new AS400JPing(properties.getProperty("HOST"));
+        pingObject.setTimeout(1000);
+        ping_PRINT = pingObject.ping(AS400.PRINT);
+        if (!ping_PRINT) {
+            row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting service PRINT.";
+            mainWindow.msgVector.add(row);
+            mainWindow.showMessages(noNodes);
+            try {
+                remoteServer.connectService(AS400.PRINT);
+            } catch (Exception exc) {
+                row = "Error: getting connection: " + exc.toString();
+                mainWindow.msgVector.add(row);
+                mainWindow.showMessages(noNodes);
+                exc.printStackTrace();
+            }
+        }
+
+        // Create spool table.
+        // ===================
+        // Select all spooled files
+        splf = selectSpooledFiles("", "", "", "", userPar, "", "", "");
+        if (splf == null) {
+            row = "Error: Spooled file list cannot be obtained. Check for connection to the server.";
+            mainWindow.msgVector.add(row);
+            mainWindow.showMessages(noNodes); // do not add child nodes
+            mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
+            return;
+        }
         spoolTable = createSpoolTable();
 
-        // Mouse listener reacts on row number selected by mouse click or double click
+        // Mouse listener reacts on the row number selected by mouse click or double click
         spoolTableMouseListener = new SpoolTableMouseAdapter();
         // Register mouse listener to the table
         spoolTable.addMouseListener(spoolTableMouseListener);
@@ -419,7 +458,6 @@ public class WrkSplF extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();
         scrollPane.getVerticalScrollBar().removeAdjustmentListener(scrollPaneAdjustmentListenerMax);
-
 
         //
         // Input fields action listeners
@@ -498,9 +536,16 @@ public class WrkSplF extends JFrame {
         // -----------------------
         refreshButton.addActionListener(ae -> {
             scrollPane.getVerticalScrollBar().addAdjustmentListener(scrollPaneAdjustmentListenerMax);
-            userPar = userComboBox.getItemAt(0); // Get current user name from the combo box field
+            userPar = properties.getProperty("USERNAME");
             // Select spooled files again
-            selectSpooledFiles(namePar, numberPar, pagesPar, jobPar, userPar, jobNumberPar, datePar, timePar);
+            splf = selectSpooledFiles(namePar, numberPar, pagesPar, jobPar, userPar, jobNumberPar, datePar, timePar);
+            if (splf == null) {
+                row = "Error: Spooled file list cannot be obtained. Check for connection to the server." + userPar;
+                mainWindow.msgVector.add(row);
+                mainWindow.showMessages(noNodes); // do not add child nodes
+                mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
+                return;
+            }
             // Refresh spool table in the window with the current user name
             refreshSpoolTable(userPar);
             scrollPane.getVerticalScrollBar().removeAdjustmentListener(scrollPaneAdjustmentListenerMax);
@@ -750,8 +795,10 @@ public class WrkSplF extends JFrame {
                 splfList.setQueueFilter(rightPathString);
             }
 
-            // Selection of spooled files is synchronous
-            splfList.openSynchronously();
+            // Selection of spooled files is asynchronous
+            splfList.openAsynchronously();
+            // Wait for completion
+            splfList.waitForListToComplete();
 
             // Get list of all spooled files
             Enumeration<SpooledFile> spooledFiles = splfList.getObjects();
@@ -1270,7 +1317,6 @@ public class WrkSplF extends JFrame {
             mainWindow.showMessages(noNodes); // do not add child nodes
             mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
             return spoolTextArea.getText();
-//            return "";
 
         } catch (Exception exc) {
             System.out.println("Error: " + exc.toString());

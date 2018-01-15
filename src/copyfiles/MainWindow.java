@@ -197,7 +197,7 @@ public class MainWindow extends JFrame {
     DefaultMutableTreeNode nodeLevel3;
 
     AS400 remoteServer;
-
+    CheckConnection chkConn;
     String language = "cs-CZ";
 
     JLabel userNameLabel = new JLabel("User name:");
@@ -1888,7 +1888,7 @@ public class MainWindow extends JFrame {
         scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
 
         // Check connection and keep connection alive in background.
-        CheckConnection chkConn = new CheckConnection(remoteServer);
+        chkConn = new CheckConnection(remoteServer);
         chkConn.execute();
 
 
@@ -3318,6 +3318,8 @@ public class MainWindow extends JFrame {
         boolean ping_FILE;
         boolean ping_COMMAND;
         boolean ping_RECORDACCESS;
+        boolean ping_PRINT;
+        
         /**
          * Constructor.
          */
@@ -3339,7 +3341,7 @@ public class MainWindow extends JFrame {
                 ping_FILE = pingObject.ping(AS400.FILE);
                 ping_COMMAND = pingObject.ping(AS400.COMMAND);
                 ping_RECORDACCESS = pingObject.ping(AS400.RECORDACCESS);
-                
+                ping_PRINT = pingObject.ping(AS400.PRINT);
                 if (!ping_FILE) {
                     row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting service FILE.";
                     msgVector.add(row);
@@ -3374,6 +3376,20 @@ public class MainWindow extends JFrame {
                     showMessages(noNodes);
                     try {
                         remoteServer.connectService(AS400.RECORDACCESS);
+                    } catch (Exception exc) {
+                        row = "Error: getting connection: " + exc.toString();
+                        msgVector.add(row);
+                        showMessages(noNodes);
+                        exc.printStackTrace();
+                    }
+                }
+                
+                if (!ping_PRINT) {
+                    row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting service PRINT.";
+                    msgVector.add(row);
+                    showMessages(noNodes);
+                    try {
+                        remoteServer.connectService(AS400.PRINT);
                     } catch (Exception exc) {
                         row = "Error: getting connection: " + exc.toString();
                         msgVector.add(row);

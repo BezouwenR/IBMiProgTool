@@ -2621,30 +2621,27 @@ public final class EditFile extends JFrame {
                 return;
             }
             if (Objects.nonNull(pattern)) {
+                startOffsets = new ArrayList<>();
+                endOffsets = new ArrayList<>();
+                highlightMap.clear();
                 Matcher matcher = pattern.matcher(textArea.getText(0, textArea.getText().length()));
                 int pos = 0;
+                int start = 0;
+                int end = 0;
                 while (matcher.find(pos)) {
-                    int start = matcher.start();
-                    int end = matcher.end();
+                    start = matcher.start();
+                    end = matcher.end();
                     layeredHighlighter.addHighlight(start, end, highlightPainter);
+                    startOffsets.add(start);
+                    endOffsets.add(end);
+                    highlightMap.put(start, end);
                     pos = end;
                 }
             }
             JLabel label = findWindow.layerUI.hint;
-            startOffsets = new ArrayList<>();
-            endOffsets = new ArrayList<>();
             LayeredHighlighter.Highlight[] array = layeredHighlighter.getHighlights();
             int hits = array.length; // number of highlighted intervals found.
-            highlightMap.clear();
-            // Put all highlighted intervals into a map.
-            for (int idx = 0; idx < hits; idx++) {
-                startOffsets.add(layeredHighlighter.getHighlights()[idx].getStartOffset());
-                endOffsets.add(layeredHighlighter.getHighlights()[idx].getEndOffset());
-                highlightMap.put(layeredHighlighter.getHighlights()[idx].getStartOffset(), layeredHighlighter.getHighlights()[idx].getEndOffset());
-            }
-
             if (hits > 0) { // If at least one interval was found.
-
                 if (findWindow.direction.equals("forward")) {
                     // Forward direction
                     if (curPos == null) {
@@ -2707,27 +2704,26 @@ public final class EditFile extends JFrame {
                 return;
             }
             if (Objects.nonNull(pattern)) {
+                startOffsets = new ArrayList<>();
+                endOffsets = new ArrayList<>();
+                highlightMap.clear();
                 Matcher matcher = pattern.matcher(textArea2.getText(0, textArea2.getText().length()));
                 int pos = 0;
+                int start = 0;
+                int end = 0;
                 while (matcher.find(pos)) {
-                    int start = matcher.start();
-                    int end = matcher.end();
+                    start = matcher.start();
+                    end = matcher.end();
                     layeredHighlighter2.addHighlight(start, end, highlightPainter);
+                    startOffsets.add(start);
+                    endOffsets.add(end);
+                    highlightMap.put(start, end);
                     pos = end;
                 }
             }
             JLabel label = findWindow.layerUI.hint;
-            startOffsets = new ArrayList<>();
-            endOffsets = new ArrayList<>();
-
             LayeredHighlighter.Highlight[] array = layeredHighlighter2.getHighlights();
             int hits = array.length;
-            highlightMap.clear();
-            for (int idx = 0; idx < hits; idx++) {
-                startOffsets.add(layeredHighlighter2.getHighlights()[idx].getStartOffset());
-                endOffsets.add(layeredHighlighter2.getHighlights()[idx].getEndOffset());
-                highlightMap.put(layeredHighlighter2.getHighlights()[idx].getStartOffset(), layeredHighlighter2.getHighlights()[idx].getEndOffset());
-            }
             if (hits > 0) {
                 if (findWindow.direction.equals("forward")) {
                     // Forward direction
