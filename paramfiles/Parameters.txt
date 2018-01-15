@@ -1,5 +1,5 @@
 #Copy files between IBM i and PC, edit and compile.
-#Mon Jan 15 13:35:49 CET 2018
+#Mon Jan 15 13:56:17 CET 2018
 DISPLAY_FONT_SIZE=12
 OVERWRITE_FILE=Y
 CARET=Short caret

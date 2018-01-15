@@ -261,17 +261,6 @@ public class WrkSplF extends JFrame {
         } else {
             userPar = "";
         }
-        /*
-        // Select all spooled files
-        SpooledFile splf = selectSpooledFiles("", "", "", "", userPar, "", "", "");
-        if (splf == null) {
-            row = "Error: Spooled file list cannot be obtained. Check for connection to the server.";
-            mainWindow.msgVector.add(row);
-            mainWindow.showMessages(noNodes); // do not add child nodes
-            mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
-            return;
-        }
-         */
         panelTop = new JPanel();
         panelTop.setPreferredSize(new Dimension(windowWidth, 60));
         panelTop.setMinimumSize(new Dimension(windowWidth, 60));
@@ -408,7 +397,7 @@ public class WrkSplF extends JFrame {
 
         // Create spool table.
         // ===================
-        // Select all spooled files
+        // Select all spooled files for the user
         splf = selectSpooledFiles("", "", "", "", userPar, "", "", "");
         if (splf == null) {
             row = "Error: Spooled file list cannot be obtained. Check for connection to the server.";
@@ -546,8 +535,12 @@ public class WrkSplF extends JFrame {
                 mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
                 return;
             }
-            // Refresh spool table in the window with the current user name
+            // Create the spool table
+            spoolTable = createSpoolTable();
+            // Refresh spool table in the window for the current user name
             refreshSpoolTable(userPar);
+
+
             scrollPane.getVerticalScrollBar().removeAdjustmentListener(scrollPaneAdjustmentListenerMax);
         });
 
