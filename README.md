@@ -39,8 +39,13 @@ Version 02.02
 Version 03.01
 
 - Searching pattern in multiple files.
-- Saving user chosen attributes (source type and compile command) for compiled files.
+- Saving compiled file source type and compile command.
 - Bugs fixed.
+
+Version 03.02
+
+- Enhancing stability - keeping or retrying connection to the server.
+- Bug fixes.
 
 - - - - - - - - - - 
 
@@ -78,4 +83,9 @@ Verze 03.01
 
 - Hledání vzorku ve více souborech.
 - Ukládání uživatelem zvolených atributů (zdrojového typu a kompilačního příkazu) pro kompilované soubory.
+- Oprava chyb.
+
+Verze 03.02
+
+- Zlepšení stability - udržení nebo obnova spojení se serverem.
 - Oprava chyb.

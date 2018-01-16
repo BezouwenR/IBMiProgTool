@@ -1,6 +1,7 @@
 package copyfiles;
 
 import com.ibm.as400.access.AS400;
+import com.ibm.as400.access.AS400JPing;
 import com.ibm.as400.access.AS400Message;
 import com.ibm.as400.access.CommandCall;
 import com.ibm.as400.access.IFSFile;
@@ -194,6 +195,10 @@ public class Compile extends JFrame {
 
     String pathString;
     boolean ifs;
+
+    AS400JPing pingObject;
+    boolean ping_PRINT;
+    boolean noNodes = false;
 
     /**
      * Constructor
@@ -650,26 +655,28 @@ public class Compile extends JFrame {
                     .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
             extractNamesFromIfsPath(pathString);
             String className = this.getClass().getSimpleName();
-            // "true" stands for *CURRENT user
-            WrkSplF wrkSplf = new WrkSplF(remoteServer, mainWindow, this.pathString, true, compileWindowX, compileWindowY, className);
-            SpooledFile splf;
-            if (!ifs) {
-                splf = wrkSplf.selectSpooledFiles(memberName, "", "", "", userName, "", "", ""); // Set member name
-            } else {
-                splf = wrkSplf.selectSpooledFiles(pathString, "", "", "", userName, "", "", ""); // Set IFS path string
-            }
-            String spoolTextAreaString = wrkSplf.convertSpooledFile(splf);
-            JTextArea textArea = new JTextArea();
-            DisplayFile dspf = new DisplayFile(textArea, mainWindow);
-            dspf.displayTextArea(spoolTextAreaString, ibmCcsid);
-        });
+
+            // "true" stands for *CURRENT user, "false",
+            // second "false" stands for "print last spooled file".
+            wwsp = new WrkSplFCall(remoteServer, mainWindow, this.pathString, 
+                    true, // *CURRENT user
+                    compileWindowX, compileWindowY, className, 
+                    false // last spooled file
+            );
+            wwsp.execute(); // Run in parallel SwingWorker
+          });
 
         // Spooled file button listener
         spooledFileButton.addActionListener(en -> {
             scrollMessagePane.getVerticalScrollBar().addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
             String className = this.getClass().getSimpleName();
-            // "true" stands for *CURRENT user
-            wwsp = new WrkSplFCall(remoteServer, mainWindow, this.pathString, true, compileWindowX, compileWindowY, className);
+            // "true" stands for *CURRENT user, "false",
+            // second "true" stands for "createSpoolTable".
+            wwsp = new WrkSplFCall(remoteServer, mainWindow, this.pathString, 
+                    true, // *CURRENT user
+                    compileWindowX, compileWindowY, className, 
+                    true  // create spool file table
+            );
             wwsp.execute(); // Run in parallel SwingWorker
         });
 

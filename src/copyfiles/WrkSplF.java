@@ -261,6 +261,17 @@ public class WrkSplF extends JFrame {
         } else {
             userPar = "";
         }
+        
+        // Select all spooled files for the user
+        splf = selectSpooledFiles("", "", "", "", userPar, "", "", "");
+        if (splf == null) {
+            row = "Error: Spooled file list cannot be obtained. Check for connection to the server.";
+            mainWindow.msgVector.add(row);
+            mainWindow.showMessages(noNodes); // do not add child nodes
+            mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
+            return;
+        }
+
         panelTop = new JPanel();
         panelTop.setPreferredSize(new Dimension(windowWidth, 60));
         panelTop.setMinimumSize(new Dimension(windowWidth, 60));
@@ -289,8 +300,8 @@ public class WrkSplF extends JFrame {
         userComboBox.setMinimumSize(new Dimension(90, 20));
         userComboBox.setMaximumSize(new Dimension(90, 20));
         userComboBox.setEditable(true);
-        // Insert the user name into the combo box field to display its spool files
-        userComboBox.setSelectedItem(userPar);
+        // Insert the first user name into the combo box field to display its spool files
+        userComboBox.setSelectedItem("");
 
         jobNumberTextField.setPreferredSize(new Dimension(60, 20));
         jobNumberTextField.setMinimumSize(new Dimension(60, 20));
@@ -376,36 +387,8 @@ public class WrkSplF extends JFrame {
         globalPanelLayout.setAutoCreateGaps(true);
         globalPanelLayout.setAutoCreateContainerGaps(true);
 
-        // Check connection to PRINT service before creating a spool table.
-        // ================================================================
-        pingObject = new AS400JPing(properties.getProperty("HOST"));
-        pingObject.setTimeout(1000);
-        ping_PRINT = pingObject.ping(AS400.PRINT);
-        if (!ping_PRINT) {
-            row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting service PRINT.";
-            mainWindow.msgVector.add(row);
-            mainWindow.showMessages(noNodes);
-            try {
-                remoteServer.connectService(AS400.PRINT);
-            } catch (Exception exc) {
-                row = "Error: getting connection: " + exc.toString();
-                mainWindow.msgVector.add(row);
-                mainWindow.showMessages(noNodes);
-                exc.printStackTrace();
-            }
-        }
-
         // Create spool table.
         // ===================
-        // Select all spooled files for the user
-        splf = selectSpooledFiles("", "", "", "", userPar, "", "", "");
-        if (splf == null) {
-            row = "Error: Spooled file list cannot be obtained. Check for connection to the server.";
-            mainWindow.msgVector.add(row);
-            mainWindow.showMessages(noNodes); // do not add child nodes
-            mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
-            return;
-        }
         spoolTable = createSpoolTable();
 
         // Mouse listener reacts on the row number selected by mouse click or double click
@@ -539,7 +522,6 @@ public class WrkSplF extends JFrame {
             spoolTable = createSpoolTable();
             // Refresh spool table in the window for the current user name
             refreshSpoolTable(userPar);
-
 
             scrollPane.getVerticalScrollBar().removeAdjustmentListener(scrollPaneAdjustmentListenerMax);
         });
@@ -764,11 +746,42 @@ public class WrkSplF extends JFrame {
 
         nbrOfRows = 0;
 
+        // Check connection to PRINT service before creating a spooled file list.
+        // ======================================================================
+        pingObject = new AS400JPing(properties.getProperty("HOST"));
+        //pingObject.setTimeout(1000);
+        ping_PRINT = pingObject.ping(AS400.PRINT);
+        boolean isPingOk = ping_PRINT;
+        while (!isPingOk) {
+            row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting PRINT service.";
+            mainWindow.msgVector.add(row);
+            mainWindow.showMessages(noNodes);
+            try {
+                ping_PRINT = pingObject.ping(AS400.PRINT);
+                isPingOk = ping_PRINT;
+                System.out.println("pingOk: " + isPingOk);
+                Thread.sleep(2000);
+            } catch (Exception exc) {
+                row = "Error: Ping: " + exc.toString();
+                System.out.println("Error: Ping: " + exc.toString());
+                mainWindow.msgVector.add(row);
+                mainWindow.showMessages(noNodes);
+                exc.printStackTrace();
+            }
+        }
+        try {
+            remoteServer.connectService(AS400.PRINT);
+        } catch (Exception exc) {
+            row = "Error: Getting connection to PRINT service: " + exc.toString();
+            mainWindow.msgVector.add(row);
+            mainWindow.showMessages(noNodes);
+            exc.printStackTrace();
+        }
+
         // Create object representing spooled files
         SpooledFileList splfList = new SpooledFileList(remoteServer);
         try {
-            // Parameter for selection all users for the first time
-            // or a specific user if not empty
+            // Parameter for selection all users for the first time or a specific user if not empty
             if (rightPathString.equals("/QSYS.LIB")) {
                 row = "Wait: Retrieving list of all spooled files . . .";
                 mainWindow.msgVector.add(row);

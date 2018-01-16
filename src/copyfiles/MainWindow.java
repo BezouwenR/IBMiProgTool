@@ -1656,8 +1656,13 @@ public class MainWindow extends JFrame {
             scrollMessagePane.getVerticalScrollBar()
                     .addAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
             String className = this.getClass().getSimpleName();
-            // "false" stand for *ALL users (not *CURRENT user)
-            WrkSplFCall wwsp = new WrkSplFCall(remoteServer, this, rightPathString, false, currentX, currentY, className);
+            // first "false" stands for *ALL users (not *CURRENT user), 
+            // second "true" stands for "create spooled file table".
+            WrkSplFCall wwsp = new WrkSplFCall(remoteServer, this, rightPathString, 
+                    false, // not *CURRENT user
+                    currentX, currentY, className, 
+                    true // create spooled file table
+            );
             wwsp.execute();
         });
 
@@ -1891,7 +1896,6 @@ public class MainWindow extends JFrame {
         chkConn = new CheckConnection(remoteServer);
         chkConn.execute();
 
-
         return true;
     }
 
@@ -1903,7 +1907,7 @@ public class MainWindow extends JFrame {
         do {
             OK = connectReconnect();
             if (OK) {
-                // Search for MEMBERS without defining a library or a file. This operation is long-lasting.
+                // Search for MEMBERS without specifying a library or a file. This operation is long-lasting.
                 // ------------------
                 if ((libraryPatternTextField.getText().isEmpty() || libraryPatternTextField.getText().equals("*"))
                         && (filePatternTextField.getText().isEmpty() || filePatternTextField.getText().equals("*"))
@@ -3314,12 +3318,13 @@ public class MainWindow extends JFrame {
      * Check connection by ping; In failure try to connect sevices.
      */
     public class CheckConnection extends SwingWorker<Void, Void> {
+
         AS400JPing pingObject;
         boolean ping_FILE;
         boolean ping_COMMAND;
         boolean ping_RECORDACCESS;
         boolean ping_PRINT;
-        
+
         /**
          * Constructor.
          */
@@ -3343,7 +3348,7 @@ public class MainWindow extends JFrame {
                 ping_RECORDACCESS = pingObject.ping(AS400.RECORDACCESS);
                 ping_PRINT = pingObject.ping(AS400.PRINT);
                 if (!ping_FILE) {
-                    row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting service FILE.";
+                    row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting FILE service.";
                     msgVector.add(row);
                     showMessages(noNodes);
                     try {
@@ -3355,9 +3360,9 @@ public class MainWindow extends JFrame {
                         exc.printStackTrace();
                     }
                 }
-                
+
                 if (!ping_COMMAND) {
-                    row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting service COMMAND.";
+                    row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting COMMAND service.";
                     msgVector.add(row);
                     showMessages(noNodes);
                     try {
@@ -3369,9 +3374,9 @@ public class MainWindow extends JFrame {
                         exc.printStackTrace();
                     }
                 }
-                
+
                 if (!ping_RECORDACCESS) {
-                    row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting service RECORDACCESS.";
+                    row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting RECORDACCESS service.";
                     msgVector.add(row);
                     showMessages(noNodes);
                     try {
@@ -3383,9 +3388,9 @@ public class MainWindow extends JFrame {
                         exc.printStackTrace();
                     }
                 }
-                
+
                 if (!ping_PRINT) {
-                    row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting service PRINT.";
+                    row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting PRINT service.";
                     msgVector.add(row);
                     showMessages(noNodes);
                     try {
@@ -3406,17 +3411,16 @@ public class MainWindow extends JFrame {
      *
      * @param args
      */
-    @SuppressWarnings("UseSpecificCatch")
     public static void main(String[] args) {
-        try {
-            // Set operating system look and feel
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            // UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-            // Create object from the class
+        java.awt.EventQueue.invokeLater(() -> {
+            try {
+                // Set operating system look and feel
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
             MainWindow mainWindow = new MainWindow();
             mainWindow.createWindow();
-        } catch (Exception exc) {
-            exc.printStackTrace();
-        }
+        });
     }
 }
