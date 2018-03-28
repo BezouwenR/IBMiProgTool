@@ -47,6 +47,10 @@ Version 03.02
 - Enhancing stability - keeping or retrying connection to the server.
 - Bug fixes.
 
+Version 03.03
+
+- Source user documentation in Pages added to "documents" directory.
+
 - - - - - - - - - - 
 
 Tento projekt se neinstaluje, je okamžitě k použití jako Java aplikace v adresáři projektu. Aplikace vyžaduje Javu SE 8 instalovanou v PC.
@@ -89,3 +93,7 @@ Verze 03.02
 
 - Zlepšení stability - udržení nebo obnova spojení se serverem.
 - Oprava chyb.
+
+Version 03.03
+
+- Uživatelská dokumentace v Pages přidána do adresáře "documents".

@@ -15,6 +15,7 @@ import com.ibm.as400.access.SequentialFile;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -34,6 +35,7 @@ import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.math.BigDecimal;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,14 +65,17 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.ListCellRenderer;
-import javax.swing.border.Border;
 import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -97,6 +102,29 @@ public final class EditFile extends JFrame {
 
     JTextArea textArea;
     JTextArea textArea2;
+
+    JPopupMenu textAreaPopupMenu = new JPopupMenu();
+    JMenuItem changeSelMode = new JMenuItem();
+    JMenuItem toggleCaret = new JMenuItem();
+
+    JMenuBar menuBar;
+    JMenu helpMenu;
+    JMenuItem helpMenuItemEN;
+    JMenuItem helpMenuItemCZ;
+    JMenuItem helpMenuItemRPGIII;
+    JMenuItem helpMenuItemRPGIV;
+    JMenuItem helpMenuItemCOBOL;
+    JMenuItem helpMenuItemDDS;
+
+    JMenu editMenu;
+    JMenuItem menuUndo;
+    JMenuItem menuRedo;
+    JMenuItem menuCut;
+    JMenuItem menuCopy;
+    JMenuItem menuPaste;
+    JMenuItem menuDelete;
+    JMenuItem menuDelete2;
+    JMenuItem menuFind;
 
     boolean textAreaIsSplit = false;
     boolean lowerHalfActive = false;
@@ -433,10 +461,16 @@ public final class EditFile extends JFrame {
             displaySourceMember();
         }
 
-        // Create window
+        // Create window if there was no error in rewriting the file.
         // -------------
         if (!isError) {
             createWindow();
+        } else {
+            row = "Error: Connection lost.";
+            mainWindow.msgVector.add(row);
+            mainWindow.showMessages(nodes);            
+            // Remove message scroll listener (cancel scrolling to the last message)
+            mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
         }
 
         // Continue constructor
@@ -490,6 +524,56 @@ public final class EditFile extends JFrame {
         windowX = screenWidth / 2 - windowWidth / 2;
         windowY = 0;
 
+        menuBar = new JMenuBar();
+        helpMenu = new JMenu("Help");
+        helpMenuItemEN = new JMenuItem("Help English");
+        helpMenuItemCZ = new JMenuItem("Nápověda česky");
+        helpMenuItemRPGIII = new JMenuItem("RPG III forms");
+        helpMenuItemRPGIV = new JMenuItem("RPG IV forms");
+        helpMenuItemCOBOL = new JMenuItem("COBOL form");
+        helpMenuItemDDS = new JMenuItem("DDS forms");
+
+        helpMenu.add(helpMenuItemEN);
+        helpMenu.add(helpMenuItemCZ);
+        helpMenu.add(helpMenuItemRPGIII);
+        helpMenu.add(helpMenuItemRPGIV);
+        helpMenu.add(helpMenuItemCOBOL);
+        helpMenu.add(helpMenuItemDDS);
+        menuBar.add(helpMenu);
+
+        editMenu = new JMenu("Edit");
+        menuUndo = new JMenuItem("Undo");
+        menuUndo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, ActionEvent.CTRL_MASK));
+        menuRedo = new JMenuItem("Redo");
+        menuRedo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y, ActionEvent.CTRL_MASK));
+        menuCut = new JMenuItem("Cut");
+        menuCut.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, ActionEvent.CTRL_MASK));
+        menuCopy = new JMenuItem("Copy");
+        menuCopy.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK));
+        menuPaste = new JMenuItem("Paste");
+        menuPaste.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, ActionEvent.CTRL_MASK));
+        menuDelete = new JMenuItem("Delete");
+        menuDelete.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
+        menuDelete2 = new JMenuItem("Delete");
+        menuDelete2.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0));
+        menuFind = new JMenuItem("Find");
+        menuFind.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, ActionEvent.CTRL_MASK));
+        menuBar.add(editMenu);
+
+        editMenu.add(menuUndo);
+        editMenu.add(menuRedo);
+        editMenu.addSeparator();
+        editMenu.add(menuCut);
+        editMenu.add(menuCopy);
+        editMenu.add(menuPaste);
+        editMenu.addSeparator();
+        editMenu.add(menuDelete);
+        editMenu.add(menuDelete2);
+        editMenu.addSeparator();
+        editMenu.add(menuFind);
+
+        setJMenuBar(menuBar); // In macOS on the main system menu bar above, in Windows on the window menu bar
+
         originalButtonBackground = new JButton().getBackground();
         originalButtonForeground = new JButton().getForeground();
 
@@ -499,9 +583,8 @@ public final class EditFile extends JFrame {
         saveButton.setToolTipText("Also Ctrl+S (Cmd+S in macOS).");
         saveButton.setFont(saveButton.getFont().deriveFont(Font.BOLD, 12));
 
-        // Sets original color of the Save button
+        // Save button will have the original black color.
         textChanged = false;
-        //checkTextChanged();
 
         undoButton.setPreferredSize(new Dimension(60, 20));
         undoButton.setMinimumSize(new Dimension(60, 20));
@@ -514,12 +597,12 @@ public final class EditFile extends JFrame {
         caretButton.setPreferredSize(new Dimension(90, 20));
         caretButton.setMinimumSize(new Dimension(90, 20));
         caretButton.setMaximumSize(new Dimension(90, 20));
-        caretButton.setToolTipText("Toggle short or long caret.");
+        caretButton.setToolTipText("Toggle short or long caret. Also right click in text area.");
 
         selectionModeButton.setPreferredSize(new Dimension(150, 20));
         selectionModeButton.setMinimumSize(new Dimension(150, 20));
         selectionModeButton.setMaximumSize(new Dimension(150, 20));
-        selectionModeButton.setToolTipText("Toggle horizontal or vertical selection.");
+        selectionModeButton.setToolTipText("Toggle horizontal or vertical selection. Also right click in text area.");
 
         // Set selection mode as the button text
         selectionModeButton.setText(selectionMode);
@@ -767,6 +850,124 @@ public final class EditFile extends JFrame {
         // Listener for undoable edits
         textArea.getDocument().addUndoableEditListener(undoHandler);
 
+        // Register HelpWindow menu item listener
+        helpMenuItemEN.addActionListener(ae -> {
+            String command = ae.getActionCommand();
+            if (command.equals("Help English")) {
+                if (Desktop.isDesktopSupported()) {
+                    String uri = Paths
+                            .get(System.getProperty("user.dir"), "helpfiles", "IBMiProgTool_doc_EN.pdf").toString();
+                    // Replace backslashes by forward slashes in Windows
+                    uri = uri.replace('\\', '/');
+                    uri = uri.replace(" ", "%20");
+                    try {
+                        // Invoke the standard browser in the operating system
+                        Desktop.getDesktop().browse(new URI("file://" + uri));
+                    } catch (Exception exc) {
+                        exc.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        // Register HelpWindow menu item listener
+        helpMenuItemCZ.addActionListener(ae -> {
+            String command = ae.getActionCommand();
+            if (command.equals("Nápověda česky")) {
+                if (Desktop.isDesktopSupported()) {
+                    String uri = Paths
+                            .get(System.getProperty("user.dir"), "helpfiles", "IBMiProgTool_doc_CZ.pdf").toString();
+                    // Replace backslashes by forward slashes in Windows
+                    uri = uri.replace('\\', '/');
+                    uri = uri.replace(" ", "%20");
+                    try {
+                        // Invoke the standard browser in the operating system
+                        Desktop.getDesktop().browse(new URI("file://" + uri));
+                    } catch (Exception exc) {
+                        exc.printStackTrace();
+                    }
+                }
+            }
+        });
+        // Register HelpWindow menu item listener
+        helpMenuItemRPGIII.addActionListener(ae -> {
+            String command = ae.getActionCommand();
+            if (command.equals("RPG III forms")) {
+                if (Desktop.isDesktopSupported()) {
+                    String uri = Paths
+                            .get(System.getProperty("user.dir"), "helpfiles", "RPG_III_forms.pdf").toString();
+                    // Replace backslashes by forward slashes in Windows
+                    uri = uri.replace('\\', '/');
+                    try {
+                        // Invoke the standard browser in the operating system
+                        Desktop.getDesktop().browse(new URI("file://" + uri));
+                    } catch (Exception exc) {
+                        exc.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        // Register HelpWindow menu item listener
+        helpMenuItemRPGIV.addActionListener(ae -> {
+            String command = ae.getActionCommand();
+            if (command.equals("RPG IV forms")) {
+                if (Desktop.isDesktopSupported()) {
+                    String uri = Paths
+                            .get(System.getProperty("user.dir"), "helpfiles", "RPG_IV_forms.pdf").toString();
+                    // Replace backslashes by forward slashes in Windows
+                    uri = uri.replace('\\', '/');
+                    uri = uri.replace(" ", "%20");
+                    try {
+                        // Invoke the standard browser in the operating system
+                        Desktop.getDesktop().browse(new URI("file://" + uri));
+                    } catch (Exception exc) {
+                        exc.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        // Register HelpWindow menu item listener
+        helpMenuItemCOBOL.addActionListener(ae -> {
+            String command = ae.getActionCommand();
+            if (command.equals("COBOL form")) {
+                if (Desktop.isDesktopSupported()) {
+                    String uri = Paths
+                            .get(System.getProperty("user.dir"), "helpfiles", "COBOL_form.pdf").toString();
+                    // Replace backslashes by forward slashes in Windows
+                    uri = uri.replace('\\', '/');
+                    uri = uri.replace(" ", "%20");
+                    try {
+                        // Invoke the standard browser in the operating system
+                        Desktop.getDesktop().browse(new URI("file://" + uri));
+                    } catch (Exception exc) {
+                        exc.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        // Register HelpWindow menu item listener
+        helpMenuItemDDS.addActionListener(ae -> {
+            String command = ae.getActionCommand();
+            if (command.equals("DDS forms")) {
+                if (Desktop.isDesktopSupported()) {
+                    String uri = Paths
+                            .get(System.getProperty("user.dir"), "helpfiles", "DDS_forms.pdf").toString();
+                    // Replace backslashes by forward slashes in Windows
+                    uri = uri.replace('\\', '/');
+                    uri = uri.replace(" ", "%20");
+                    try {
+                        // Invoke the standard browser in the operating system
+                        Desktop.getDesktop().browse(new URI("file://" + uri));
+                    } catch (Exception exc) {
+                        exc.printStackTrace();
+                    }
+                }
+            }
+        });
+
         // Select editor font from the list in combo box - listener
         // --------------------------------------------------------
         fontComboBox.addItemListener(il -> {
@@ -838,9 +1039,9 @@ public final class EditFile extends JFrame {
             int currentCaretPos = textArea.getCaretPosition();
             JComboBox<String> source = (JComboBox) il.getSource();
             progLanguage = (String) source.getSelectedItem();
-                // Highlight possible matched patterns in both primary and secondary areas 
-                changeHighlight();
-                changeHighlight2();
+            // Highlight possible matched patterns in both primary and secondary areas 
+            changeHighlight();
+            changeHighlight2();
             try {
                 BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
                 // Save programming language into properties
@@ -855,138 +1056,28 @@ public final class EditFile extends JFrame {
             // - Highlight blocks.
             // - Update progLanguage property in parameters.
             prepareEditingAndShow();
-            
+
             textArea.requestFocusInWindow();
             // Set remembered caret position 
             textArea.setCaretPosition(currentCaretPos);
         });
 
-        // Caret button listener
-        // =====================
+        // Caret button and popup menu listeners
+        // =====================================
+        toggleCaret.addActionListener(ae -> {
+            changeCaretShape();
+        });
         caretButton.addActionListener(ae -> {
-            try {
-                int currentCaretPos = textArea.getCaretPosition();
-                infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
-                properties.load(infile);
-                infile.close();
-                caretShape = properties.getProperty("CARET");
-                if (selectionModeButton.getText().equals(HORIZONTAL_SELECTION)) {
-                    if (caretButton.getText().equals(LONG_CARET)) {
-                        // Long caret button detected - change it to short caret.
-                        caretShape = SHORT_CARET;
-                        caretButton.setText(caretShape);
-                        // For horizontal selection set basic caret - a short vertical line
-                        textArea.setCaret(basicCaret);
-                        textArea2.setCaret(basicCaret2);
-                    } else {
-                        // Short caret button detected - change it to long caret.
-                        caretShape = LONG_CARET;
-                        caretButton.setText(caretShape);
-                        // For horizontal selection set long caret - long vertical gray line with a short red pointer
-                        textArea.setCaret(longCaret);
-                        textArea2.setCaret(longCaret2);
-                    }
-                } else {
-                    if (caretButton.getText().equals(LONG_CARET)) {
-                        // Long caret button detected - change it to short caret.
-                        caretShape = SHORT_CARET;
-                        caretButton.setText(caretShape);
-                        // For vertical selection set special caret - a short vertical line
-                        textArea.setCaret(specialCaret);
-                        textArea2.setCaret(specialCaret2);
-                    } else {
-                        // Short caret button detected - change it to long caret.
-                        caretShape = LONG_CARET;
-                        caretButton.setText(caretShape);
-                        // For vertical selection set special with long caret - long vertical gray line with a short red pointer
-                        textArea.setCaret(specialCaret);
-                        textArea2.setCaret(specialCaret2);
-                    }
-                }
-
-                prepareEditingAndShow();
-                textArea.requestFocusInWindow();
-                textArea.setCaretPosition(currentCaretPos);
-
-                BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-                // Save caret shape into properties
-                properties.setProperty("CARET", caretShape);
-                properties.store(outfile, PROP_COMMENT);
-                outfile.close();
-            } catch (Exception exc) {
-                exc.printStackTrace();
-            }
+            changeCaretShape();
         });
 
-        // Selection mode button listener
-        // ==============================
+        // Selection mode listeners
+        // ========================
         selectionModeButton.addActionListener(ae -> {
-            try {
-                int currentCaretPos = textArea.getCaretPosition();
-                infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
-                properties.load(infile);
-                infile.close();
-                selectionMode = properties.getProperty("SELECTION_MODE");
-                if (selectionModeButton.getText().equals(VERTICAL_SELECTION)) {
-                    // Horizontal selection will be active
-                    // --------------------
-                    selectionMode = HORIZONTAL_SELECTION;
-                    selectionModeButton.setText(selectionMode);
-                    if (caretButton.getText().equals(SHORT_CARET)) {
-                        // Basic caret - a short vertical line
-                        textArea.setCaret(basicCaret);
-                        textArea2.setCaret(basicCaret2);
-                    } else {
-                        // Long vertical gray line with a short red pointer
-                        textArea.setCaret(longCaret);
-                        textArea2.setCaret(longCaret2);
-                    }
-                    // Deactivate custom deletion in horizontal mode
-                    textArea.getInputMap(JComponent.WHEN_FOCUSED)
-                            .remove(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
-                    textArea.getInputMap(JComponent.WHEN_FOCUSED)
-                            .remove(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0));
-                    textArea.getActionMap().remove("deleteDel");
-                    textArea.getActionMap().remove("deleteBcksp");
-                    textArea2.getInputMap(JComponent.WHEN_FOCUSED)
-                            .remove(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
-                    textArea2.getInputMap(JComponent.WHEN_FOCUSED)
-                            .remove(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0));
-                    textArea2.getActionMap().remove("deleteDel");
-                    textArea2.getActionMap().remove("deleteBcksp");
-                } else {
-                    // Vertical selection will be active
-                    // ------------------
-                    selectionMode = VERTICAL_SELECTION;
-                    selectionModeButton.setText(selectionMode);
-                    // Set special caret - same for both caret shapes
-                    textArea.setCaret(specialCaret);
-                    textArea2.setCaret(specialCaret2);
-                    // Activate custom deletion by Delete or Backspace key
-                    textArea.getInputMap(JComponent.WHEN_FOCUSED)
-                            .put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteDel");
-                    textArea.getActionMap().put("deleteDel", new CustomDelete("DEL"));
-                    textArea.getInputMap(JComponent.WHEN_FOCUSED)
-                            .put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "deleteBcksp");
-                    textArea.getActionMap().put("deleteBcksp", new CustomDelete("BACKSPACE"));
-                    textArea2.getInputMap(JComponent.WHEN_FOCUSED)
-                            .put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteDel");
-                    textArea2.getActionMap().put("deleteDel", new CustomDelete("DEL"));
-                    textArea2.getInputMap(JComponent.WHEN_FOCUSED)
-                            .put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "deleteBcksp");
-                    textArea2.getActionMap().put("deleteBcksp", new CustomDelete("BACKSPACE"));
-                }
-                prepareEditingAndShow();
-                textArea.requestFocusInWindow();
-                textArea.setCaretPosition(currentCaretPos);
-                BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-                // Save caret shape into properties
-                properties.setProperty("SELECTION_MODE", selectionMode);
-                properties.store(outfile, PROP_COMMENT);
-                outfile.close();
-            } catch (Exception exc) {
-                exc.printStackTrace();
-            }
+            changeSelectionMode();
+        });
+        changeSelMode.addActionListener(ae -> {
+            changeSelectionMode();
         });
 
         // Find button listener
@@ -1007,17 +1098,44 @@ public final class EditFile extends JFrame {
             }
         });
 
-        // Undo button listener
+        // Undo button listener and menu item listener
         undoAction = new UndoAction();
         undoButton.addActionListener(undoAction);
+        menuUndo.addActionListener(undoAction);
 
-        // Redo button listener
+        // Redo button listener and menu item listener
         redoAction = new RedoAction();
         redoButton.addActionListener(redoAction);
+        menuRedo.addActionListener(redoAction);
+
+        // Cut menu item listener
+        CustomCut customCut = new CustomCut();
+        menuCut.addActionListener(customCut);
+
+        // Copy menu item listener
+        CustomCopy customCopy = new CustomCopy();
+        menuCopy.addActionListener(customCopy);
+
+        // Paste menu item listener
+        CustomPaste customPaste = new CustomPaste();
+        menuPaste.addActionListener(customPaste);
+
+        // Delete DEL menu item listener
+        CustomDelete customDelete = new CustomDelete("DEL");
+        menuDelete.addActionListener(customDelete);
+
+        // Delet BACKSPACE menu item listener
+        CustomDelete customDelete2 = new CustomDelete("BACKSPACE");
+        menuDelete2.addActionListener(customDelete2);
+
+        // Find menu item listener
+        CreateFindWindow findWindow = new CreateFindWindow();
+        menuFind.addActionListener(findWindow);
 
         // Save button listener
         // --------------------
         SaveAction saveAction = new SaveAction();
+        saveButton.setToolTipText("Also Ctrl+S (Cmd+S in macOS).");
         saveButton.addActionListener(saveAction);
 
         // Left shift button listener
@@ -1372,7 +1490,7 @@ public final class EditFile extends JFrame {
         } catch (Exception exc) {
             isError = true;
             exc.printStackTrace();
-            row = "Error in rewriting source member: " + exc.toString();
+            row = "Error in displaying source member: " + exc.toString();
             mainWindow.msgVector.add(row);
             mainWindow.showMessages(nodes);
         }
@@ -1815,6 +1933,136 @@ public final class EditFile extends JFrame {
             exc.printStackTrace();
         }
 
+    }
+
+    /**
+     * Change selection mode from horizontal to vertical and vice versa.
+     */
+    protected void changeSelectionMode() {
+        try {
+            int currentCaretPos = textArea.getCaretPosition();
+            infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+            properties.load(infile);
+            infile.close();
+            selectionMode = properties.getProperty("SELECTION_MODE");
+            if (selectionModeButton.getText().equals(VERTICAL_SELECTION)) {
+                // Horizontal selection will be active
+                // --------------------
+                selectionMode = HORIZONTAL_SELECTION;
+                selectionModeButton.setText(selectionMode);
+                if (caretButton.getText().equals(SHORT_CARET)) {
+                    // Basic caret - a short vertical line
+                    textArea.setCaret(basicCaret);
+                    textArea2.setCaret(basicCaret2);
+                } else {
+                    // Long vertical gray line with a short red pointer
+                    textArea.setCaret(longCaret);
+                    textArea2.setCaret(longCaret2);
+                }
+                // Deactivate custom deletion in horizontal mode
+                textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                        .remove(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
+                textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                        .remove(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0));
+                textArea.getActionMap().remove("deleteDel");
+                textArea.getActionMap().remove("deleteBcksp");
+                textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                        .remove(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
+                textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                        .remove(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0));
+                textArea2.getActionMap().remove("deleteDel");
+                textArea2.getActionMap().remove("deleteBcksp");
+            } else {
+                // Vertical selection will be active
+                // ------------------
+                selectionMode = VERTICAL_SELECTION;
+                selectionModeButton.setText(selectionMode);
+                // Set special caret - same for both caret shapes
+                textArea.setCaret(specialCaret);
+                textArea2.setCaret(specialCaret2);
+                // Activate custom deletion by Delete or Backspace key
+                textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                        .put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteDel");
+                textArea.getActionMap().put("deleteDel", new CustomDelete("DEL"));
+                textArea.getInputMap(JComponent.WHEN_FOCUSED)
+                        .put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "deleteBcksp");
+                textArea.getActionMap().put("deleteBcksp", new CustomDelete("BACKSPACE"));
+                textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                        .put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteDel");
+                textArea2.getActionMap().put("deleteDel", new CustomDelete("DEL"));
+                textArea2.getInputMap(JComponent.WHEN_FOCUSED)
+                        .put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "deleteBcksp");
+                textArea2.getActionMap().put("deleteBcksp", new CustomDelete("BACKSPACE"));
+            }
+            prepareEditingAndShow();
+            textArea.requestFocusInWindow();
+            textArea.setCaretPosition(currentCaretPos);
+            BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+            // Save caret shape into properties
+            properties.setProperty("SELECTION_MODE", selectionMode);
+            properties.store(outfile, PROP_COMMENT);
+            outfile.close();
+        } catch (Exception exc) {
+            exc.printStackTrace();
+        }
+    }
+
+    /**
+     * Change caret shape between long and short.
+     */
+    protected void changeCaretShape() {
+        try {
+            int currentCaretPos = textArea.getCaretPosition();
+            infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+            properties.load(infile);
+            infile.close();
+            caretShape = properties.getProperty("CARET");
+            if (selectionModeButton.getText().equals(HORIZONTAL_SELECTION)) {
+                if (caretButton.getText().equals(LONG_CARET)) {
+                    // Long caret button detected - change it to short caret.
+                    caretShape = SHORT_CARET;
+                    caretButton.setText(caretShape);
+                    // For horizontal selection set basic caret - a short vertical line
+                    textArea.setCaret(basicCaret);
+                    textArea2.setCaret(basicCaret2);
+                } else {
+                    // Short caret button detected - change it to long caret.
+                    caretShape = LONG_CARET;
+                    caretButton.setText(caretShape);
+                    // For horizontal selection set long caret - long vertical gray line with a short red pointer
+                    textArea.setCaret(longCaret);
+                    textArea2.setCaret(longCaret2);
+                }
+            } else {
+                if (caretButton.getText().equals(LONG_CARET)) {
+                    // Long caret button detected - change it to short caret.
+                    caretShape = SHORT_CARET;
+                    caretButton.setText(caretShape);
+                    // For vertical selection set special caret - a short vertical line
+                    textArea.setCaret(specialCaret);
+                    textArea2.setCaret(specialCaret2);
+                } else {
+                    // Short caret button detected - change it to long caret.
+                    caretShape = LONG_CARET;
+                    caretButton.setText(caretShape);
+                    // For vertical selection set special with long caret - long vertical gray line with a short red pointer
+                    textArea.setCaret(specialCaret);
+                    textArea2.setCaret(specialCaret2);
+                }
+            }
+
+            prepareEditingAndShow();
+            textArea.requestFocusInWindow();
+            textArea.setCaretPosition(currentCaretPos);
+
+            BufferedWriter outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+            // Save caret shape into properties
+            properties.setProperty("CARET", caretShape);
+            properties.store(outfile, PROP_COMMENT);
+            outfile.close();
+        } catch (Exception exc) {
+            exc.printStackTrace();
+        }
     }
 
     /**
@@ -3073,7 +3321,7 @@ public final class EditFile extends JFrame {
             caretPosition = textArea.getCaretPosition();
             rewriteFile();
 
-            textChanged = false;
+            textChanged = false; // Save button gets the original color
             checkTextChanged();
 
             textArea.setCaretPosition(caretPosition);
@@ -4102,12 +4350,14 @@ public final class EditFile extends JFrame {
 
         @Override
         public void insertUpdate(DocumentEvent de) {
+            // Save button will have notification color and an exclamation mark.
             textChanged = true;
             checkTextChanged();
         }
 
         @Override
         public void removeUpdate(DocumentEvent de) {
+            // Save button will have notification color and an exclamation mark.
             textChanged = true;
             checkTextChanged();
         }
@@ -4124,6 +4374,7 @@ public final class EditFile extends JFrame {
 
         @Override
         public void insertUpdate(DocumentEvent de) {
+            // Save button will have notification color and an exclamation mark.
             textChanged = true;
             checkTextChanged();
 
@@ -4139,6 +4390,7 @@ public final class EditFile extends JFrame {
 
         @Override
         public void removeUpdate(DocumentEvent de) {
+            // Save button will have notification color and an exclamation mark.
             textChanged = true;
             checkTextChanged();
 
@@ -4163,6 +4415,7 @@ public final class EditFile extends JFrame {
 
         @Override
         public void insertUpdate(DocumentEvent de) {
+            // Save button will have notification color and an exclamation mark.
             textChanged = true;
             checkTextChanged();
 
@@ -4178,6 +4431,7 @@ public final class EditFile extends JFrame {
 
         @Override
         public void removeUpdate(DocumentEvent de) {
+            // Save button will have notification color and an exclamation mark.
             textChanged = true;
             checkTextChanged();
 
@@ -4211,6 +4465,13 @@ public final class EditFile extends JFrame {
             if (!progLanguage.equals("*NONE")) {
                 highlightBlocks(textArea, progLanguage);
             }
+
+            // On right click show popup menu with commands.
+            if ((mouseEvent.getButton() == MouseEvent.BUTTON3)) {
+                preparePopupMenu();
+                // Show the menu
+                textAreaPopupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
+            }
         }
     }
 
@@ -4234,8 +4495,38 @@ public final class EditFile extends JFrame {
             if (!progLanguage.equals("*NONE")) {
                 highlightBlocks(textArea2, progLanguage);
             }
-//            }
+
+            // On right click change selection mode.
+            if ((mouseEvent.getButton() == MouseEvent.BUTTON3)) {
+                preparePopupMenu();
+                // Show the menu
+                textAreaPopupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
+            }
         }
+    }
+
+    /**
+     * Prepare popup menu for mouse listeners.
+     */
+    protected void preparePopupMenu() {
+        // Command "Change selection"
+        String mode, shape;
+        if (selectionMode.equals(HORIZONTAL_SELECTION)) {
+            mode = "Vertical";
+        } else {
+            mode = "Horizontal";
+        }
+        changeSelMode.setText("Change selection to " + mode + ".");
+        textAreaPopupMenu.add(changeSelMode);
+
+        // Command "Change caret"
+        if (caretShape.equals(SHORT_CARET)) {
+            shape = "Long";
+        } else {
+            shape = "Short";
+        }
+        toggleCaret.setText("Change caret to " + shape + ".");
+        textAreaPopupMenu.add(toggleCaret);
     }
 
     /**

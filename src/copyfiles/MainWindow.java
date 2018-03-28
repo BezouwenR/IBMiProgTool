@@ -1253,7 +1253,6 @@ public class MainWindow extends JFrame {
         // Left popup menu on Right mouse click
         // ====================================
 
-
         //
         // Find text in multiple PC files
         //
@@ -1658,9 +1657,9 @@ public class MainWindow extends JFrame {
             String className = this.getClass().getSimpleName();
             // first "false" stands for *ALL users (not *CURRENT user), 
             // second "true" stands for "create spooled file table".
-            WrkSplFCall wwsp = new WrkSplFCall(remoteServer, this, rightPathString, 
+            WrkSplFCall wwsp = new WrkSplFCall(remoteServer, this, rightPathString,
                     false, // not *CURRENT user
-                    currentX, currentY, className, 
+                    currentX, currentY, className,
                     true // create spooled file table
             );
             wwsp.execute();
@@ -1883,7 +1882,7 @@ public class MainWindow extends JFrame {
         // *****
 
         // Show completion message when connection to IBM i server connected.
-        row = "Comp: Server IBM i  " + properties.getProperty("HOST") + "  has been conneted to user  " + remoteServer.getUserId()
+        row = "Comp: Server IBM i  " + properties.getProperty("HOST") + "  has been connected to user  " + remoteServer.getUserId()
                 + " and is retrieving the Integrated File System.";
         msgVector.add(row);
         showMessages(noNodes);
@@ -2756,6 +2755,7 @@ public class MainWindow extends JFrame {
             rightPathString = correctRightPathString(rightPathString);
             IFSFile ifsFile = new IFSFile(remoteServer, rightPathString);
             try {
+                remoteServer.connectService(AS400.FILE);
                 fileName = ifsFile.getName();
                 if (rightPathString.endsWith(".FILE") && ifsFile.getSubtype().equals("SAVF")) {
                     String bareFileName = fileName.substring(0, fileName.indexOf(".FILE"));
@@ -2764,6 +2764,11 @@ public class MainWindow extends JFrame {
                 }
             } catch (Exception exc) {
                 exc.printStackTrace();
+                row = "Error: Connection lost.";
+                msgVector.add(row);
+                showMessages(nodes);
+                // Remove message scroll listener (cancel scrolling to the last message)
+                scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
             }
             // Change right root to selected path
             rightRoot = rightPathString;
@@ -2936,6 +2941,23 @@ public class MainWindow extends JFrame {
                 }
             } catch (Exception exc) {
                 exc.printStackTrace();
+                System.out.println("Error: Connection to the server lost. - " + exc.toString() + ". Trying to connect again.");
+                row = "Error: Connection to the server lost. - " + exc.toString() + ". Trying to connect again.";
+                msgVector.add(row);
+                showMessages(noNodes);
+                // Remove message scroll listener (cancel scrolling to the last message)
+                scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
+                // Try to reconnect server - FILE and RECORDACCESS services
+                try {
+                    remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
+                    remoteServer.connectService(AS400.FILE);
+                    remoteServer.connectService(AS400.RECORDACCESS);
+                } catch (Exception ex) {
+                    row = "Error: Getting new connection to the server." + ex.toString();
+                    msgVector.add(row);
+                    showMessages(noNodes);
+                    exc.printStackTrace();
+                }
             }
         }
 
@@ -3352,12 +3374,14 @@ public class MainWindow extends JFrame {
                     msgVector.add(row);
                     showMessages(noNodes);
                     try {
+                        remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
                         remoteServer.connectService(AS400.FILE);
                     } catch (Exception exc) {
-                        row = "Error: getting connection: " + exc.toString();
+                        row = "Error: getting new connection to FILE service: " + exc.toString();
                         msgVector.add(row);
                         showMessages(noNodes);
                         exc.printStackTrace();
+                        continue;
                     }
                 }
 
@@ -3366,12 +3390,14 @@ public class MainWindow extends JFrame {
                     msgVector.add(row);
                     showMessages(noNodes);
                     try {
+                        remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
                         remoteServer.connectService(AS400.COMMAND);
                     } catch (Exception exc) {
-                        row = "Error: getting connection: " + exc.toString();
+                        row = "Error: getting new connection to COMMAND service: " + exc.toString();
                         msgVector.add(row);
                         showMessages(noNodes);
                         exc.printStackTrace();
+                        continue;
                     }
                 }
 
@@ -3380,12 +3406,14 @@ public class MainWindow extends JFrame {
                     msgVector.add(row);
                     showMessages(noNodes);
                     try {
+                        remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
                         remoteServer.connectService(AS400.RECORDACCESS);
                     } catch (Exception exc) {
-                        row = "Error: getting connection: " + exc.toString();
+                        row = "Error: getting new connection to RECORDACCESS service: " + exc.toString();
                         msgVector.add(row);
                         showMessages(noNodes);
                         exc.printStackTrace();
+                        continue;
                     }
                 }
 
@@ -3394,12 +3422,14 @@ public class MainWindow extends JFrame {
                     msgVector.add(row);
                     showMessages(noNodes);
                     try {
+                        remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
                         remoteServer.connectService(AS400.PRINT);
                     } catch (Exception exc) {
-                        row = "Error: getting connection: " + exc.toString();
+                        row = "Error: getting new connection to PRINT service: " + exc.toString();
                         msgVector.add(row);
                         showMessages(noNodes);
                         exc.printStackTrace();
+                        continue;
                     }
                 }
             }

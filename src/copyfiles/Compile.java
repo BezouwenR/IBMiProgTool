@@ -6,7 +6,6 @@ import com.ibm.as400.access.AS400Message;
 import com.ibm.as400.access.CommandCall;
 import com.ibm.as400.access.IFSFile;
 import com.ibm.as400.access.Job;
-import com.ibm.as400.access.SpooledFile;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
@@ -788,7 +787,7 @@ public class Compile extends JFrame {
 
         // Set the window visible again if it was closed (by click on close icon) or canceled by Cancel button.
         setVisible(true);
-        pack();
+        //pack();
     }
 
     /**

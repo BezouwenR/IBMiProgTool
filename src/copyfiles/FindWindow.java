@@ -170,7 +170,6 @@ public class FindWindow extends JFrame {
         // Register WindowListener for storing X and Y coordinates to properties
         addWindowListener(new FindingPatternsWindowAdapter());
 
-        findField.requestFocus();
         findField.setPreferredSize(new Dimension(200, 20));
         findField.setMaximumSize(new Dimension(200, 20));
         // Set document listener for the search field
@@ -425,7 +424,6 @@ public class FindWindow extends JFrame {
             ArrayList<Integer> arrListStart = new ArrayList<>();
             ArrayList<Integer> arrListEnd = new ArrayList<>();
             Highlighter highlighter = editFile.textArea.getHighlighter();
-//            highlighter.removeAllHighlights();
             try {
                 String text = editFile.textArea.getText();
                 String pattern = findField.getText();
@@ -474,7 +472,12 @@ public class FindWindow extends JFrame {
         });
 
         // Register document listener for the "findField" when hihglighting matched patterns.
+        // ----------------------------------------------
         findField.getDocument().addDocumentListener(editFile.highlightListener);
+        
+        // Request focus on Find field.
+        // ----------------------------
+        findField.requestFocus();
     }
 
     /**
