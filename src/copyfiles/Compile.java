@@ -148,6 +148,7 @@ public class Compile extends JFrame {
     String commandText;
     ActionListener commandsComboBoxListener;
     ActionListener sourceTypeComboBoxListener;
+    ActionListener librariesComboBoxListener;
 
     JLabel libraryPatternLabel = new JLabel("Library pattern:");
     JTextField libraryPatternTextField;
@@ -453,9 +454,6 @@ public class Compile extends JFrame {
         jobLogButton.setToolTipText("Print actual contents of job log.");
         clearButton.setToolTipText("Delete all messages from the message area.");
 
-        // Set result object library and object name.
-        getObjectNames();
-
         // Set and create the panel layout
         parameterPanel.setLayout(paramLayout);
         paramLayout.setHorizontalGroup(paramLayout.createSequentialGroup()
@@ -540,6 +538,9 @@ public class Compile extends JFrame {
         sourceTypeComboBoxListener = new SourceTypeComboBoxListener();
         // Compile command combo box
         commandsComboBoxListener = new CommandsComboBoxListener();
+        // Libraries combo box
+        librariesComboBoxListener = new LibrariesComboBoxListener();
+        librariesComboBox.addActionListener(librariesComboBoxListener);
 
         // "Custom defaults" button listener
         sourceAttributesButton.addActionListener(ae -> {
@@ -595,16 +596,25 @@ public class Compile extends JFrame {
             libraryPattern = libraryPatternTextField.getText().toUpperCase();
             libraryPatternTextField.setText(libraryPattern);
             String[] librariesArr = getListOfLibraries(libraryPattern);
+            // Disable Libraries combo box listener so tat writing in the box list does not invoke its listener.
+            //librariesComboBox.removeActionListener(librariesComboBoxListener);
             librariesComboBox.removeAllItems();
             for (int idx = 0; idx < librariesArr.length; idx++) {
                 librariesComboBox.addItem(librariesArr[idx]);
             }
+            // Enable Libraries combo box listener.
+            //librariesComboBox.addActionListener(librariesComboBoxListener);            
         });
 
         // Object name text field listener
         objectNameFld.addActionListener(en -> {
             objNamePar = objectNameFld.getText();
             compileCommandName = (String) compileCommandsComboBox.getSelectedItem();
+
+            if (sourceAttributes.equals("SAVE_SOURCE_ATTRIBUTES")) {
+                updateModifiedAttributes("object");
+            }
+
             commandText = buildCommand(compileCommandName, libNamePar, objNamePar);
             if (commandText == null) {
                 commandTextLabel.setText(compileNotSupported);
@@ -657,13 +667,13 @@ public class Compile extends JFrame {
 
             // "true" stands for *CURRENT user, "false",
             // second "false" stands for "print last spooled file".
-            wwsp = new WrkSplFCall(remoteServer, mainWindow, this.pathString, 
+            wwsp = new WrkSplFCall(remoteServer, mainWindow, this.pathString,
                     true, // *CURRENT user
-                    compileWindowX, compileWindowY, className, 
+                    compileWindowX, compileWindowY, className,
                     false // last spooled file
             );
             wwsp.execute(); // Run in parallel SwingWorker
-          });
+        });
 
         // Spooled file button listener
         spooledFileButton.addActionListener(en -> {
@@ -671,10 +681,10 @@ public class Compile extends JFrame {
             String className = this.getClass().getSimpleName();
             // "true" stands for *CURRENT user, "false",
             // second "true" stands for "createSpoolTable".
-            wwsp = new WrkSplFCall(remoteServer, mainWindow, this.pathString, 
+            wwsp = new WrkSplFCall(remoteServer, mainWindow, this.pathString,
                     true, // *CURRENT user
-                    compileWindowX, compileWindowY, className, 
-                    true  // create spool file table
+                    compileWindowX, compileWindowY, className,
+                    true // create spool file table
             );
             wwsp.execute(); // Run in parallel SwingWorker
         });
@@ -740,9 +750,12 @@ public class Compile extends JFrame {
         this.pathString = pathString;
         this.ifs = ifs;
 
-        // Disable combo boxes listeners because writing in them must not invoke their listeners.
+        // Disable two combo boxes listeners
+        // ---------------------------------
+        // Disable combo boxes listeners so that writing in them does not invoke their listeners.
         sourceTypeComboBox.removeActionListener(sourceTypeComboBoxListener);
         compileCommandsComboBox.removeActionListener(commandsComboBoxListener);
+        librariesComboBox.removeActionListener(librariesComboBoxListener);
 
         // Get application parameters from "Parameters.txt" file.
         getAppProperties();
@@ -750,10 +763,18 @@ public class Compile extends JFrame {
         // Decide if source file attributes modified by the user are to be saved or not.
         if (sourceAttributes.equals("SAVE_SOURCE_ATTRIBUTES")) {
             // Save and update modified attributes in "SourceFileAttributes.lib" for the source file to be compiled.
-            String pair = updateModifiedAttributes("compile");
-            sourceType = pair.substring(0, pair.indexOf(","));
+            String[] attributesArray = new String[4];
+            String attributes = updateModifiedAttributes("compile");
+            attributesArray = attributes.split(",");
+            sourceType = attributesArray[0];
+            setCommandNames(sourceType);
             sourceTypeComboBox.setSelectedItem(sourceType);
-            compileCommandName = pair.substring(pair.indexOf(",") + 1);
+            compileCommandName = attributesArray[1];
+            compileCommandsComboBox.setSelectedItem(compileCommandName);
+            librariesComboBox.setSelectedItem(attributesArray[2]);
+            objectNameFld.setText(attributesArray[3]);
+            libNamePar = attributesArray[2];
+            objNamePar = attributesArray[3];
         } else {
             // The attributes of the source file are not saved.
             sourceType = setDefaultSourceType();
@@ -763,10 +784,9 @@ public class Compile extends JFrame {
             compileCommandName = commandNames.get(0);
             setCommandNames(sourceType);
             compileCommandsComboBox.setSelectedItem(compileCommandName);
+            // Get default object names (libNamePar, objNamePar)
+            getDefaultObjectNames();
         }
-
-        // Set result object library and object name.
-        getObjectNames();
 
         // Build complete command text when source type and command name is updated.
         commandText = buildCommand(compileCommandName, libNamePar, objNamePar);
@@ -784,6 +804,7 @@ public class Compile extends JFrame {
         compileCommandsComboBox.addActionListener(commandsComboBoxListener);
         // Enable source type combo box listener  - sets also compileCommandsComboBox.
         sourceTypeComboBox.addActionListener(sourceTypeComboBoxListener);
+        librariesComboBox.addActionListener(librariesComboBoxListener);
 
         // Set the window visible again if it was closed (by click on close icon) or canceled by Cancel button.
         setVisible(true);
@@ -791,106 +812,101 @@ public class Compile extends JFrame {
     }
 
     /**
-     * Extract individual names (libraryName, fileName, memberName) from the AS400 IFS path.
-     *
-     * @param as400PathString
-     */
-    protected void extractNamesFromIfsPath(String as400PathString) {
-
-        qsyslib = "/QSYS.LIB/";
-        if (as400PathString.startsWith(qsyslib) && as400PathString.length() > qsyslib.length()) {
-            libraryName = as400PathString.substring(as400PathString.indexOf("/QSYS.LIB/") + 10,
-                    as400PathString.lastIndexOf(".LIB"));
-            if (as400PathString.length() > qsyslib.length() + libraryName.length() + 5) {
-                fileName = as400PathString.substring(qsyslib.length() + libraryName.length() + 5,
-                        as400PathString.lastIndexOf(".FILE"));
-                if (as400PathString.length() > qsyslib.length() + libraryName.length() + 5
-                        + fileName.length() + 6) {
-                    memberName = as400PathString.substring(
-                            qsyslib.length() + libraryName.length() + 5 + fileName.length() + 6,
-                            as400PathString.lastIndexOf(".MBR"));
-                }
-            }
-        }
-    }
-
-    /**
      * Update user modified attributes in "SourceFileAttributes.lib" for the source file to be compiled,
-     * The attributes are sourceType and compileCommand called here a "pair",
+     * The attributes are sourceType and compileCommand called here a "attributes",
      * The item in the SourceFileAttributes.lib file consists of three elements separated by a comma:
-     * <pathString>,<sourceType>,<compileCommand>,
-     * A map is constructed for these items where pathString is a key and the "pair" is a value.
+     * <pathString>,<sourceType>,<compileCommand>,<library>,<object>
+     * A map is constructed for these items where pathString is a key and the "attributes" is a value.
+     *
+     * @param whenCalled
+     * @return
      */
     protected String updateModifiedAttributes(String whenCalled) {
         // Remember the source type and compile command name in the file "SourceFileAttributes.lib"
         compileCommandsMap = new TreeMap<>();
-        String pair = null;
+        String attributes = null;
         String srcType = "";
         String cmdName = "";
+        String libName = "";
+        String objName = "";
+        String[] attributesArray = new String[4];
         try {
             List<String> items = Files.readAllLines(compileCommandsPath);
             if (!items.isEmpty()) {
-                // Read all pairs (<file-path>, <source-type, command-name>) from the file and write them in a map.
+                // Non empty file
+                // --------------
+                // Read all attributess (<file-path>, <source-type, command-name>, library-name>, object-name>) 
+                // from the file and write them in a map.
                 for (String item : items) {
                     String filePath = item.substring(0, item.indexOf(","));
-                    pair = item.substring(item.indexOf(",") + 1);
-                    compileCommandsMap.put(filePath, pair); // Adds or updates the pair.
-                }
-            }
-            if (compileCommandsMap.containsKey(pathString)) {
-                // Item for pathString was found
-                pair = compileCommandsMap.get(pathString);
-                if (whenCalled.equals("compile")) {
-                    srcType = pair.substring(0, pair.indexOf(","));
-                    cmdName = pair.substring(pair.indexOf(",") + 1);
-                    pair = srcType + "," + cmdName;
-                    compileCommandsMap.put(pathString, pair);
-                    compileCommandsComboBox.setSelectedItem(cmdName);
-                } else if (whenCalled.equals("sourceType")) {
-                    srcType = (String) sourceTypeComboBox.getSelectedItem();
-                    setCommandNames(srcType);
-                    cmdName = compileCommands.get(0);
-                    pair = srcType + "," + cmdName;
-                    compileCommandsMap.put(pathString, pair);
-                    compileCommandsComboBox.setSelectedItem(cmdName);
-                } else if (whenCalled.equals("commands")) {
-                    srcType = pair.substring(0, pair.indexOf(","));
-                    cmdName = compileCommandName;
-                    pair = srcType + "," + cmdName;
-                    compileCommandsMap.put(pathString, pair);
-                    compileCommandsComboBox.setSelectedItem(cmdName);
+                    attributes = item.substring(item.indexOf(",") + 1);
+                    compileCommandsMap.put(filePath, attributes); // Adds or updates the attributes.
                 }
             } else {
-                // Item for pathString was NOT found
+                // Empty file 
+                // ----------
+                // Get default source type
                 srcType = setDefaultSourceType();
+                // Set array list of command names depending on source type
                 ArrayList<String> commandNames = getSourceFileAttributes(srcType);
                 // Get default (first) command name
                 cmdName = commandNames.get(0);
+                // Set command names in the list of combo box
                 setCommandNames(srcType);
-                //cmdName = (String) compileCommandsComboBox.getSelectedItem();
-                pair = srcType + "," + cmdName;
-
-                compileCommandsMap.put(pathString, pair);
-                compileCommandsComboBox.setSelectedItem(cmdName);
+                // Get default object names (libNamePar, objNamePar)
+                getDefaultObjectNames();
+                // Build attributes separated by comma
+                attributes = srcType + "," + cmdName + "," + libNamePar + "," + objNamePar;
+                // Put attributes into the map
+                compileCommandsMap.put(pathString, attributes);
+                compileCommandsComboBox.removeActionListener(commandsComboBoxListener);
             }
 
+            // Split attributes into an array
+            attributesArray = attributes.split(",");
+
+            if (whenCalled.equals("compile")) {
+                // Do nothing - attributes and attributesArray already set.
+            }
+            if (whenCalled.equals("sourceType")) {
+                srcType = (String) sourceTypeComboBox.getSelectedItem();
+                setCommandNames(srcType);
+                cmdName = compileCommands.get(0);
+                attributes = srcType + "," + cmdName + "," + attributesArray[2] + "," + attributesArray[3];
+            }
+            if (whenCalled.equals("commands")) {
+                cmdName = compileCommandName;
+                attributes = attributesArray[0] + "," + cmdName + "," + attributesArray[2] + "," + attributesArray[3];
+            }
+            if (whenCalled.equals("library")) {
+                libName = (String) librariesComboBox.getSelectedItem();
+                attributes = attributesArray[0] + "," + attributesArray[1] + "," + libName + "," + attributesArray[3];
+            }
+            if (whenCalled.equals("object")) {
+                objName = objectNameFld.getText();
+                attributes = attributesArray[0] + "," + attributesArray[1] + "," + attributesArray[2] + "," + objName;
+            }
+            compileCommandsMap.put(pathString, attributes);
             // Write contents of the map to array list.
-            ArrayList<String> compileCommandsArr = new ArrayList<>();
-            String pair2;
+            ArrayList<String> attributesArrayList = new ArrayList<>();            
             if (!compileCommandsMap.isEmpty()) {
                 String filePath = compileCommandsMap.firstKey();
                 while (filePath != null) {
-                    pair2 = compileCommandsMap.get(filePath);
-                    compileCommandsArr.add(filePath + "," + pair2);
-                    filePath = compileCommandsMap.higherKey(filePath);
+                    attributes = compileCommandsMap.get(filePath);
+                    attributesArrayList.add(filePath + "," + attributes);
+                    if (compileCommandsMap.higherKey(filePath) == null) {
+                        break;
+                    } else {
+                        filePath = compileCommandsMap.higherKey(filePath);
+                    }
                 }
             }
             // Write array list to the file.
-            Files.write(compileCommandsPath, compileCommandsArr);
+            Files.write(compileCommandsPath, attributesArrayList);
         } catch (Exception ioe) {
             ioe.printStackTrace();
         }
-        return pair;
+        return attributes;
     }
 
     /**
@@ -917,11 +933,13 @@ public class Compile extends JFrame {
         // Default values of command names for given sourceType.
         // Set predefined commands (one or more) corresponing to the source type to the command combo box.
         compileCommands = getSourceFileAttributes(sourceType);
+        compileCommandsComboBox.removeActionListener(commandsComboBoxListener);
         compileCommandsComboBox.removeAllItems();
         for (int idx = 0; idx < compileCommands.size(); idx++) {
             compileCommandsComboBox.addItem(compileCommands.get(idx));
         }
         compileCommandsComboBox.setSelectedItem(compileCommands.get(0));
+        //compileCommandsComboBox.addActionListener(commandsComboBoxListener);
     }
 
     /**
@@ -1301,19 +1319,16 @@ public class Compile extends JFrame {
                 IFSFile[] ifsFiles = ifsFile.listFiles(libraryPattern + ".LIB");
                 libraryNameVector.removeAllElements();
                 // Add the selected library names to the vector
-                //libraryNameVector.addElement(libraryName);
                 for (IFSFile ifsFileLevel2 : ifsFiles) {
                     String bareLibraryName = ifsFileLevel2.getName().substring(0, ifsFileLevel2.getName().indexOf("."));
-                    //System.out.println("bareLibraryName: " + bareLibraryName);
                     libraryNameVector.addElement(bareLibraryName);
                 }
-                // Add "current library" at the end of the vector
+                // Add "current library"
                 libraryNameVector.addElement("*CURLIB");
             } catch (Exception exc) {
                 exc.printStackTrace();
             }
         }
-
         String[] libraryArray = new String[libraryNameVector.size()];
         libraryArray = libraryNameVector.toArray(libraryArray);
         return libraryArray;
@@ -1434,7 +1449,8 @@ public class Compile extends JFrame {
             }
 
             // Set result object library and object name.
-            getObjectNames();
+            libNamePar = (String) librariesComboBox.getSelectedItem();
+            objNamePar = objectNameFld.getText();
 
             // Enable compile commands combo box listener
             compileCommandsComboBox.addActionListener(commandsComboBoxListener);
@@ -1453,6 +1469,7 @@ public class Compile extends JFrame {
             // Disable combo boxes because writing in them must not invoke their listeners.
             sourceTypeComboBox.removeActionListener(sourceTypeComboBoxListener);
             compileCommandsComboBox.removeActionListener(commandsComboBoxListener);
+
             compileCommandName = (String) compileCommandsComboBox.getSelectedItem();
             sourceType = (String) sourceTypeComboBox.getSelectedItem();
 
@@ -1461,7 +1478,8 @@ public class Compile extends JFrame {
             }
 
             // Set result object library and object name.
-            getObjectNames();
+            libNamePar = (String) librariesComboBox.getSelectedItem();
+            objNamePar = objectNameFld.getText();
 
             // Build command text given compile command name (CRT...)
             commandText = buildCommand(compileCommandName, libNamePar, objNamePar);
@@ -1477,6 +1495,31 @@ public class Compile extends JFrame {
             // Enable source type combo box listener  - sets also compileCommandsComboBox.
             sourceTypeComboBox.addActionListener(sourceTypeComboBoxListener);
 
+        }
+    }
+
+    /**
+     * Call the buildCommand() method and get the command text.
+     */
+    class LibrariesComboBoxListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent ae) {
+            // Get selected item of the libraries combo box field
+            libNamePar = (String) librariesComboBox.getSelectedItem();
+
+            if (sourceAttributes.equals("SAVE_SOURCE_ATTRIBUTES")) {
+                updateModifiedAttributes("library");
+            }
+            // Build command text given compile command name (CRT...)
+            commandText = buildCommand(compileCommandName, libNamePar, objNamePar);
+            if (commandText == null) {
+                commandTextLabel.setText(compileNotSupported);
+                commandTextLabel.setForeground(DIM_RED);
+            } else {
+                commandTextLabel.setForeground(DIM_BLUE);
+                commandTextLabel.setText(commandText);
+            }
         }
     }
 
@@ -1587,15 +1630,11 @@ public class Compile extends JFrame {
     /**
      * Set result object library and object name.
      */
-    protected void getObjectNames() {
+    protected void getDefaultObjectNames() {
         if (ifs) {
             // IFS file
             try {
-                String[] librariesArr = getListOfLibraries(libraryPattern);
-                librariesComboBox.removeAllItems();
-                for (int idx = 0; idx < librariesArr.length; idx++) {
-                    librariesComboBox.addItem(librariesArr[idx]);
-                }
+                // Get library name parameter from the library combo box 
                 libNamePar = (String) librariesComboBox.getSelectedItem();
 
                 // Derive object name (or member name) from the IFS path string
@@ -1617,9 +1656,34 @@ public class Compile extends JFrame {
             // Source file
             libNamePar = libraryName;
             objNamePar = memberName;
+
         }
         libraryPatternTextField.setText(libraryPattern);
         librariesComboBox.setSelectedItem(libNamePar);
         objectNameFld.setText(objNamePar);
+    }
+
+    /**
+     * Extract individual names (libraryName, fileName, memberName) from the AS400 IFS path.
+     *
+     * @param as400PathString
+     */
+    protected void extractNamesFromIfsPath(String as400PathString) {
+
+        qsyslib = "/QSYS.LIB/";
+        if (as400PathString.startsWith(qsyslib) && as400PathString.length() > qsyslib.length()) {
+            libraryName = as400PathString.substring(as400PathString.indexOf("/QSYS.LIB/") + 10,
+                    as400PathString.lastIndexOf(".LIB"));
+            if (as400PathString.length() > qsyslib.length() + libraryName.length() + 5) {
+                fileName = as400PathString.substring(qsyslib.length() + libraryName.length() + 5,
+                        as400PathString.lastIndexOf(".FILE"));
+                if (as400PathString.length() > qsyslib.length() + libraryName.length() + 5
+                        + fileName.length() + 6) {
+                    memberName = as400PathString.substring(
+                            qsyslib.length() + libraryName.length() + 5 + fileName.length() + 6,
+                            as400PathString.lastIndexOf(".MBR"));
+                }
+            }
+        }
     }
 }

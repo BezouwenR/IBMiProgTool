@@ -50,6 +50,7 @@ Version 03.02
 Version 03.03
 
 - Source user documentation in Pages added to "documents" directory.
+- Compilation attributes saving and restoring corrected and redesigned.
 
 - - - - - - - - - - 
 
@@ -97,3 +98,4 @@ Verze 03.02
 Version 03.03
 
 - Uživatelská dokumentace v Pages přidána do adresáře "documents".
+- Ukládání a obnova atributů kompilace opraveno a přepracováno.
