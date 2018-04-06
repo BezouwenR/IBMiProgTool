@@ -69,8 +69,8 @@ public class Compile extends JFrame {
     Path libraryListPath = Paths.get(System.getProperty("user.dir"), "workfiles", "UserLibraryList.lib");
     // Path to CurrentLibrary.lib file
     Path currentLibraryPath = Paths.get(System.getProperty("user.dir"), "workfiles", "CurrentLibrary.lib");
-    // Path to SourceFileAttributes.lib file
-    Path compileCommandsPath = Paths.get(System.getProperty("user.dir"), "workfiles", "SourceFileAttributes.lib");
+    // Path to CompileAttributes.lib file
+    Path compileCommandsPath = Paths.get(System.getProperty("user.dir"), "workfiles", "CompileAttributes.lib");
     // Path to SrcAttrib.png file
     Path saveSrcAttribIconPathDark = Paths.get(System.getProperty("user.dir"), "icons", "saveSrcAttrib.png");
     // Path to noSrcAttrib.png file
@@ -750,8 +750,8 @@ public class Compile extends JFrame {
         this.pathString = pathString;
         this.ifs = ifs;
 
-        // Disable two combo boxes listeners
-        // ---------------------------------
+        // Disable combo boxes listeners
+        // -----------------------------
         // Disable combo boxes listeners so that writing in them does not invoke their listeners.
         sourceTypeComboBox.removeActionListener(sourceTypeComboBoxListener);
         compileCommandsComboBox.removeActionListener(commandsComboBoxListener);
@@ -762,7 +762,7 @@ public class Compile extends JFrame {
 
         // Decide if source file attributes modified by the user are to be saved or not.
         if (sourceAttributes.equals("SAVE_SOURCE_ATTRIBUTES")) {
-            // Save and update modified attributes in "SourceFileAttributes.lib" for the source file to be compiled.
+            // Save and update modified attributes in "CompileAttributes.lib" for the source file to be compiled.
             String[] attributesArray = new String[4];
             String attributes = updateModifiedAttributes("compile");
             attributesArray = attributes.split(",");
@@ -812,9 +812,9 @@ public class Compile extends JFrame {
     }
 
     /**
-     * Update user modified attributes in "SourceFileAttributes.lib" for the source file to be compiled,
+     * Update user modified attributes in "CompileAttributes.lib" for the source file to be compiled,
      * The attributes are sourceType and compileCommand called here a "attributes",
-     * The item in the SourceFileAttributes.lib file consists of three elements separated by a comma:
+     * The item in the CompileAttributes.lib file consists of three elements separated by a comma:
      * <pathString>,<sourceType>,<compileCommand>,<library>,<object>
      * A map is constructed for these items where pathString is a key and the "attributes" is a value.
      *
@@ -822,9 +822,11 @@ public class Compile extends JFrame {
      * @return
      */
     protected String updateModifiedAttributes(String whenCalled) {
-        // Remember the source type and compile command name in the file "SourceFileAttributes.lib"
+        // Remember the source type and compile command name in the file "CompileAttributes.lib"
+        String filePath = "";
         compileCommandsMap = new TreeMap<>();
         String attributes = null;
+        String attributesLoop = null;
         String srcType = "";
         String cmdName = "";
         String libName = "";
@@ -833,17 +835,23 @@ public class Compile extends JFrame {
         try {
             List<String> items = Files.readAllLines(compileCommandsPath);
             if (!items.isEmpty()) {
-                // Non empty file
+                // Non empty list - at least one attributes file
                 // --------------
-                // Read all attributess (<file-path>, <source-type, command-name>, library-name>, object-name>) 
-                // from the file and write them in a map.
+                // Read attributess (<file-path>, <source-type, command-name>, library-name>, object-name>) 
+                // from all files and write them in a map.
                 for (String item : items) {
-                    String filePath = item.substring(0, item.indexOf(","));
-                    attributes = item.substring(item.indexOf(",") + 1);
-                    compileCommandsMap.put(filePath, attributes); // Adds or updates the attributes.
+                    filePath = item.substring(0, item.indexOf(","));
+                    attributesLoop = item.substring(item.indexOf(",") + 1);
+                    compileCommandsMap.put(filePath, attributesLoop); // Adds or updates the attributes.
+                    if (filePath.equals(pathString)) {
+                        // This filePath matches - take the attributes from the loop for the following processing
+                        attributes = attributesLoop;
+                    }
                 }
-            } else {
-                // Empty file 
+            } 
+            
+            if (items.isEmpty() || attributes == null) {
+                // Empty list or no filePath matches
                 // ----------
                 // Get default source type
                 srcType = setDefaultSourceType();
@@ -890,7 +898,7 @@ public class Compile extends JFrame {
             // Write contents of the map to array list.
             ArrayList<String> attributesArrayList = new ArrayList<>();            
             if (!compileCommandsMap.isEmpty()) {
-                String filePath = compileCommandsMap.firstKey();
+                filePath = compileCommandsMap.firstKey();
                 while (filePath != null) {
                     attributes = compileCommandsMap.get(filePath);
                     attributesArrayList.add(filePath + "," + attributes);
