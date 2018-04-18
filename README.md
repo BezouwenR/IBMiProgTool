@@ -52,6 +52,10 @@ Version 03.03
 - Source user documentation in Pages added to "documents" directory.
 - Compilation attributes saving and restoring corrected and redesigned.
 
+Version 03.04
+
+- Editor now enables color hihglighting SQL statements - in standalone script files or in programs (preprocessor EXEC SQL).
+
 - - - - - - - - - - 
 
 Tento projekt se neinstaluje, je okamžitě k použití jako Java aplikace v adresáři projektu. Aplikace vyžaduje Javu SE 8 instalovanou v PC.
@@ -99,3 +103,7 @@ Version 03.03
 
 - Uživatelská dokumentace v Pages přidána do adresáře "documents".
 - Ukládání a obnova atributů kompilace opraveno a přepracováno.
+
+Version 03.04
+
+- Editor nyní umožňuje barevné zvýraznění SQL příkazů - v samostatných souborech skriptů nebo v programech (EXEC SQL předkompilátoru).

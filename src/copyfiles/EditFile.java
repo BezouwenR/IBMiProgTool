@@ -468,7 +468,7 @@ public final class EditFile extends JFrame {
         } else {
             row = "Error: Connection lost.";
             mainWindow.msgVector.add(row);
-            mainWindow.showMessages(nodes);            
+            mainWindow.showMessages(nodes);
             // Remove message scroll listener (cancel scrolling to the last message)
             mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
         }
@@ -621,7 +621,7 @@ public final class EditFile extends JFrame {
         // Sets the current editor font item into the input field of the combo box
         fontComboBox.setSelectedItem(editorFont);
 
-        // This class gives the corresponding fonts to the font names in the combo box list
+        // This class assigns the corresponding fonts to the font names in the combo box list
         fontComboBox.setRenderer(new FontComboBoxRenderer());
 
         fontSizeField.setText(fontSizeString);
@@ -647,6 +647,7 @@ public final class EditFile extends JFrame {
         languageComboBox.addItem("CL");
         languageComboBox.addItem("C");
         languageComboBox.addItem("C++");
+        languageComboBox.addItem("SQL");
 
         languageComboBox.setSelectedItem(progLanguage);
 
@@ -790,7 +791,7 @@ public final class EditFile extends JFrame {
             rowPanel1.add(compileButton);
         }
 
-        saveButton.setSelected(true);
+//        saveButton.setSelected(true);
 
         rowPanel2 = new JPanel();
         GroupLayout rowPanel2Layout = new GroupLayout(rowPanel2);
@@ -1255,8 +1256,8 @@ public final class EditFile extends JFrame {
         textArea2MouseListener = new TextArea2MouseListener();
         textArea2.addMouseListener(textArea2MouseListener);
 
-        // Window listener
-        // ---------------
+        // Register window listener
+        // ------------------------
         windowEditFileListener = new WindowEditFileAdapter();
         this.addWindowListener(windowEditFileListener);
 
@@ -1914,13 +1915,13 @@ public final class EditFile extends JFrame {
         blockHighlighter = textArea.getHighlighter();
         // Hightlight only if the option is not *NONE
         if (!progLanguage.equals("*NONE")) {
-            highlightBlocks(textArea, progLanguage);
+            highlightBlocks(textArea);
         }
-        // Get a highlighter for the primary text area
+        // Get a highlighter for the secondary text area
         blockHighlighter = textArea2.getHighlighter();
         // Hightlight only if the option is not *NONE
         if (!progLanguage.equals("*NONE")) {
-            highlightBlocks(textArea2, progLanguage);
+            highlightBlocks(textArea2);
         }
 
         try {
@@ -2069,12 +2070,12 @@ public final class EditFile extends JFrame {
      * Highlight compound statements (blocks) in a simplified parsing
      *
      * @param textArea
-     * @param progLanguage
      */
-    protected void highlightBlocks(JTextArea textArea, String progLanguage) {
+    protected void highlightBlocks(JTextArea textArea) {
         stmtsBeg.clear();
         stmtsEnd.clear();
 
+        // Define block beginning and ending symbols
         switch (progLanguage) {
             case "*ALL": {
                 // Beginnings of block statements
@@ -2135,28 +2136,81 @@ public final class EditFile extends JFrame {
                 // C - style
                 stmtsBeg.add("{");
 
-                // Ends of block statements
+                // Query
+                stmtsBeg.add("SELECT");
+                stmtsBeg.add("FROM");
+                stmtsBeg.add("WHERE");
+                stmtsBeg.add("ORDER");
+                stmtsBeg.add("HAVING");
+                stmtsBeg.add("GROUP");
+                stmtsBeg.add("CONNECT");
+                stmtsBeg.add("FETCH");
+                stmtsBeg.add("ORDER");
+                stmtsBeg.add("ORDER");
+                stmtsBeg.add("JOIN");
+                stmtsBeg.add("INNER");
+                stmtsBeg.add("LEFT");
+                stmtsBeg.add("RIGHT");
+                stmtsBeg.add("FULL");
+                stmtsBeg.add("EXCEPTION");
+                stmtsBeg.add("CROSS");
+                stmtsBeg.add("DISTINCT");
+                stmtsBeg.add("TABLE");
+                stmtsBeg.add("WITH");
+                stmtsBeg.add("RECURSIVE");
+                stmtsBeg.add("UNION");
+                stmtsBeg.add("INTERSECT");
+                stmtsBeg.add("EXCEPT");
+                stmtsBeg.add("SET");
+                stmtsBeg.add("SCHEMA");
+                stmtsBeg.add("SQLSTATE");
+                stmtsBeg.add("SQLCODE");
 
-                // Declarations
-                stmtsEnd.add("END-DS");
-                stmtsEnd.add("END-PR");
-                stmtsEnd.add("END-PI");
-                stmtsEnd.add("END-PROC");
-                stmtsEnd.add("ENDSR");
+                // Data definition
+                stmtsBeg.add("CREATE");
+                stmtsBeg.add("INSERT");
+                stmtsBeg.add("UPDATE");
+                stmtsBeg.add("ALTER");
+                stmtsBeg.add("DROP");
+
+                // Special comments
+                stmtsBeg.add("--;");
+
+                // Parameter marker - question mark
+                //stmtsBeg.add("?");
+
+                // Exec for embedded SQl
+                stmtsBeg.add("EXEC");
+                stmtsBeg.add("SQL");
+
+                // Parameter marker - question mark
+                // stmtsBeg.add("?"); // Resolved elsewhere
+
+                // Endings of block statements
+
+                // Declarations 
+                stmtsEnd.add("END-DS"); // RPG **FREE
+                stmtsEnd.add("END-PR"); // RPG **FREE
+                stmtsEnd.add("END-PI"); // RPG **FREE
+                stmtsEnd.add("END-PROC"); // RPG **FREE
+                stmtsEnd.add("ENDSR"); // RPG
                 // Loops
-                stmtsEnd.add("ENDDO");
-                stmtsEnd.add("ENDFOR");
-                stmtsEnd.add("END-PERFORM");
+                stmtsEnd.add("ENDDO"); // RPG **FREE
+                stmtsEnd.add("ENDFOR"); // RPG **FREE
+                stmtsEnd.add("END-PERFORM"); // COBOL
                 // Conditions
-                stmtsEnd.add("ENDIF");
-                stmtsEnd.add("END-IF");
-                stmtsEnd.add("ENDSL");
-                stmtsEnd.add("ENDSELECT");
-                stmtsEnd.add("END-EVALUATE");
+                stmtsEnd.add("ENDIF"); // RPG
+                stmtsEnd.add("END-IF"); // COBOL
+                stmtsEnd.add("ENDSL"); // RPG
+                stmtsEnd.add("ENDSELECT"); // CL
+                stmtsEnd.add("END-EVALUATE"); // COBOL
                 // Monitor
-                stmtsEnd.add("ENDMON");
+                stmtsEnd.add("ENDMON"); // RPG
                 // C - style
-                stmtsEnd.add("}");
+                stmtsEnd.add("}"); // C
+
+                // SQL style
+                stmtsEnd.add("END-EXEC"); // In RPG III
                 break;
             } // End of case *ALL
 
@@ -2448,6 +2502,62 @@ public final class EditFile extends JFrame {
                 break;
             } // End of case C++
 
+            case "SQL": {
+                // Beginnings of block statements
+
+                // Query
+                stmtsBeg.add("SELECT");
+                stmtsBeg.add("FROM");
+                stmtsBeg.add("WHERE");
+                stmtsBeg.add("ORDER");
+                stmtsBeg.add("HAVING");
+                stmtsBeg.add("GROUP");
+                stmtsBeg.add("CONNECT");
+                stmtsBeg.add("FETCH");
+                stmtsBeg.add("JOIN");
+                stmtsBeg.add("INNER");
+                stmtsBeg.add("LEFT");
+                stmtsBeg.add("RIGHT");
+                stmtsBeg.add("FULL");
+                stmtsBeg.add("EXCEPTION");
+                stmtsBeg.add("CROSS");
+                stmtsBeg.add("DISTINCT");
+                stmtsBeg.add("TABLE");
+                stmtsBeg.add("WITH");
+                stmtsBeg.add("RECURSIVE");
+                stmtsBeg.add("UNION");
+                stmtsBeg.add("INTERSECT");
+                stmtsBeg.add("EXCEPT");
+                stmtsBeg.add("SET");
+                stmtsBeg.add("SCHEMA");
+                stmtsBeg.add("SQLSTATE");
+                stmtsBeg.add("SQLCOD");
+                stmtsBeg.add("SQLCODE");
+
+                // Data definition
+                stmtsBeg.add("CREATE");
+                stmtsBeg.add("INSERT");
+                stmtsBeg.add("UPDATE");
+                stmtsBeg.add("ALTER");
+                stmtsBeg.add("DROP");
+
+                // Special comments
+                stmtsBeg.add("--;");
+
+                // Exec for embedded SQl
+                stmtsBeg.add("EXEC");
+                stmtsBeg.add("SQL");
+
+                // Parameter marker - question mark
+                // stmtsBeg.add("?"); // Resolved elsewhere
+
+                // Endings of block statements
+
+                stmtsEnd.add("END-EXEC"); // In RPG III
+                break;
+
+            } // End of case SQL
+
         } // End of switch
 
         // Find and highlight beginning block statements
@@ -2459,7 +2569,6 @@ public final class EditFile extends JFrame {
         stmtsEnd.forEach(stmtEnd -> {
             highlightBlockStmt(textArea, stmtEnd, false); // false is tested as !beg
         });
-
     }
 
     /**
@@ -2472,6 +2581,7 @@ public final class EditFile extends JFrame {
     protected void highlightBlockStmt(JTextArea textArea, String blockStmt, boolean beg) {
 
         // Beginnings of block statements - colors
+        // ------------------------------
         if (beg && (blockStmt.equals("DCL-DS"))) {
             // DCL-DS in RPG **FREE
             blockPainter = blockBrownLighter;
@@ -2553,7 +2663,7 @@ public final class EditFile extends JFrame {
         } else if (beg && blockStmt.equals("ELSE")) {
             // ELSE in RPG, CL, COBOL, C, C++
             blockPainter = blockGreenLighter;
-        } else if (beg && blockStmt.equals("SELECT")) {
+        } else if (beg && blockStmt.equals("SELECT") && !progLanguage.equals("SQL")) {
             // SELECT in RPG IV (and COBOL - not a block, only file selection)
             blockPainter = blockYellowLighter;
         } else if (beg && blockStmt.equals("SELEC")) {
@@ -2626,10 +2736,119 @@ public final class EditFile extends JFrame {
             // PROCEDURE in COBOL
             blockPainter = blockRedDarker;
         } else if (beg && blockStmt.equals("{")) {
-            // { in C, C++
+            // in C, C++
             blockPainter = curlyBracketsLighter;
+        } else if (beg && blockStmt.equals("EXEC") && progLanguage.equals("SQL")) {
+            // in SQL
+            blockPainter = blockRedLighter;
+        } else if (beg && blockStmt.equals("SQL")) {
+            // in SQL
+            blockPainter = blockRedLighter;
+        } else if (beg && blockStmt.equals("SELECT") && progLanguage.equals("SQL")) {
+            // in SQL
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("FROM")) {
+            // in SQL
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("WHERE")) {
+            // in SQL
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("ORDER")) {
+            // in SQL
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("HAVING")) {
+            // in SQL
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("GROUP")) {
+            // in SQL
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("CONNECT")) {
+            // in SQL
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("FETCH")) {
+            // in SQL
+            blockPainter = blockBlueLighter;
+        } else if (beg && blockStmt.equals("JOIN")) {
+            // in SQL
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("INNER")) {
+            // in SQL
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("LEFT")) {
+            // in SQL
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("RIGHT")) {
+            // in SQL
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("FULL")) {
+            // in SQL
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("EXCEPTION")) {
+            // in SQL
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("CROSS")) {
+            // in SQL
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("DISTINCT")) {
+            // in SQL
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("TABLE") && progLanguage.equals("SQL")) {
+            // in SQL
+            blockPainter = blockBrownLighter;
+        } else if (beg && blockStmt.equals("WITH")) {
+            // in SQL
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("RECURSIVE")) {
+            // in SQL
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("UNION")) {
+            // in SQL
+            blockPainter = blockGrayLighter;
+        } else if (beg && blockStmt.equals("INTERSECT")) {
+            // in SQL
+            blockPainter = blockGrayLighter;
+        } else if (beg && blockStmt.equals("EXCEPT")) {
+            // in SQL
+            blockPainter = blockGrayLighter;
+        } else if (beg && blockStmt.equals("SET") && progLanguage.equals("SQL")) {
+            // in SQL
+            blockPainter = blockBrownLighter;
+        } else if (beg && blockStmt.equals("SCHEMA")) {
+            // in SQL
+            blockPainter = blockBrownLighter;
+        } else if (beg && blockStmt.equals("CREATE")) {
+            // in SQL
+            blockPainter = blockBrownLighter;
+        } else if (beg && blockStmt.equals("INSERT")) {
+            // in SQL
+            blockPainter = blockBrownLighter;
+        } else if (beg && blockStmt.equals("UPDATE")) {
+            // in SQL
+            blockPainter = blockBrownLighter;
+        } else if (beg && blockStmt.equals("ALTER")) {
+            // in SQL
+            blockPainter = blockBrownLighter;
+        } else if (beg && blockStmt.equals("DROP")) {
+            // in SQL
+            blockPainter = blockBrownLighter;
+        } else if (beg && blockStmt.equals("SQLSTATE")) {
+            // in SQL
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("SQLCOD")) {
+            // in SQL
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("SQLCODE")) {
+            // in SQL
+            blockPainter = blockGreenLighter;
+        } else if (beg && blockStmt.equals("--;")) {
+            // in SQL - special comment (trigraph)
+            blockPainter = blockYellowLighter;
+        } else if (beg && blockStmt.equals("?")) {
+            // in SQL - parameter marker
+            blockPainter = blockRedDarker;
 
             // Ends of block statements - colors
+            // ------------------------
         } else if (!beg && blockStmt.equals("END-DS")) {
             // END-DS in RPG **FREE
             blockPainter = blockBrownDarker;
@@ -2679,7 +2898,7 @@ public final class EditFile extends JFrame {
             // END-PROC in RPG **FREE
             blockPainter = blockGrayDarker;
         } else if (!beg && blockStmt.equals("}")) {
-            // } in C, C++
+            // in C, C++
             blockPainter = curlyBracketsDarker;
         }
 
@@ -2688,17 +2907,19 @@ public final class EditFile extends JFrame {
 
         String text;
 
-        // The *ALL option highlights all occurrences in all languages.
         text = textArea.getText().toUpperCase();
 
         int startOfLine = 0;
         int endOfLine = 0;
         try {
             endOfLine = text.indexOf(NEW_LINE, startOfLine);
+
+            // Process all lines in the text area
             while (startOfLine > -1 && startOfLine < text.length()) {
+                // (not empty text and inside the text before the last NEW_LINE)
 
                 if (endOfLine - startOfLine > 0) {
-
+                    // The line has at least one character
                     int startOfBlockStmt = text.indexOf(blockStmt, startOfLine);
                     int endOfBlockStmt = startOfBlockStmt + blockStmt.length();
 
@@ -2706,6 +2927,7 @@ public final class EditFile extends JFrame {
                         switch (progLanguage) {
 
                             case "*ALL": {
+                                // The *ALL option highlights all occurrences in all languages.
                                 blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
                                 break;
                             }
@@ -2844,14 +3066,62 @@ public final class EditFile extends JFrame {
                                 break;
                             } // End of case C++
 
+                            case "SQL": {
+                                String line = text.substring(startOfLine, endOfLine);
+                                int specialCommentPos = line.indexOf("--;"); // Trigraph - special SQL line comment
+                                int dashCommentPos = line.indexOf("--"); // // Double dash - ordinary SQL line comment
+                                if ((blockStmt.equals("--;")) && specialCommentPos == 0) {
+                                    // Highlight special comment line beginning at the start of line. Nowhere else.
+                                    // Other comments are not hightlighted (double dashes and slash-asterisks).
+                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                } else if (specialCommentPos == -1 && dashCommentPos == -1) {
+                                    // Highlight block statements other than special comment (--; trigraph) or dash comment (--). 
+                                    // These block statements (SELECT, FROM, ...) are highlighted.
+                                    blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
+                                    // All question marks are highlighted in the whole text area
+                                    highlightSqlQuestionMarks();
+                                }
+                                break;
+                            } // End of case SQL
+
                         } // End of switch
                     }
                 }
+                // Get next line
                 startOfLine = text.indexOf(NEW_LINE, startOfLine) + NEW_LINE.length();
                 endOfLine = text.indexOf(NEW_LINE, startOfLine);
             }
         } catch (Exception exc) {
             exc.printStackTrace();
+        }
+    }
+
+    /**
+     * Highlighting question marks in the whole SQL script (text area).
+     */
+    protected void highlightSqlQuestionMarks() {
+        LayeredHighlighter sqlQuestionMarkHighlighter = (LayeredHighlighter) textArea.getHighlighter();
+        String stringPattern = "?";
+        try {
+            stringPattern = stringPattern.replace("?", "\\?");
+            Pattern pattern = Pattern.compile(stringPattern);
+            if (stringPattern == null) {
+                return;
+            }
+            if (Objects.nonNull(stringPattern)) {
+                Matcher matcher = pattern.matcher(textArea.getText(0, textArea.getText().length()));
+                int pos = 0;
+                int start = 0;
+                int end = 0;
+                while (matcher.find(pos)) {
+                    start = matcher.start();
+                    end = matcher.end();
+                    sqlQuestionMarkHighlighter.addHighlight(start, end, blockRedDarker);
+                    pos = end;
+                }
+            }
+        } catch (BadLocationException ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -2888,7 +3158,7 @@ public final class EditFile extends JFrame {
             }
             JLabel label = findWindow.layerUI.hint;
             LayeredHighlighter.Highlight[] array = layeredHighlighter.getHighlights();
-            int hits = array.length; // number of highlighted intervals found.
+            int hits = array.length; // number of highlighted intervals.
             if (hits > 0) { // If at least one interval was found.
                 if (findWindow.direction.equals("forward")) {
                     // Forward direction
@@ -3106,14 +3376,14 @@ public final class EditFile extends JFrame {
         blockHighlighter = textArea.getHighlighter();
         // Hightlight only if the option is not *NONE
         if (!progLanguage.equals("*NONE")) {
-            highlightBlocks(textArea, progLanguage);
+            highlightBlocks(textArea);
         }
 
         // Get a highlighter for the secondary text area
         blockHighlighter = textArea2.getHighlighter();
         // Hightlight only if the option is not *NONE
         if (!progLanguage.equals("*NONE")) {
-            highlightBlocks(textArea2, progLanguage);
+            highlightBlocks(textArea2);
         }
 
         // Add document listener for the secondary text area 
@@ -3176,7 +3446,7 @@ public final class EditFile extends JFrame {
             blockHighlighter = textArea.getHighlighter();
             // Hightlight only if the option is not *NONE
             if (!progLanguage.equals("*NONE")) {
-                highlightBlocks(textArea, progLanguage);
+                highlightBlocks(textArea);
             }
         }
 
@@ -3824,7 +4094,7 @@ public final class EditFile extends JFrame {
                     blockHighlighter = tArea.getHighlighter();
                     // Hightlight only if the option is not *NONE
                     if (!progLanguage.equals("*NONE")) {
-                        highlightBlocks(tArea, progLanguage);
+                        highlightBlocks(tArea);
                     }
                 } catch (Exception exc) {
                     exc.printStackTrace();
@@ -3901,7 +4171,7 @@ public final class EditFile extends JFrame {
                     blockHighlighter = tArea.getHighlighter();
                     // Hightlight only if the option is not *NONE
                     if (!progLanguage.equals("*NONE")) {
-                        highlightBlocks(tArea, progLanguage);
+                        highlightBlocks(tArea);
                     }
                 } catch (Exception exc) {
                     exc.printStackTrace();
@@ -4336,7 +4606,7 @@ public final class EditFile extends JFrame {
             saveButton.setForeground(originalButtonForeground);
             saveButton.setText("Save");
         }
-        saveButton.setSelected(true);
+//        saveButton.setSelected(true);
     }
 
     /**
@@ -4463,7 +4733,7 @@ public final class EditFile extends JFrame {
             blockHighlighter = textArea.getHighlighter();
             // Hightlight only if the option is not *NONE
             if (!progLanguage.equals("*NONE")) {
-                highlightBlocks(textArea, progLanguage);
+                highlightBlocks(textArea);
             }
 
             // On right click show popup menu with commands.
@@ -4493,7 +4763,7 @@ public final class EditFile extends JFrame {
             blockHighlighter = textArea2.getHighlighter();
             // Hightlight only if the option is not *NONE
             if (!progLanguage.equals("*NONE")) {
-                highlightBlocks(textArea2, progLanguage);
+                highlightBlocks(textArea2);
             }
 
             // On right click change selection mode.

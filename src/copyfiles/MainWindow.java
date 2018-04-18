@@ -1948,8 +1948,7 @@ public class MainWindow extends JFrame {
             try {
                 // Get list of objects in the directory
                 Stream<Path> stream = Files.list(pathParam);
-                // Process level 2 of objects (children of node level 1 - the
-                // root)
+                // Process level 2 of objects (children of node level 1 - the root)
                 stream.forEach(pathLevel2 -> {
                     Path relativePathLevel2;
                     // Eliminate directories whose names begin with a dot
@@ -2686,16 +2685,16 @@ public class MainWindow extends JFrame {
                 leftTreePopupMenu.add(findInPcFiles);
                 leftTreePopupMenu.add("");
                 leftTreePopupMenu.add(movePcObjectToTrash);
-            }
-            // On double click run "editPcFile"
-            if (mouseEvent.getClickCount() == 2
-                    && (mouseEvent.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK) == MouseEvent.BUTTON1_DOWN_MASK) {
-                clipboardPathStrings = leftPathStrings;
-                for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
-                    sourcePathString = clipboardPathStrings[idx];
-                    JTextArea textArea = new JTextArea();
-                    JTextArea textArea2 = new JTextArea();
-                    EditFile edtf = new EditFile(remoteServer, MainWindow.this, textArea, textArea2, leftPathString, "rewritePcFile");
+                // On double click run "editPcFile"
+                if (mouseEvent.getClickCount() == 2
+                        && (mouseEvent.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK) == MouseEvent.BUTTON1_DOWN_MASK) {
+                    clipboardPathStrings = leftPathStrings;
+                    for (int idx = 0; idx < clipboardPathStrings.length; idx++) {
+                        sourcePathString = clipboardPathStrings[idx];
+                        JTextArea textArea = new JTextArea();
+                        JTextArea textArea2 = new JTextArea();
+                        EditFile edtf = new EditFile(remoteServer, MainWindow.this, textArea, textArea2, leftPathString, "rewritePcFile");
+                    }
                 }
             }
 
