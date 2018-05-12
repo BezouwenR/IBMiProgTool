@@ -1598,7 +1598,7 @@ public class Compile extends JFrame {
             ibmCcsidInt = Integer.parseInt(ibmCcsid);
         } catch (Exception exc) {
             // If ibmCcsid is not numeric, take 65535
-            exc.printStackTrace();
+            //exc.printStackTrace();
             ibmCcsid = "65535";
             ibmCcsidInt = 65535;
         }

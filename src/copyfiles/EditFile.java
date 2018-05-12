@@ -1390,15 +1390,6 @@ public final class EditFile extends JFrame {
                     }
                 }
             }
-            if (list != null) {
-                // Concatenate all text lines from the list obtained from the file
-                textArea.setText("");
-                Object[] obj = (Object[]) list.stream().toArray();
-                for (int idx = 0; idx < obj.length; idx++) {
-                    String text = obj[idx].toString();
-                    textArea.append(text + NEW_LINE);
-                }
-            }
         } catch (Exception exc) {
             isError = true;
             exc.printStackTrace();
@@ -2072,6 +2063,17 @@ public final class EditFile extends JFrame {
      * @param textArea
      */
     protected void highlightBlocks(JTextArea textArea) {
+        /**
+         * This new-line is necessary for prevention of a never ending loop.
+         * Without it the never ending loop would occur when BLOCK HIGHLIGHTING is specified
+         * and the user writes some character(s) after the END of the text area
+         * and then the user presses a mouse button.
+         *
+         * This produces an invisible effect of appending an empty new line
+         * each time the user clicks the mouse button anywhere in the text area.
+         */
+//????        textArea.append("\n");
+
         stmtsBeg.clear();
         stmtsEnd.clear();
 
@@ -2905,22 +2907,30 @@ public final class EditFile extends JFrame {
         // Inspect each line separately for ONE occurrence of the block statement.
         // Highlight only the block statement that is outside of a comment, if it is not too complex.
 
-        String text;
+        String textToHighlight;
 
-        text = textArea.getText().toUpperCase();
-
+        textToHighlight = textArea.getText().toUpperCase();
+        int textLength = textToHighlight.length();
         int startOfLine = 0;
         int endOfLine = 0;
+        //System.out.println("endOfLine first: " + endOfLine);
+        // Process all lines in the textToHighlight area
         try {
-            endOfLine = text.indexOf(NEW_LINE, startOfLine);
+            // Find the first new-line character in the textToHighlight.
+            // Index of the first new-line character is the first end of line.
+            // May be -1 if no end-of-line character exists in the text area.
+            endOfLine = textToHighlight.indexOf(NEW_LINE, startOfLine);
 
             // Process all lines in the text area
-            while (startOfLine > -1 && startOfLine < text.length()) {
-                // (not empty text and inside the text before the last NEW_LINE)
-
+            while ( // "textToHighlight" is not empty  
+                    // and the block statement is inside the whole textToHighlight (before the last NEW_LINE)
+                    // and at the end of line exists at least one new-line character.
+                    startOfLine > -1
+                    && startOfLine < textLength
+                    && endOfLine != -1) {
                 if (endOfLine - startOfLine > 0) {
                     // The line has at least one character
-                    int startOfBlockStmt = text.indexOf(blockStmt, startOfLine);
+                    int startOfBlockStmt = textToHighlight.indexOf(blockStmt, startOfLine);
                     int endOfBlockStmt = startOfBlockStmt + blockStmt.length();
 
                     if (startOfBlockStmt >= startOfLine && startOfBlockStmt <= endOfLine - blockStmt.length()) {
@@ -2935,12 +2945,12 @@ public final class EditFile extends JFrame {
                             case "RPG **FREE": {
                                 // Before block statement: All spaces or empty
                                 // After block statement: A space or semicolon or new line
-                                if ((text.substring(startOfLine, startOfBlockStmt).equals(fixedLengthSpaces(startOfBlockStmt
+                                if ((textToHighlight.substring(startOfLine, startOfBlockStmt).equals(fixedLengthSpaces(startOfBlockStmt
                                         - startOfLine))
-                                        || text.substring(startOfLine, startOfBlockStmt).isEmpty())
-                                        && (text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(" ")
-                                        || text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(";")
-                                        || text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(NEW_LINE))) {
+                                        || textToHighlight.substring(startOfLine, startOfBlockStmt).isEmpty())
+                                        && (textToHighlight.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(" ")
+                                        || textToHighlight.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(";")
+                                        || textToHighlight.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(NEW_LINE))) {
                                     blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
                                 }
                                 break;
@@ -2950,14 +2960,14 @@ public final class EditFile extends JFrame {
                                 // Before block statement: at least 7 spaces
                                 // After block statement: A space or new line or semicolon
                                 // No asterisk comment (* in column 7)
-                                if (text.length() >= 7) {
-                                    if ((text.substring(startOfLine + 7, startOfBlockStmt).equals(fixedLengthSpaces(startOfBlockStmt
+                                if (textToHighlight.length() >= 7) {
+                                    if ((textToHighlight.substring(startOfLine + 7, startOfBlockStmt).equals(fixedLengthSpaces(startOfBlockStmt
                                             - (startOfLine + 7)))
-                                            || text.substring(startOfLine, startOfBlockStmt).isEmpty())
-                                            && (text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(" ")
-                                            || text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(NEW_LINE)
-                                            || text.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(";"))
-                                            && !text.substring(startOfLine + 6, startOfLine + 7).equals("*")) {
+                                            || textToHighlight.substring(startOfLine, startOfBlockStmt).isEmpty())
+                                            && (textToHighlight.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(" ")
+                                            || textToHighlight.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(NEW_LINE)
+                                            || textToHighlight.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(";"))
+                                            && !textToHighlight.substring(startOfLine + 6, startOfLine + 7).equals("*")) {
                                         blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
                                     }
                                 }
@@ -2966,9 +2976,9 @@ public final class EditFile extends JFrame {
 
                             case "RPG IV fixed": {
                                 // C in column 6 and no asterisk comment (* in column 7) and block statement in column 26 (Opcode)
-                                if (text.length() >= 5) {
-                                    if (text.substring(startOfLine + 5, startOfLine + 6).equals("C")
-                                            && !text.substring(startOfLine + 6, startOfLine + 7).equals("*")
+                                if (textToHighlight.length() >= 5) {
+                                    if (textToHighlight.substring(startOfLine + 5, startOfLine + 6).equals("C")
+                                            && !textToHighlight.substring(startOfLine + 6, startOfLine + 7).equals("*")
                                             && startOfBlockStmt - startOfLine == 25) {
                                         blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
                                     }
@@ -2978,9 +2988,9 @@ public final class EditFile extends JFrame {
 
                             case "RPG III": {
                                 // C in column 6 and no asterisk comment (* in column 7) and block statement in column 28 (Opcode)
-                                if (text.length() >= 5) {
-                                    if (text.substring(startOfLine + 5, startOfLine + 6).equals("C")
-                                            && !text.substring(startOfLine + 6, startOfLine + 7).equals("*")
+                                if (textToHighlight.length() >= 5) {
+                                    if (textToHighlight.substring(startOfLine + 5, startOfLine + 6).equals("C")
+                                            && !textToHighlight.substring(startOfLine + 6, startOfLine + 7).equals("*")
                                             && startOfBlockStmt - startOfLine == 27) {
                                         blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
                                     }
@@ -2989,7 +2999,7 @@ public final class EditFile extends JFrame {
                             } // End of case RPG RPG III
 
                             case "CL": {
-                                String line = text.substring(startOfLine, endOfLine);
+                                String line = textToHighlight.substring(startOfLine, endOfLine);
                                 int commentLeftPos = line.indexOf("/*");
                                 int commentRightPos = line.indexOf("*/");
                                 // One comment exists in the line and the block statement is outside
@@ -3009,9 +3019,9 @@ public final class EditFile extends JFrame {
                             case "COBOL": {
                                 // No asterisk or slash comment (* or / in column 7)
                                 // and the block statement is in columns 12 to 72
-                                if (text.length() >= 7) {
-                                    if (!text.substring(startOfLine + 6, startOfLine + 7).equals("*")
-                                            && !text.substring(startOfLine + 6, startOfLine + 7).equals("/")
+                                if (textToHighlight.length() >= 7) {
+                                    if (!textToHighlight.substring(startOfLine + 6, startOfLine + 7).equals("*")
+                                            && !textToHighlight.substring(startOfLine + 6, startOfLine + 7).equals("/")
                                             //&& startOfBlockStmt - startOfLine >= 11
                                             && endOfBlockStmt - startOfLine <= 72) {
                                         blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
@@ -3021,7 +3031,7 @@ public final class EditFile extends JFrame {
                             } // End of case COBOL
 
                             case "C": {
-                                String line = text.substring(startOfLine, endOfLine);
+                                String line = textToHighlight.substring(startOfLine, endOfLine);
                                 int doubleSlashPos = line.indexOf("//");
                                 int commentLeftPos = line.indexOf("/*");
                                 int commentRightPos = line.indexOf("*/");
@@ -3044,7 +3054,7 @@ public final class EditFile extends JFrame {
                             } // End of case C
 
                             case "C++": {
-                                String line = text.substring(startOfLine, endOfLine);
+                                String line = textToHighlight.substring(startOfLine, endOfLine);
                                 int doubleSlashPos = line.indexOf("//");
                                 int commentLeftPos = line.indexOf("/*");
                                 int commentRightPos = line.indexOf("*/");
@@ -3067,7 +3077,7 @@ public final class EditFile extends JFrame {
                             } // End of case C++
 
                             case "SQL": {
-                                String line = text.substring(startOfLine, endOfLine);
+                                String line = textToHighlight.substring(startOfLine, endOfLine);
                                 int specialCommentPos = line.indexOf("--;"); // Trigraph - special SQL line comment
                                 int dashCommentPos = line.indexOf("--"); // // Double dash - ordinary SQL line comment
                                 if ((blockStmt.equals("--;")) && specialCommentPos == 0) {
@@ -3078,7 +3088,7 @@ public final class EditFile extends JFrame {
                                     // Highlight block statements other than special comment (--; trigraph) or dash comment (--). 
                                     // These block statements (SELECT, FROM, ...) are highlighted.
                                     blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
-                                    // All question marks are highlighted in the whole text area
+                                    // All question marks are highlighted in the whole textToHighlight area
                                     highlightSqlQuestionMarks();
                                 }
                                 break;
@@ -3088,8 +3098,8 @@ public final class EditFile extends JFrame {
                     }
                 }
                 // Get next line
-                startOfLine = text.indexOf(NEW_LINE, startOfLine) + NEW_LINE.length();
-                endOfLine = text.indexOf(NEW_LINE, startOfLine);
+                startOfLine = textToHighlight.indexOf(NEW_LINE, startOfLine) + NEW_LINE.length();
+                endOfLine = textToHighlight.indexOf(NEW_LINE, startOfLine);
             }
         } catch (Exception exc) {
             exc.printStackTrace();
@@ -4735,13 +4745,14 @@ public final class EditFile extends JFrame {
             if (!progLanguage.equals("*NONE")) {
                 highlightBlocks(textArea);
             }
-
+            /*
             // On right click show popup menu with commands.
             if ((mouseEvent.getButton() == MouseEvent.BUTTON3)) {
                 preparePopupMenu();
                 // Show the menu
                 textAreaPopupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
             }
+            */
         }
     }
 
@@ -4765,13 +4776,14 @@ public final class EditFile extends JFrame {
             if (!progLanguage.equals("*NONE")) {
                 highlightBlocks(textArea2);
             }
-
+            /*
             // On right click change selection mode.
             if ((mouseEvent.getButton() == MouseEvent.BUTTON3)) {
                 preparePopupMenu();
                 // Show the menu
                 textAreaPopupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
             }
+            */
         }
     }
 

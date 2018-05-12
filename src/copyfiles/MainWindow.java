@@ -1883,7 +1883,7 @@ public class MainWindow extends JFrame {
 
         // Show completion message when connection to IBM i server connected.
         row = "Comp: Server IBM i  " + properties.getProperty("HOST") + "  has been connected to user  " + remoteServer.getUserId()
-                + " and is retrieving the Integrated File System.";
+                + "  and is retrieving the Integrated File System.";
         msgVector.add(row);
         showMessages(noNodes);
         // Change cursor to default
@@ -2973,8 +2973,7 @@ public class MainWindow extends JFrame {
     }
 
     /**
-     * Action listener for LEFT PATH ComboBox reacts on text change in its input
-     * field.
+     * Action listener for LEFT PATH ComboBox reacts on text change in its input field.
      */
     class LeftPathActionListener implements ActionListener {
 
@@ -3009,8 +3008,7 @@ public class MainWindow extends JFrame {
     }
 
     /**
-     * Action listener for RIGHT PATH ComboBox reacts on text change in its input
-     * field.
+     * Action listener for RIGHT PATH ComboBox reacts on text change in its input field.
      */
     class RightPathActionListener implements ActionListener {
 

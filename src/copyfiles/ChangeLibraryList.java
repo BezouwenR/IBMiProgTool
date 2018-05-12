@@ -64,6 +64,7 @@ public class ChangeLibraryList extends JFrame {
 
     // Empty left vector for list of library names
     Vector<String> vectorLeft = new Vector<>();
+    ListLeftRightTransfHdlr listLeftRightTransfHdlr = new ListLeftRightTransfHdlr();
 
     String userLibraryListString = ""; // Empty library list to be returned
     String currentLibrary;
@@ -71,6 +72,8 @@ public class ChangeLibraryList extends JFrame {
     JList<String> listLeft = new JList<>(vectorLeft);
     JList<String> listRight;
     DefaultListModel<String> listRightModel = new DefaultListModel<>();
+    // ListRightRightTransfHdlr listRightRightTransfHdlr = new ListRightRightTransfHdlr(); // Does not work properly.
+
     int selectedIndexRight;
 
     int scrollPaneWidth = 150;
@@ -144,7 +147,7 @@ public class ChangeLibraryList extends JFrame {
         removeButton.setToolTipText("Remove selected libraries from the right side.");
         clearButton.setToolTipText("Remove all libraries from the right side.");
         saveButton.setToolTipText("Create user library list and current library. Return to the previous window.");
-                
+
         // Retrieve library names beginning with a prefix    
         librariesForCurlib = getListOfLibraries(libraryPattern);
 
@@ -188,9 +191,9 @@ public class ChangeLibraryList extends JFrame {
         // Create right list (user library list) using the DefaultListModel 
         listRight = new JList(listRightModel);
         listRight.setDragEnabled(true);
-        listRight.setTransferHandler(new ListRightRightTransfHdlr());
+//        listRight.setTransferHandler(listRightRightTransfHdlr); // Does not work properly.
         listRight.setDropMode(DropMode.INSERT);
-        listRight.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+//        listRight.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION); // This is unnecessary. Multiple interval selection is default.
 
         scrollPaneLeft = new JScrollPane(listLeft);
         scrollPaneLeft.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -277,22 +280,16 @@ public class ChangeLibraryList extends JFrame {
             }
         });
 
-        // Current library combo box listener
-        // ----------------------------------
-        curentLibraryComboBox.addActionListener(ae -> {
-        });
-
         // Left list listener
         // ------------------
         listLeft.addListSelectionListener(lse -> {
-            listRight.setTransferHandler(new ListLeftRightTransfHdlr());
+            listRight.setTransferHandler(listLeftRightTransfHdlr);
         });
 
         // Right list listener
         // ------------------
         listRight.addListSelectionListener(lse -> {
-            lse.getSource();
-            listRight.setTransferHandler(new ListRightRightTransfHdlr());
+            //listRight.setTransferHandler(listRightRightTransfHdlr); // Does not work properly
         });
 
         // Copy button listener
@@ -503,19 +500,39 @@ public class ChangeLibraryList extends JFrame {
      */
     protected void copyRightToRight(Integer insertIndex) {
         // Copy selected items from the right list to the (same) right list
-        int selIndex = listRight.getSelectedIndex();
-        String itemRightSelected = (String) listRightModel.getElementAt(selIndex);
+        int minIndex = listRight.getMinSelectionIndex();
+        int maxIndex = listRight.getMaxSelectionIndex();
+        String itemRightSelected;
+
         if (!listRightModel.isEmpty()) {
-            // Insert selected items on the insert index in the right list 
-            if (insertIndex == null) {
-                listRightModel.addElement(itemRightSelected);
-            } else {
-                listRightModel.insertElementAt(itemRightSelected, insertIndex);
+            for (int idx = minIndex; idx <= maxIndex; idx++) {
+                itemRightSelected = (String) listRightModel.getElementAt(idx);
+                // Insert selected items on the insert index in the right list 
+                if (insertIndex == null) {
+                    listRightModel.addElement(itemRightSelected);
+                } else {
+                    //listRightModel.removeElementAt(idx);
+
+                    listRightModel.add(idx, itemRightSelected);
+                }
             }
-            if (selIndex > insertIndex) {
-                selIndex++;
-            }
-            listRightModel.remove(selIndex);
+            
+        minIndex = listRight.getMinSelectionIndex();
+        maxIndex = listRight.getMaxSelectionIndex();
+            
+System.out.println("minIndex   : "+minIndex);
+System.out.println("maxIndex   : "+maxIndex);
+System.out.println("insertIndex: "+insertIndex);
+            //if (insertIndex > maxIndex) {
+                //minIndex++;
+                for (int idx = maxIndex; idx >= minIndex; idx--) {
+                //for (int idx = minIndex; idx <= maxIndex; idx++) {
+System.out.println("idx : "+idx);
+                    listRightModel.remove(idx);
+                }
+
+            //}
+
         }
     }
 
@@ -562,8 +579,9 @@ public class ChangeLibraryList extends JFrame {
     }
 
     /**
-     *
+     * Drag and drop does not work properly in the same list!
      */
+    /*
     class ListRightRightTransfHdlr extends TransferHandler {
 
         @Override
@@ -601,5 +619,6 @@ public class ChangeLibraryList extends JFrame {
             return true;
         }
     }
+    */
 
 }
