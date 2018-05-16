@@ -1164,6 +1164,12 @@ public final class EditFile extends JFrame {
         globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "save");
         globalPanel.getActionMap().put("save", saveAction);
+        textArea.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "save");
+        textArea.getActionMap().put("save", saveAction);
+        textArea2.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "save");
+        textArea2.getActionMap().put("save", saveAction);
 
         // Enable processing of function key Ctrl + Z = Undo
         globalPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
