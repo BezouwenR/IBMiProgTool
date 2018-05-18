@@ -1544,7 +1544,22 @@ public final class EditFile extends JFrame {
 
             String textAreaString = textArea.getText();
             byte[] byteArray;
-            AS400Text textConverter = new AS400Text(textAreaString.length(), ccsidAttribute, remoteServer);
+            int nbrOfBytes = 0;
+            // Decide how long in bytes the line is given target encoding.
+            if (ibmCcsid.equals("1200") || ibmCcsid.equals("13488")) {
+                // Get length in bytes for conversion to Unicode 1200 (UTF-16) and 13488 (UCS-2)
+                nbrOfBytes = textArea.getText().length() * 2;
+            } else if (ibmCcsid.equals("1208")) {
+                // Get length in bytes
+                // for UTF-8 -> 1208
+                // and for single byte CCSIDs.
+                nbrOfBytes = textArea.getText().getBytes().length;
+            } else {
+                // Get length of bytes of the text line for single byte characters
+                nbrOfBytes = textArea.getText().length();
+            }
+
+            AS400Text textConverter = new AS400Text(nbrOfBytes, ccsidAttribute, remoteServer);
             byteArray = textConverter.toBytes(textAreaString);
             // Write text from the text area to the file
             outStream.write(byteArray);
@@ -4758,7 +4773,7 @@ public final class EditFile extends JFrame {
                 // Show the menu
                 textAreaPopupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
             }
-            */
+             */
         }
     }
 
@@ -4789,7 +4804,7 @@ public final class EditFile extends JFrame {
                 // Show the menu
                 textAreaPopupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
             }
-            */
+             */
         }
     }
 
