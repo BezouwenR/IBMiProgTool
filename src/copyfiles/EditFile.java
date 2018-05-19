@@ -1333,7 +1333,7 @@ public final class EditFile extends JFrame {
 
             try (IFSFileInputStream inputStream = new IFSFileInputStream(remoteServer, filePathString)) {
                 int bytesRead = inputStream.read(inputBuffer);
-                //System.out.println("bytesRead: " + bytesRead);
+                System.out.println("bytesRead: " + bytesRead);
                 while (bytesRead != -1) {
                     for (int idx = 0; idx < bytesRead; idx++) {
                         // Copy input byte to output byte
@@ -1357,12 +1357,12 @@ public final class EditFile extends JFrame {
                     bytesRead = inputStream.read(inputBuffer);
                 }
                 inputStream.close();
-                //System.out.println("displayIfsFile - NEW_LINE: ");
-                //for (int i = 0; i < NEW_LINE.length(); i++) {
-                //    System.out.print(toHex(NEW_LINE.getBytes()[i]));
-                //}
-                //System.out.println();
-                //System.out.println("displayIfsFile - ccsidAttribute: " + ccsidAttribute);
+                System.out.println("displayIfsFile - NEW_LINE: ");
+                for (int i = 0; i < NEW_LINE.length(); i++) {
+                    System.out.print(toHex(NEW_LINE.getBytes()[i]));
+                }
+                System.out.println();
+                System.out.println("displayIfsFile - ccsidAttribute: " + ccsidAttribute);
             }
         } catch (Exception exc) {
             isError = true;
@@ -1374,14 +1374,14 @@ public final class EditFile extends JFrame {
         mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
     }
 
-    //static String toHex(byte bajt) {
-    //    int bin = (bajt < 0) ? (256 + bajt) : bajt;
-    //    int bin0 = bin >>> 4; // horní půlbajt
-    //    int bin1 = bin % 16;  // dolní půlbajt
-    //    String hex = Integer.toHexString(bin0)
-    //            + Integer.toHexString(bin1);
-    //    return hex;
-    //}
+    static String toHex(byte bajt) {
+        int bin = (bajt < 0) ? (256 + bajt) : bajt;
+        int bin0 = bin >>> 4; // horní půlbajt
+        int bin1 = bin % 16;  // dolní půlbajt
+        String hex = Integer.toHexString(bin0)
+                + Integer.toHexString(bin1);
+        return hex;
+    }
 
     /**
      * Display PC file using the application parameter "pcCharset".
@@ -1569,12 +1569,12 @@ public final class EditFile extends JFrame {
             } else if (ibmCcsid.equals("1208")) {
                 // Get length in bytes for conversion to Unicode 1208 (UTF-8)
                 nbrOfBytes = textAreaString.getBytes(Charset.forName("UTF-8")).length;
-                //System.out.println("rewriteIfsFile - nbrOfBytes: " + nbrOfBytes);
+                System.out.println("rewriteIfsFile - nbrOfBytes: " + nbrOfBytes);
             } else {
                 // Get length of bytes of the text line for single byte characters
                 nbrOfBytes = textAreaString.length();
             }
-            //System.out.println("rewriteIfsFile - ccsidAttribute: " + ccsidAttribute);
+            System.out.println("rewriteIfsFile - ccsidAttribute: " + ccsidAttribute);
             AS400Text textConverter = new AS400Text(nbrOfBytes, ccsidAttribute, remoteServer);
             byteArray = textConverter.toBytes(textAreaString);
             // Write text from the text area to the file
