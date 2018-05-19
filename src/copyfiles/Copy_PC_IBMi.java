@@ -339,7 +339,7 @@ public class Copy_PC_IBMi {
                         int nbrOfBytes = 0;
                         String textLine = bufferedReader.readLine();
                         while (textLine != null) {
-                            textLine += "\r\n";
+                            textLine += "\n";
                             // Decide how long in bytes the line is given target encoding.
                             if (ibmCcsid.equals("1200") || ibmCcsid.equals("13488")) {
                                 // Get length in bytes for conversion to Unicode 1200 (UTF-16) and 13488 (UCS-2)
@@ -347,7 +347,6 @@ public class Copy_PC_IBMi {
                             } else if (ibmCcsid.equals("1208")) {
                                 // Get length in bytes
                                 // for UTF-8 -> 1208
-                                // and for single byte CCSIDs.
                                 nbrOfBytes = textLine.getBytes().length;
                             } else {
                                 // Get length of bytes of the text line for single byte characters

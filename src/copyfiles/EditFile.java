@@ -1366,6 +1366,15 @@ public final class EditFile extends JFrame {
         mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
     }
 
+    static String toHex(byte bajt) {
+        int bin = (bajt < 0) ? (256 + bajt) : bajt;
+        int bin0 = bin >>> 4; // horní půlbajt
+        int bin1 = bin % 16;  // dolní půlbajt
+        String hex = Integer.toHexString(bin0)
+                + Integer.toHexString(bin1);
+        return hex;
+    }
+
     /**
      * Display PC file using the application parameter "pcCharset".
      */
@@ -1550,15 +1559,13 @@ public final class EditFile extends JFrame {
                 // Get length in bytes for conversion to Unicode 1200 (UTF-16) and 13488 (UCS-2)
                 nbrOfBytes = textArea.getText().length() * 2;
             } else if (ibmCcsid.equals("1208")) {
-                // Get length in bytes
-                // for UTF-8 -> 1208
-                // and for single byte CCSIDs.
-                nbrOfBytes = textArea.getText().getBytes().length;
+                // Get length in bytes multiplied by two (non ASCII characters occupie at least two bytes).
+                // This is necessary when the project is copied to Windows!
+                nbrOfBytes = textArea.getText().length() * 2;
             } else {
                 // Get length of bytes of the text line for single byte characters
                 nbrOfBytes = textArea.getText().length();
             }
-
             AS400Text textConverter = new AS400Text(nbrOfBytes, ccsidAttribute, remoteServer);
             byteArray = textConverter.toBytes(textAreaString);
             // Write text from the text area to the file
