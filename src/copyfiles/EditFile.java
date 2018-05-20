@@ -1331,9 +1331,10 @@ public final class EditFile extends JFrame {
             byte[] workBuffer = new byte[100000];
             textArea.setText("");
 
+            System.out.println("displayIfsFile - ccsidAttribute: " + ccsidAttribute);
+
             try (IFSFileInputStream inputStream = new IFSFileInputStream(remoteServer, filePathString)) {
                 int bytesRead = inputStream.read(inputBuffer);
-                //System.out.println("displayIfsFile - bytesRead: " + bytesRead);
                 while (bytesRead != -1) {
                     for (int idx = 0; idx < bytesRead; idx++) {
                         // Copy input byte to output byte
@@ -1352,12 +1353,12 @@ public final class EditFile extends JFrame {
                     textLine = (String) textConverter.toObject(bufferToWrite);
                     // Append the line to text area
                     textArea.append(textLine + NEW_LINE);
-                    //System.out.println("displayIfsFile - bytesRead: " + bytesRead);
+                    System.out.println("displayIfsFile - bytesRead: " + bytesRead);
                     // Read next input buffer
                     bytesRead = inputStream.read(inputBuffer);
                 }
                 inputStream.close();
-                
+
                 // Print NEW_LINE in one (or two) hexadecimal character(s) depending on 
                 // whether it is "\n" or "\r\n".
                 //System.out.println("displayIfsFile - NEW_LINE: ");
@@ -1365,8 +1366,6 @@ public final class EditFile extends JFrame {
                 //    System.out.print(toHex(NEW_LINE.getBytes()[i]));
                 //}
                 //System.out.println();
-                
-                //System.out.println("displayIfsFile - ccsidAttribute: " + ccsidAttribute);
             }
         } catch (Exception exc) {
             isError = true;
@@ -1380,9 +1379,9 @@ public final class EditFile extends JFrame {
 
     /**
      * Convert a byte to two "hexadecimal" characters (for testing)
-     * 
+     *
      * @param aByte
-     * @return 
+     * @return
      */
     static String toHex(byte aByte) {
         int bin = (aByte < 0) ? (256 + aByte) : aByte;
@@ -1573,16 +1572,14 @@ public final class EditFile extends JFrame {
             byte[] byteArray;
             int nbrOfBytes = 0;
             // Decide how long in bytes the line is given target encoding.
-            if (ibmCcsid.equals("1200") || ibmCcsid.equals("13488")) {
+            if (ccsidAttribute == 1200 || ccsidAttribute == 13488) {
                 // Get length in bytes for conversion to Unicode 1200 (UTF-16) and 13488 (UCS-2)
                 nbrOfBytes = textAreaString.getBytes(Charset.forName("UTF-16")).length;;
                 System.out.println("rewriteIfsFile - nbrOfBytes: " + nbrOfBytes);
-                System.out.println("rewriteIfsFile - ccsidAttribute: " + ccsidAttribute);
-            } else if (ibmCcsid.equals("1208")) {
+            } else if (ccsidAttribute == 1208) {
                 // Get length in bytes for conversion to Unicode 1208 (UTF-8)
                 nbrOfBytes = textAreaString.getBytes(Charset.forName("UTF-8")).length;
                 System.out.println("rewriteIfsFile - nbrOfBytes: " + nbrOfBytes);
-                System.out.println("rewriteIfsFile - ccsidAttribute: " + ccsidAttribute);
             } else {
                 // Get length of bytes of the text line for single byte characters
                 nbrOfBytes = textAreaString.length();
