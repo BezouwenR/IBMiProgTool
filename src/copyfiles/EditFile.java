@@ -1333,7 +1333,7 @@ public final class EditFile extends JFrame {
 
             try (IFSFileInputStream inputStream = new IFSFileInputStream(remoteServer, filePathString)) {
                 int bytesRead = inputStream.read(inputBuffer);
-                System.out.println("bytesRead: " + bytesRead);
+                //System.out.println("displayIfsFile - bytesRead: " + bytesRead);
                 while (bytesRead != -1) {
                     for (int idx = 0; idx < bytesRead; idx++) {
                         // Copy input byte to output byte
@@ -1352,17 +1352,21 @@ public final class EditFile extends JFrame {
                     textLine = (String) textConverter.toObject(bufferToWrite);
                     // Append the line to text area
                     textArea.append(textLine + NEW_LINE);
-
+                    //System.out.println("displayIfsFile - bytesRead: " + bytesRead);
                     // Read next input buffer
                     bytesRead = inputStream.read(inputBuffer);
                 }
                 inputStream.close();
-                System.out.println("displayIfsFile - NEW_LINE: ");
-                for (int i = 0; i < NEW_LINE.length(); i++) {
-                    System.out.print(toHex(NEW_LINE.getBytes()[i]));
-                }
-                System.out.println();
-                System.out.println("displayIfsFile - ccsidAttribute: " + ccsidAttribute);
+                
+                // Print NEW_LINE in one (or two) hexadecimal character(s) depending on 
+                // whether it is "\n" or "\r\n".
+                //System.out.println("displayIfsFile - NEW_LINE: ");
+                //for (int i = 0; i < NEW_LINE.length(); i++) {
+                //    System.out.print(toHex(NEW_LINE.getBytes()[i]));
+                //}
+                //System.out.println();
+                
+                //System.out.println("displayIfsFile - ccsidAttribute: " + ccsidAttribute);
             }
         } catch (Exception exc) {
             isError = true;
@@ -1374,10 +1378,16 @@ public final class EditFile extends JFrame {
         mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
     }
 
-    static String toHex(byte bajt) {
-        int bin = (bajt < 0) ? (256 + bajt) : bajt;
-        int bin0 = bin >>> 4; // horní půlbajt
-        int bin1 = bin % 16;  // dolní půlbajt
+    /**
+     * Convert a byte to two "hexadecimal" characters (for testing)
+     * 
+     * @param aByte
+     * @return 
+     */
+    static String toHex(byte aByte) {
+        int bin = (aByte < 0) ? (256 + aByte) : aByte;
+        int bin0 = bin >>> 4; // upper half-byte
+        int bin1 = bin % 16;  // lower half-byte
         String hex = Integer.toHexString(bin0)
                 + Integer.toHexString(bin1);
         return hex;
@@ -1566,15 +1576,17 @@ public final class EditFile extends JFrame {
             if (ibmCcsid.equals("1200") || ibmCcsid.equals("13488")) {
                 // Get length in bytes for conversion to Unicode 1200 (UTF-16) and 13488 (UCS-2)
                 nbrOfBytes = textAreaString.getBytes(Charset.forName("UTF-16")).length;;
+                System.out.println("rewriteIfsFile - nbrOfBytes: " + nbrOfBytes);
+                System.out.println("rewriteIfsFile - ccsidAttribute: " + ccsidAttribute);
             } else if (ibmCcsid.equals("1208")) {
                 // Get length in bytes for conversion to Unicode 1208 (UTF-8)
                 nbrOfBytes = textAreaString.getBytes(Charset.forName("UTF-8")).length;
                 System.out.println("rewriteIfsFile - nbrOfBytes: " + nbrOfBytes);
+                System.out.println("rewriteIfsFile - ccsidAttribute: " + ccsidAttribute);
             } else {
                 // Get length of bytes of the text line for single byte characters
                 nbrOfBytes = textAreaString.length();
             }
-            System.out.println("rewriteIfsFile - ccsidAttribute: " + ccsidAttribute);
             AS400Text textConverter = new AS400Text(nbrOfBytes, ccsidAttribute, remoteServer);
             byteArray = textConverter.toBytes(textAreaString);
             // Write text from the text area to the file

@@ -53,6 +53,7 @@ public class Copy_PC_IBMi {
     BufferedReader inFile;
     SequentialFile outSeqFile;
     String textLine;
+    final String NEW_LINE = "\n";
 
     Properties properties;
     Path parPath = Paths.get(System.getProperty("user.dir"), "paramfiles", "Parameters.txt");
@@ -337,17 +338,17 @@ public class Copy_PC_IBMi {
 
                         // Copy data
                         int nbrOfBytes = 0;
-                        String textLine = bufferedReader.readLine();
+                        textLine = bufferedReader.readLine();
                         while (textLine != null) {
-                            textLine += "\n";
+                            textLine += NEW_LINE;
                             // Decide how long in bytes the line is given target encoding.
                             if (ibmCcsid.equals("1200") || ibmCcsid.equals("13488")) {
                                 // Get length in bytes for conversion to Unicode 1200 (UTF-16) and 13488 (UCS-2)
-                                nbrOfBytes = textLine.length() * 2;
+                                nbrOfBytes = textLine.getBytes(Charset.forName("UTF-16")).length;;
                             } else if (ibmCcsid.equals("1208")) {
                                 // Get length in bytes
                                 // for UTF-8 -> 1208
-                                nbrOfBytes = textLine.getBytes().length;
+                                nbrOfBytes = textLine.getBytes(Charset.forName("UTF-8")).length;
                             } else {
                                 // Get length of bytes of the text line for single byte characters
                                 nbrOfBytes = textLine.length();

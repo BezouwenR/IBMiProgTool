@@ -58,7 +58,7 @@ public class Copy_IBMi_PC {
     boolean sourceRecordPrefixPresent;
 
     String pcFileSep; // PC file separator ( / in unix, \ in Windows )
-    final String NEW_LINE = "\r\n";
+    final String NEW_LINE = "\n";
 
     TreeMap<String, String> sourceFilesAndTypes = new TreeMap<>();
 
@@ -336,8 +336,8 @@ public class Copy_IBMi_PC {
                         IFSFileInputStream ifsInStream = new IFSFileInputStream(remoteServer, as400PathString);
 
                         // Open the output PC file as buffered output stream
-                        OutputStream os = Files.newOutputStream(pcFilePath, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
-                        BufferedOutputStream bos = new BufferedOutputStream(os);
+                        OutputStream outStream = Files.newOutputStream(pcFilePath, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+                        BufferedOutputStream bufOutStream = new BufferedOutputStream(outStream);
 
                         // Copy IFS file to PC file reading input stream to byte array and using byte buffer for output
                         // Read first portion of bytes
@@ -345,12 +345,12 @@ public class Copy_IBMi_PC {
                         // Repeat if at least one byte was read
                         while (bytesRead > 0) {
                             // Write out bytes read before
-                            bos.write(byteArray, 0, bytesRead);
+                            bufOutStream.write(byteArray, 0, bytesRead);
                             // Read next portion of bytes
                             bytesRead = ifsInStream.read(byteArray);
                         }
                         // Close files
-                        bos.close();
+                        bufOutStream.close();
                         ifsInStream.close();
                         if (fromWalk) {
                             row = "Info: IFS file  " + as400PathString + "  was copied unchanged (binary) to PC file  "
