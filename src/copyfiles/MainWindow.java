@@ -1874,7 +1874,12 @@ public class MainWindow extends JFrame {
             setCursor(Cursor.getDefaultCursor());
             // Remove setting last element of messages
             scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
-            return false;
+
+            // Check connection and keep connection alive in background.
+            chkConn = new CheckConnection(remoteServer);
+            chkConn.execute();
+            
+            return true;
         }
         //
         // ================================= End of connection to the server

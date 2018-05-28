@@ -132,6 +132,12 @@ public class Compile extends JFrame {
     JLabel commandTextLabel = new JLabel();
 
     String sourceAttributes; // Custom input compile parameters
+    String[] attributesArray;
+    String attributes;
+    ArrayList<String> attributesArrayList;
+    ArrayList<String> commandNames;
+    ArrayList<String> commandNamesArrayList;
+
     // Icon Aa will be dimmed or dark when clicked
     ImageIcon saveSrcAttribIconDark = new ImageIcon(saveSrcAttribIconPathDark.toString());
     ImageIcon noSrcAttribIconDim = new ImageIcon(noSrcAttribIconPathDim.toString());
@@ -763,8 +769,8 @@ public class Compile extends JFrame {
         // Decide if source file attributes modified by the user are to be saved or not.
         if (sourceAttributes.equals("SAVE_SOURCE_ATTRIBUTES")) {
             // Save and update modified attributes in "CompileAttributes.lib" for the source file to be compiled.
-            String[] attributesArray = new String[4];
-            String attributes = updateModifiedAttributes("compile");
+            attributesArray = new String[4];
+            attributes = updateModifiedAttributes("compile");
             attributesArray = attributes.split(",");
             sourceType = attributesArray[0];
             setCommandNames(sourceType);
@@ -776,10 +782,10 @@ public class Compile extends JFrame {
             libNamePar = attributesArray[2];
             objNamePar = attributesArray[3];
         } else {
-            // The attributes of the source file are not saved.
+            // The attributes of the source file are not to be saved.
             sourceType = setDefaultSourceType();
             setCommandNames(sourceType);
-            ArrayList<String> commandNames = getSourceFileAttributes(sourceType);
+            commandNames = getSourceFileAttributes(sourceType);
             // Get default (first) command name
             compileCommandName = commandNames.get(0);
             setCommandNames(sourceType);
@@ -788,7 +794,7 @@ public class Compile extends JFrame {
             getDefaultObjectNames();
         }
 
-        // Build complete command text when source type and command name is updated.
+        // Build complete command text when source type and command name is being updated.
         commandText = buildCommand(compileCommandName, libNamePar, objNamePar);
         if (commandText == null) {
             commandTextLabel.setText(compileNotSupported);
@@ -831,12 +837,13 @@ public class Compile extends JFrame {
         String cmdName = "";
         String libName = "";
         String objName = "";
-        String[] attributesArray = new String[4];
+        attributesArray = new String[4];
         try {
             List<String> items = Files.readAllLines(compileCommandsPath);
+
+            // Non empty list - at least one attributes file
+            // --------------
             if (!items.isEmpty()) {
-                // Non empty list - at least one attributes file
-                // --------------
                 // Read attributess (<file-path>, <source-type, command-name>, library-name>, object-name>) 
                 // from all files and write them in a map.
                 for (String item : items) {
@@ -846,17 +853,35 @@ public class Compile extends JFrame {
                     if (filePath.equals(pathString)) {
                         // This filePath matches - take the attributes from the loop for the following processing
                         attributes = attributesLoop;
+                        //break;
                     }
                 }
-            } 
-            
+                // Equal path was not found - Set default attributes
+                if (attributes == null) {
+                    // Get default source type
+                    srcType = setDefaultSourceType();
+                    // Set array list of command names depending on source type
+                    commandNames = getSourceFileAttributes(srcType);
+                    // Get default (first) command name
+                    cmdName = commandNames.get(0);
+                    // Set command names in the list of combo box
+                    setCommandNames(srcType);
+                    // Get default object names (libNamePar, objNamePar)
+                    getDefaultObjectNames();
+                    // Build attributes separated by comma
+                    attributes = srcType + "," + cmdName + "," + libNamePar + "," + objNamePar;
+                    // Put attributes into the map
+                    compileCommandsMap.put(pathString, attributes);
+                    compileCommandsComboBox.removeActionListener(commandsComboBoxListener);
+                }
+            }
+            // Empty list or no filePath matches, set default attributes
+            // ----------
             if (items.isEmpty() || attributes == null) {
-                // Empty list or no filePath matches
-                // ----------
                 // Get default source type
                 srcType = setDefaultSourceType();
                 // Set array list of command names depending on source type
-                ArrayList<String> commandNames = getSourceFileAttributes(srcType);
+                commandNames = getSourceFileAttributes(srcType);
                 // Get default (first) command name
                 cmdName = commandNames.get(0);
                 // Set command names in the list of combo box
@@ -870,7 +895,7 @@ public class Compile extends JFrame {
                 compileCommandsComboBox.removeActionListener(commandsComboBoxListener);
             }
 
-            // Split attributes into an array
+            // Split attributes into the new array
             attributesArray = attributes.split(",");
 
             if (whenCalled.equals("compile")) {
@@ -895,22 +920,18 @@ public class Compile extends JFrame {
                 attributes = attributesArray[0] + "," + attributesArray[1] + "," + attributesArray[2] + "," + objName;
             }
             compileCommandsMap.put(pathString, attributes);
+            
             // Write contents of the map to array list.
-            ArrayList<String> attributesArrayList = new ArrayList<>();            
+            attributesArrayList = new ArrayList<>();
             if (!compileCommandsMap.isEmpty()) {
-                filePath = compileCommandsMap.firstKey();
-                while (filePath != null) {
-                    attributes = compileCommandsMap.get(filePath);
-                    attributesArrayList.add(filePath + "," + attributes);
-                    if (compileCommandsMap.higherKey(filePath) == null) {
-                        break;
-                    } else {
-                        filePath = compileCommandsMap.higherKey(filePath);
-                    }
-                }
+                compileCommandsMap.forEach((key,value) -> {
+                    attributesArrayList.add(key + "," + value);
+                });
             }
+
             // Write array list to the file.
             Files.write(compileCommandsPath, attributesArrayList);
+            
         } catch (Exception ioe) {
             ioe.printStackTrace();
         }
@@ -957,7 +978,6 @@ public class Compile extends JFrame {
      * @return
      */
     protected ArrayList<String> getSourceFileAttributes(String sourceType) {
-        ArrayList<String> commandNamesArrayList;
         commandNamesArrayList = sourceTypesAndCommands.get(sourceType);
         if (commandNamesArrayList == null) {
             commandNamesArrayList = new ArrayList<>();
@@ -1438,7 +1458,7 @@ public class Compile extends JFrame {
             }
 
             setCommandNames(sourceType);
-            ArrayList<String> commandNames = getSourceFileAttributes(sourceType);
+            commandNames = getSourceFileAttributes(sourceType);
             compileCommandName = commandNames.get(0);
             compileCommandsComboBox.setSelectedIndex(0);
 

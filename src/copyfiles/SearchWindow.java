@@ -754,7 +754,10 @@ public class SearchWindow extends JFrame {
             // On double click run "editFile"
             if (mouseEvent.getClickCount() == 2
                     && (mouseEvent.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK) == MouseEvent.BUTTON1_DOWN_MASK) {
-                editFile(0);
+                //editFile(0);
+            for (int selectedRow : matchedFilesTable.getSelectedRows()) {
+                editFile(selectedRow);
+            }
             }
 
             // On right click pop up the menu

@@ -782,7 +782,7 @@ public class WrkSplF extends JFrame {
         SpooledFileList splfList = new SpooledFileList(remoteServer);
         try {
             // Parameter for selection all users for the first time or a specific user if not empty
-            if (rightPathString.equals("/QSYS.LIB")) {
+            if (rightPathString.equals("/") || rightPathString.equals("/QSYS.LIB")) {
                 row = "Wait: Retrieving list of all spooled files . . .";
                 mainWindow.msgVector.add(row);
                 mainWindow.showMessages(noNodes);
@@ -1017,7 +1017,7 @@ public class WrkSplF extends JFrame {
                             // New Line characters
                             // ===================
                             if (byteRead == 0x06 // Required New Line (RNL)
-                                    || byteRead == 0x0B // Vertical Tab (VT)
+                                    //|| byteRead == 0x0B // Vertical Tab (VT)
                                     || byteRead == 0x0C // Form Feed (FF)
                                     || byteRead == 0x15 // New Line (NL)
                                     || byteRead == 0x1E // Interchange Record Separator (IRE)
@@ -1039,8 +1039,8 @@ public class WrkSplF extends JFrame {
                                 }
                                 // Interpreted by CR and LF - Carriage Return and Line Feed
                                 workBuffer[endPointer] = 0x0d; // CR
-                                endPointer++;
-                                workBuffer[endPointer] = 0x25; // LF
+                                //endPointer++;
+                                workBuffer[endPointer] = 0x25; // LF in EBCDIC!
                                 endPointer++;
                                 currentPosInLine = 0;
                                 break;
@@ -1055,21 +1055,6 @@ public class WrkSplF extends JFrame {
                             if (byteRead == 0x2B) {
                                 // System.out.println("B2 command classes: " + byteToHex(byteRead));
                                 machineState = COMMAND_CLASSES;
-                                break;
-                            }
-                            // Printable characters (hex 40 - FF and hex 3F)
-                            // --------------------
-                            if (byteRead >= 0x40 || byteRead < 0xf9
-                                    || byteRead == 0x3f // Substitute (SUB)
-                                    ) {
-                                // System.out.print(byteToHex(byteRead));
-                                if (byteRead == 0x3f) {
-                                    workBuffer[endPointer] = 0x40;
-                                } else {
-                                    workBuffer[endPointer] = byteRead;
-                                }
-                                endPointer++;
-                                currentPosInLine++;
                                 break;
                             }
                             // Horizontal tab (HT)
@@ -1103,10 +1088,23 @@ public class WrkSplF extends JFrame {
 
                                 // Interpreted by CR and LF - Carriage Return and Line Feed
                                 workBuffer[endPointer] = 0x0d; // CR
-                                endPointer++;
+                                //endPointer++;
                                 workBuffer[endPointer] = 0x25; // LF
-                                endPointer++;
+                                //endPointer++;
                                 machineState = VERTICAL_CHANNEL_SELECT;
+                                break;
+                            }
+                            // All other (printable) characters (<= EF)
+                            // --------------------------------
+                            if (byteRead <= 0xef) {
+                                // System.out.print(byteToHex(byteRead));
+                                if (byteRead == 0x3f) {
+                                    workBuffer[endPointer] = 0x40;
+                                } else {
+                                    workBuffer[endPointer] = byteRead;
+                                }
+                                endPointer++;
+                                currentPosInLine++;
                                 break;
                             }
                             break;
@@ -1144,9 +1142,9 @@ public class WrkSplF extends JFrame {
                             for (int cnt = 0; cnt < byteRead - 1; cnt++) {
                                 // Interpreted by CR and LF - Carriage Return and Line Feed
                                 workBuffer[endPointer] = 0x0d; // CR
-                                endPointer++;
+                                //endPointer++;
                                 workBuffer[endPointer] = 0x25; // LF
-                                endPointer++;
+                                //endPointer++;
                             }
                             machineState = SINGLE_CHARACTERS;
                             break;
@@ -1191,9 +1189,9 @@ public class WrkSplF extends JFrame {
                             for (int cnt = 0; cnt < byteRead + 2; cnt++) {
                                 // Interpreted by CR and LF - Carriage Return and Line Feed
                                 workBuffer[endPointer] = 0x0d; // CR
-                                endPointer++;
+                                //endPointer++;
                                 workBuffer[endPointer] = 0x25; // LF
-                                endPointer++;
+                                //endPointer++;
                             }
                             machineState = SINGLE_CHARACTERS;
                             break;
@@ -1244,9 +1242,9 @@ public class WrkSplF extends JFrame {
                             // X'89' = 9
                             // Interpreted by CR and LF - Carriage Return and Line Feed
                             workBuffer[endPointer] = 0x0d; // CR
-                            endPointer++;
+                            //endPointer++;
                             workBuffer[endPointer] = 0x25; // LF
-                            endPointer++;
+                            //endPointer++;
                             machineState = SINGLE_CHARACTERS;
                             break;
                         }

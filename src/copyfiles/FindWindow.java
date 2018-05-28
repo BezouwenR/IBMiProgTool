@@ -581,7 +581,6 @@ public class FindWindow extends JFrame {
             return null;
         }
         try {
-            pattern = String.format(pattern);
             // Allow backslash, asterisk, plus, question mark etc.
             // The backslash must be tested first!!!         
             pattern = pattern.replace("\\", "\\\\");
@@ -598,6 +597,9 @@ public class FindWindow extends JFrame {
             pattern = pattern.replace("(", "\\(");
             pattern = pattern.replace(")", "\\)");
             pattern = pattern.replace("`", "\\`");
+            pattern = pattern.replace("%", "\\%");
+            
+            pattern = String.format("%1$s", pattern);
             int flags = matchCaseButton.getSelectedIcon().equals(matchCaseIconDark) ? 0
                     : Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
             return Pattern.compile(pattern, flags);

@@ -803,7 +803,6 @@ public final class DisplayFile extends JFrame {
             return null;
         }
         try {
-            pattern = String.format(pattern);
             // Allow backslash, asterisk, plus, question mark etc.
             // The backslash must be tested first!!!         
             pattern = pattern.replace("\\", "\\\\");
@@ -820,6 +819,9 @@ public final class DisplayFile extends JFrame {
             pattern = pattern.replace("(", "\\(");
             pattern = pattern.replace(")", "\\)");
             pattern = pattern.replace("`", "\\`");
+            pattern = pattern.replace("%", "\\%");
+            
+            pattern = String.format("%1$s", pattern); // 1 = first argument, s = string conversion
             int flags = matchCaseButton.getSelectedIcon().equals(matchCaseIconDark) ? 0
                     : Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
             return Pattern.compile(pattern, flags);
@@ -859,7 +861,6 @@ public final class DisplayFile extends JFrame {
                     highlightMap.put(start, end);
                     pos = end;
                 }
-                System.out.println("start: '" + start + "'");
             }
             JLabel label = layerUI.hint;
             Highlighter.Highlight[] array = highlighter.getHighlights();

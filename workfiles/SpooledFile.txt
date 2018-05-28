@@ -1,271 +1,100 @@
 
-
-
-
-
-
-
-
-
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/MOVE_L           PASSIST2   05/15/18 16:41:29        Page      1
-
-  Command  . . . . . . . . . . . . :   CRTBNDRPG
-    Issued by  . . . . . . . . . . :     VZUPKA
-  Program  . . . . . . . . . . . . :   MOVE_L
-    Library  . . . . . . . . . . . :     VZRPG72
-  Text 'description' . . . . . . . :   *SRCMBRTXT
-
-  Source Member  . . . . . . . . . :   MOVE_L
-  Source File  . . . . . . . . . . :   QRPGLESRC
-    Library  . . . . . . . . . . . :     VZRPG72
-    CCSID  . . . . . . . . . . . . :     870
-  Text 'description' . . . . . . . :
-  Last Change  . . . . . . . . . . :   05/15/18  16:41:24
-
-  Generation severity level  . . . :   10
-  Default activation group . . . . :   *YES
-  Compiler options . . . . . . . . :   *XREF      *GEN       *NOSECLVL  *SHOWCPY
-                                       *EXPDDS    *EXT       *NOSHOWSKP *NOSRCSTMT
-                                       *DEBUGIO   *UNREF     *NOEVENTF
-  Debugging views  . . . . . . . . :   *ALL
-  Debug encryption key . . . . . . :   *NONE
-  Output . . . . . . . . . . . . . :   *PRINT
-  Optimization level . . . . . . . :   *NONE
-  Source listing indentation . . . :   *NONE
-  Type conversion options  . . . . :   *NONE
-  Sort sequence  . . . . . . . . . :   *HEX
-  Language identifier  . . . . . . :   *JOBRUN
-  Replace program  . . . . . . . . :   *YES
-  User profile . . . . . . . . . . :   *USER
-  Authority  . . . . . . . . . . . :   *LIBCRTAUT
-  Truncate numeric . . . . . . . . :   *YES
-  Fix numeric  . . . . . . . . . . :   *NONE
-  Target release . . . . . . . . . :   *CURRENT
-  Allow null values  . . . . . . . :   *NO
-  Define condition names . . . . . :   *NONE
-  Enable performance collection  . :   *PEP
-  Profiling data . . . . . . . . . :   *NOCOL
-  Licensed Internal Code options . :
-  Generate program interface . . . :   *NO
-  Include directory  . . . . . . . :
-  Preprocessor options . . . . . . :   *NONE
-
-
-
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/MOVE_L           PASSIST2   05/15/18 16:41:29        Page      2
-
-Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
-Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
-
-                          S o u r c e   L i s t i n g
-
-     1 H*debug                                                                                                   000000     000100
-     2   CTL-OPT debug;                                                                                          000000     000200
-     3  * Operace MOVEL a MOVE                                                                                   000000     000300
-     4  * ====================                                                                                   000000     000400
-     5 D*ame+++++++++++ETDsFrom+++To/L+++IDc.Keywords+++++++++++++++++++++++++++++Comments++++++++++++     ..... 000000     000500
-
-
-     6 D TEXT_1          s              3a   inz('ABC')                                                          000000     000600
-     7   // DCL-S TEXT_1 CHAR(11) inz('ABC++++++++');                                                            000000     000700
-     8 D*TEXT_1          s             11a   inz('ABC++++++++')                                                  000000     000800
-     9 D TEXT_2          s             10a   inz('abcdefghij')                                                   000000     000900
-    10 D CISLO_1         s              5p 2 inz(123.56)                                                         000000     001000
-    11 D CISLO_2         s              7p 3 inz(1234.567)                                                       000000     001100
-    12 D TEXT_3          s              3a   inz('999')                                                          000000     001200
-    13                                                                                                           000000     001300
-    14   dcl-s cislo_3 packed(10);                                                                               000000     001400
-    15   dcl-s  mocnina int(10);                                                                                 000000     001500
-    16                                                                                                           000000     001600
-    17 C*    'Před'        DUMP                                                                                  000000     001700
-    18                                                                                                           000000     001800
-    19 C*0N01Factor1+++++++Opcode&ExtFactor2+++++++Result++++++++Len++D+HiLoEq....Comments++++++++++++     ..... 000000     001900
-    20  * Znaky do znaků                                                                                         000000     002000
-    21  * --------------                                                                                         000000     002100
-    22                                                                                                           000000     002200
-    23  * Přesun zleva bez výmazu                                                                                000000     002300
-    24 C*                  MOVEL     TEXT_1       TEXT_2                                                         000000     002400
-
-
-    25    monitor;                                                                                     B01       000000     002500
-    26    //   TEXT_2  = %REPLACE (TEXT_1 : TEXT_2  : 1 : %LEN(TEXT_1));                                         000000     002600
-    27    on-error 100;                                                                                X01       000000     002700
-    28       dump(a) 'Chyba pozice nebo délky';                                                         01       000000     002800
-    29    endmon;                                                                                      E01       000000     002900
-    30                                                                                                           000000     003000
-    31   // Přesun zleva s výmazem                                                                               000000     003100
-    32 C*                  MOVEL(P)  TEXT_1       TEXT_2                                                         000000     003200
-    33   // TEXT_2  = TEXT_1;                                                                                    000000     003300
-    34                                                                                                           000000     003400
-    35   // Přesun zprava bez výmazu                                                                             000000     003500
-    36 C*                  MOVE      TEXT_1       TEXT_2                                                         000000     003600
-    37   // Monitor!                                                                                             000000     003700
-    38   //    TEXT_2  = %REPLACE (TEXT_1 : TEXT_2  :                                                            000000     003800
-    39   //                    %LEN(TEXT_2 ) - %LEN(TEXT_1) + 1 :                                                000000     003900
-    40   //                    %LEN(TEXT_1));                                                                    000000     004000
-    41                                                                                                           000000     004100
-    42   // Přesun zprava s výmazem                                                                              000000     004200
-    43 C*                  MOVE(P)   TEXT_1       TEXT_2                                                         000000     004300
-    44   //    EVALR TEXT_2  = TEXT_1; // Je-li TEXT_1 delší, TEXT_2  se nezmění (mlčky)                         000000     004400
-    45                                                                                                           000000     004500
-    46 C*0N01Factor1+++++++Opcode&ExtFactor2+++++++Result++++++++Len++D+HiLoEq....Comments++++++++++++     ..... 000000     004600
-    47  * Čísla do znaků                                                                                         000000     004700
-    48  * --------------                                                                                         000000     004800
-    49                                                                                                           000000     004900
-
-
-
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/MOVE_L           PASSIST2   05/15/18 16:41:29        Page      3
-
-Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
-Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
-    50   // Přesun zleva bez výmazu                                                                              000000     005000
-    51 C*                  MOVEL     CISLO_1       TEXT_2                                                        000000     005100
-    52   // Monitor!                                                                                             000000     005200
-    53   // TEXT_2  = %REPLACE( %CHAR(CISLO_1) : TEXT_2  : 1 :                                                   000000     005300
-    54   //                    %LEN(%CHAR(CISLO_1)) );                                                           000000     005400
-    55                                                                                                           000000     005500
-    56   // Přesun zleva s výmazem                                                                               000000     005600
-    57 C*                  MOVEL(P)  CISLO_1       TEXT_2                                                        000000     005700
-    58   //  TEXT_2  = %CHAR (CISLO_1);                                                                          000000     005800
-    59   //  TEXT_2  = %triml( %editc(CISLO_1: 'P') ); // Editace a ukrojení zleva                               000000     005900
-    60                                                                                                           000000     006000
-    61  //  Přesun zprava bez výmazu                                                                             000000     006100
-    62 C*                  MOVE      CISLO_1       TEXT_2                                                        000000     006200
-    63   // Monitor!                                                                                             000000     006300
-    64   // TEXT_2  = %REPLACE( %CHAR(CISLO_1) : TEXT_2  :                                                       000000     006400
-    65   //                    %LEN(%CHAR(CISLO_1)) - %LEN(%CHAR(CISLO_1)) + 1 :                                 000000     006500
-    66   //                    %LEN(%CHAR(CISLO_1)) );                                                           000000     006600
-    67                                                                                                           000000     006700
-    68   //  Přesun zprava s výmazem                                                                             000000     006800
-    69 C*                  MOVE(P)   CISLO_1       TEXT_2                                                        000000     006900
-    70   // EVALR TEXT_2  = %CHAR(CISLO_1);                                                                      000000     007000
-    71                                                                                                           000000     007100
-    72  * Znaky do čísel                                                                                         000000     007200
-    73  * --------------                                                                                         000000     007300
-    74                                                                                                           000000     007400
-    75  // Přesun zleva bez výmazu                                                                               000000     007500
-    76 C*                  MOVEL     TEXT_3        CISLO_2                                                       000000     007600
-    77  * CISLO_2               PACKED(7,3)          9994.567         '9994567F'X *                              000000     007700
-    78  * TEXT_3                PACKED(3,0)          999.             '999F'X     *                              000000     007800
-    79   // ????                                                                                                 000000     007900
-    80   mocnina = %len(%dec(text_3: 3: 0));                                                                     000000     008000
-    81   CISLO_2 = CISLO_2 ** %LEN(%DEC(TEXT_3)) ** -%LEN(%DEC(TEXT_3)) ;                                        000000     008100
-    82                                                                                                           000000     008200
-    83                                                                                                           000000     008300
-    84                                                                                                           000000     008400
-    85                                                                                                           000000     008500
-    86                                                                                                           000000     008600
-    87                                                                                                           000000     008700
-    88                                                                                                           000000     008800
-    89                                                                                                           000000     008900
-    90 C     'Po_přesunu'  DUMP                                                                                  000000     009000
-    91 C                   EVAL      *inlr = *on                                                                 000000     009100
-
-       * * * * *   E N D   O F   S O U R C E   * * * * *
-
-
-
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/MOVE_L           PASSIST2   05/15/18 16:41:29        Page      4
-
-          A d d i t i o n a l   D i a g n o s t i c   M e s s a g e s
-
- Msg id  Sv Number Seq     Message text
-*RNF0332 30     81 008100  The second and third parameters for %DEC may not be omitted
-                           for a float or character value.
-*RNF0332 30     81 008100  The second and third parameters for %DEC may not be omitted
-                           for a float or character value.
-
- * * * * *   E N D   O F   A D D I T I O N A L   D I A G N O S T I C   M E S S A G E S   * * * * *
-
-
-
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/MOVE_L           PASSIST2   05/15/18 16:41:29        Page      5
-
-                          C r o s s   R e f e r e n c e
-
-      File and Record References:
-
-         File              Device             References (D=Defined)
-           Record
-
-         No references in the source.
-
-      Global Field References:
-
-         Field             Attributes         References (D=Defined M=Modified)
-         *INLR             N(1)                   91M
-*RNF7031 CISLO_1           P(5,2)                 10D
-         CISLO_2           P(7,3)                 11D     81M     81
-*RNF7031 CISLO_3           P(10,0)                14D
-         MOCNINA           I(10,0)                15D     80M
-*RNF7031 TEXT_1            A(3)                    6D
-*RNF7031 TEXT_2            A(10)                   9D
-         TEXT_3            A(3)                   12D     80      81      81
-
-      Indicator References:
-
-         Indicator                            References (D=Defined M=Modified)
-         LR                                       91M
-
-       * * * * *   E N D   O F   C R O S S   R E F E R E N C E   * * * * *
-
-
-
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/MOVE_L           PASSIST2   05/15/18 16:41:29        Page      6
-
-                      E x t e r n a l   R e f e r e n c e s
-
-      Statically bound procedures:
-         Procedure                            References
-         No references in the source.
-
-      Imported fields:
-         Field             Attributes         Defined
-         No references in the source.
-
-      Exported fields:
-         Field             Attributes         Defined
-         No references in the source.
-
-   * * * * *   E N D   O F   E X T E R N A L   R E F E R E N C E S   * * * * *
-
-
-
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/MOVE_L           PASSIST2   05/15/18 16:41:29        Page      7
-
-                          M e s s a g e   S u m m a r y
-
- Msg id  Sv Number Message text
-*RNF7031 00      4 The name or indicator is not referenced.
-*RNF0332 30      2 The second and third parameters for %DEC may not be omitted
-                   for a float or character value.
-
-       * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
-
-
-
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/MOVE_L           PASSIST2   05/15/18 16:41:29        Page      8
-
-                            F i n a l   S u m m a r y
-
-  Message Totals:
-
-    Information  (00) . . . . . . . :        4
-    Warning      (10) . . . . . . . :        0
-    Error        (20) . . . . . . . :        0
-    Severe Error (30+)  . . . . . . :        2
-    ---------------------------------  -------
-    Total . . . . . . . . . . . . . :        6
-
-
-  Source Totals:
-
-    Records . . . . . . . . . . . . :       91
-    Specifications  . . . . . . . . :       16
-    Data records  . . . . . . . . . :        0
-    Comments  . . . . . . . . . . . :       53
-
-         * * * * *   E N D   O F   F I N A L   S U M M A R Y   * * * * *
-Compilation stopped. Severity 30 errors found in program.
-          * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *
+5770WDS V7R3M0  160422   IBM ILE C compiler      VZC/QCSRC(CPP04)                   PASSIST2    05/27/18 12:11:31 Page           1
+                                                * * * * *   P R O L O G   * * * * *
+ Program . . . . . . . . . . . . :   CPP04
+   Library . . . . . . . . . . . :      VZC
+ Source file . . . . . . . . . . :   QCSRC
+   Library . . . . . . . . . . . :      VZC
+ Source member . . . . . . . . . :   CPP04
+ Text description  . . . . . . . :
+ Output options:
+   Output file . . . . . . . . . :   *PRINT
+   Title . . . . . . . . . . . . :   *BLANK
+   Subtitle  . . . . . . . . . . :   *BLANK
+ Compiler options  . . . . . . . :   *NOFULL  *SHOWSRC  *SHOWSYS  *SHOWUSR  *SHOWINC  *NOEXPMAC
+                                     *NOSECLVL  *NOSHOWSKP  *DIGRAPH  *NOAGR  *NOSTRUCREF  *NOXREF  *NOXREFREF
+                                     *NOEVENTF  *LOGMSG  *NOSTDLOGMSG  *NOSYSINCPATH  *STDINC  *NOINCDIRFIRST
+ Checkout options  . . . . . . . :   *NOCOND  *NOEFFECT  *NOGENERAL  *NOPARM  *NOPORT  *NOREACH  *NOTRUNC  *NOUNUSED
+                                     *NOGOTO  *NOINIT  *NOCONST  *NOENUM  *NOPPCHECK  *NOPPTRACE  *NOEXTERN
+ Optimization  . . . . . . . . . :   10
+ Inline options:
+   Inliner . . . . . . . . . . . :   *OFF
+   Mode  . . . . . . . . . . . . :   *AUTO
+   Threshold . . . . . . . . . . :   250
+   Limit . . . . . . . . . . . . :   2000
+   Report  . . . . . . . . . . . :   *NO
+ Debugging view  . . . . . . . . :   *ALL
+ Debug encryption key  . . . . . :   *NONE
+ Define names  . . . . . . . . . :   *NONE
+ Language level  . . . . . . . . :   *EXTENDED
+ Alias . . . . . . . . . . . . . :   *ANSI
+ System interface options  . . . :   *NOIFSIO  *NOASYNCSIGNAL
+ Locale object type  . . . . . . :   *LOCALE
+ Message flagging level  . . . . :   0
+ Compiler messages:
+   Message limit . . . . . . . . :   *NOMAX
+   Message limit severity  . . . :   30
+ Replace program object  . . . . :   *YES
+ User profile  . . . . . . . . . :   *USER
+ Authority . . . . . . . . . . . :   *LIBCRTAUT
+ Target release  . . . . . . . . :   *CURRENT
+ Performance collection  . . . . :   *PEP
+ Performance options . . . . . . :   *SETFPCA  *NOSTRDONLY
+ Profiling data  . . . . . . . . :   *NOCOL
+ Teraspace options . . . . . . . :   *NO
+ Storage model . . . . . . . . . :   *SNGLVL
+ Data model  . . . . . . . . . . :   *P128
+ Include directory . . . . . . . :   *NONE
+ Pack structure  . . . . . . . . :   *NATURAL
+ Enum size . . . . . . . . . . . :   *SMALL
+ Dependency information  . . . . :   *NONE
+ Default char type . . . . . . . :   *UNSIGNED
+ Compiler services option  . . . :   *BLANK
+ Licensed internal code options  :   *BLANK
+ Target CCSID  . . . . . . . . . :   *SOURCE
+ Decimal float round mode  . . . :   *HALFEVEN
+ Last change . . . . . . . . . . :   11/04/17 14:28:03
+ Source description  . . . . . . :
+ Compiler  . . . . . . . . . . . :   IBM ILE C compiler
+                                         * * * * *   E N D   O F   P R O L O G   * * * * *
+
+5770WDS V7R3M0  160422   IBM ILE C compiler      VZC/QCSRC(CPP04)                   PASSIST2    05/27/18 12:11:31 Page           2
+                                                * * * * *   S O U R C E   * * * * *
+ LINE  STMT                                                                                                       SEQNBR INCNO
+             *...+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9........
+    1       !int count = 1;                                                                                    !      1
+    2       !while (count <= 20)                                                                               !      2
+===========> a.................................................................................................
+*=SEVERE==========> a - CZM0046  Syntax error.
+    3       !{                                                                                                 !      3
+    4       !   printf("count = %d\n", count);                                                                 !      4
+    5       !count++; }                                                                                        !      5
+    6       !                                                                                                  !      6
+    7       !for (; index > 10; --index)                                                                       !      7
+    8       !{                                                                                                 !      8
+    9       !   list[index] = var1 + var2;                                                                     !      9
+   10       !   printf("list[%d] = %d\n", index,                                                               !     10
+   11       !   list[index]);                                                                                  !     11
+   12       !}                                                                                                 !     12
+   13       !for (row = 0; row < 5; row++)                                                                     !     13
+   14       !   for (column = 0; column < 3; column++)                                                         !     14
+   15       !      printf("%d\n",                                                                              !     15
+   16       !      table[row][column]);                                                                        !     16
+                                         * * * * *   E N D   O F   S O U R C E   * * * * *
+
+5770WDS V7R3M0  160422   IBM ILE C compiler      VZC/QCSRC(CPP04)                   PASSIST2    05/27/18 12:11:31 Page           3
+                                              * * * * *   M E S S A G E S   * * * * *
+MSG ID      SEV     TEXT
+                    <SEQNBR>-<FILE NO>:<FILE LINE NO>
+CZM0046     30      Syntax error.
+                     ( 2-0:2 )
+                                      * * * * *   E N D   O F   M E S S A G E S   * * * * *
+
+5770WDS V7R3M0  160422   IBM ILE C compiler      VZC/QCSRC(CPP04)                   PASSIST2    05/27/18 12:11:31 Page           4
+                                       * * * * *   M E S S A G E   S U M M A R Y   * * * * *
+      Total      Informational(00)      Warning(10)      Error(20)      Severe Error(30)      Unrecoverable Error(40)
+        1              0                    0               0                  1                        0
+                               * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
+
+Program CPP04 is not created because statement errors occurred.
+                                   * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *
