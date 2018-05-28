@@ -899,6 +899,7 @@ public final class EditFile extends JFrame {
                             .get(System.getProperty("user.dir"), "helpfiles", "RPG_III_forms.pdf").toString();
                     // Replace backslashes by forward slashes in Windows
                     uri = uri.replace('\\', '/');
+                    uri = uri.replace(" ", "%20");
                     try {
                         // Invoke the standard browser in the operating system
                         Desktop.getDesktop().browse(new URI("file://" + uri));
