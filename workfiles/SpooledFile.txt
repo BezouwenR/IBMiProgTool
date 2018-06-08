@@ -1,100 +1,317 @@
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/FILEPARM         PASSIST2   06/07/18 20:17:02        Page      1
 
-5770WDS V7R3M0  160422   IBM ILE C compiler      VZC/QCSRC(CPP04)                   PASSIST2    05/27/18 12:11:31 Page           1
-                                                * * * * *   P R O L O G   * * * * *
- Program . . . . . . . . . . . . :   CPP04
-   Library . . . . . . . . . . . :      VZC
- Source file . . . . . . . . . . :   QCSRC
-   Library . . . . . . . . . . . :      VZC
- Source member . . . . . . . . . :   CPP04
- Text description  . . . . . . . :
- Output options:
-   Output file . . . . . . . . . :   *PRINT
-   Title . . . . . . . . . . . . :   *BLANK
-   Subtitle  . . . . . . . . . . :   *BLANK
- Compiler options  . . . . . . . :   *NOFULL  *SHOWSRC  *SHOWSYS  *SHOWUSR  *SHOWINC  *NOEXPMAC
-                                     *NOSECLVL  *NOSHOWSKP  *DIGRAPH  *NOAGR  *NOSTRUCREF  *NOXREF  *NOXREFREF
-                                     *NOEVENTF  *LOGMSG  *NOSTDLOGMSG  *NOSYSINCPATH  *STDINC  *NOINCDIRFIRST
- Checkout options  . . . . . . . :   *NOCOND  *NOEFFECT  *NOGENERAL  *NOPARM  *NOPORT  *NOREACH  *NOTRUNC  *NOUNUSED
-                                     *NOGOTO  *NOINIT  *NOCONST  *NOENUM  *NOPPCHECK  *NOPPTRACE  *NOEXTERN
- Optimization  . . . . . . . . . :   10
- Inline options:
-   Inliner . . . . . . . . . . . :   *OFF
-   Mode  . . . . . . . . . . . . :   *AUTO
-   Threshold . . . . . . . . . . :   250
-   Limit . . . . . . . . . . . . :   2000
-   Report  . . . . . . . . . . . :   *NO
- Debugging view  . . . . . . . . :   *ALL
- Debug encryption key  . . . . . :   *NONE
- Define names  . . . . . . . . . :   *NONE
- Language level  . . . . . . . . :   *EXTENDED
- Alias . . . . . . . . . . . . . :   *ANSI
- System interface options  . . . :   *NOIFSIO  *NOASYNCSIGNAL
- Locale object type  . . . . . . :   *LOCALE
- Message flagging level  . . . . :   0
- Compiler messages:
-   Message limit . . . . . . . . :   *NOMAX
-   Message limit severity  . . . :   30
- Replace program object  . . . . :   *YES
- User profile  . . . . . . . . . :   *USER
- Authority . . . . . . . . . . . :   *LIBCRTAUT
- Target release  . . . . . . . . :   *CURRENT
- Performance collection  . . . . :   *PEP
- Performance options . . . . . . :   *SETFPCA  *NOSTRDONLY
- Profiling data  . . . . . . . . :   *NOCOL
- Teraspace options . . . . . . . :   *NO
- Storage model . . . . . . . . . :   *SNGLVL
- Data model  . . . . . . . . . . :   *P128
- Include directory . . . . . . . :   *NONE
- Pack structure  . . . . . . . . :   *NATURAL
- Enum size . . . . . . . . . . . :   *SMALL
- Dependency information  . . . . :   *NONE
- Default char type . . . . . . . :   *UNSIGNED
- Compiler services option  . . . :   *BLANK
- Licensed internal code options  :   *BLANK
- Target CCSID  . . . . . . . . . :   *SOURCE
- Decimal float round mode  . . . :   *HALFEVEN
- Last change . . . . . . . . . . :   11/04/17 14:28:03
- Source description  . . . . . . :
- Compiler  . . . . . . . . . . . :   IBM ILE C compiler
-                                         * * * * *   E N D   O F   P R O L O G   * * * * *
+  Command  . . . . . . . . . . . . :   CRTBNDRPG
+    Issued by  . . . . . . . . . . :     VZUPKA
+  Program  . . . . . . . . . . . . :   FILEPARM
+    Library  . . . . . . . . . . . :     VZRPG72
+  Text 'description' . . . . . . . :   *SRCMBRTXT
 
-5770WDS V7R3M0  160422   IBM ILE C compiler      VZC/QCSRC(CPP04)                   PASSIST2    05/27/18 12:11:31 Page           2
-                                                * * * * *   S O U R C E   * * * * *
- LINE  STMT                                                                                                       SEQNBR INCNO
-             *...+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9........
-    1       !int count = 1;                                                                                    !      1
-    2       !while (count <= 20)                                                                               !      2
-===========> a.................................................................................................
-*=SEVERE==========> a - CZM0046  Syntax error.
-    3       !{                                                                                                 !      3
-    4       !   printf("count = %d\n", count);                                                                 !      4
-    5       !count++; }                                                                                        !      5
-    6       !                                                                                                  !      6
-    7       !for (; index > 10; --index)                                                                       !      7
-    8       !{                                                                                                 !      8
-    9       !   list[index] = var1 + var2;                                                                     !      9
-   10       !   printf("list[%d] = %d\n", index,                                                               !     10
-   11       !   list[index]);                                                                                  !     11
-   12       !}                                                                                                 !     12
-   13       !for (row = 0; row < 5; row++)                                                                     !     13
-   14       !   for (column = 0; column < 3; column++)                                                         !     14
-   15       !      printf("%d\n",                                                                              !     15
-   16       !      table[row][column]);                                                                        !     16
-                                         * * * * *   E N D   O F   S O U R C E   * * * * *
+  Source Member  . . . . . . . . . :   FILEPARM
+  Source File  . . . . . . . . . . :   QRPGLESRC
+    Library  . . . . . . . . . . . :     VZRPG72
+    CCSID  . . . . . . . . . . . . :     870
+  Text 'description' . . . . . . . :   Member FILEPARM
+  Last Change  . . . . . . . . . . :   06/07/18  20:06:19
 
-5770WDS V7R3M0  160422   IBM ILE C compiler      VZC/QCSRC(CPP04)                   PASSIST2    05/27/18 12:11:31 Page           3
-                                              * * * * *   M E S S A G E S   * * * * *
-MSG ID      SEV     TEXT
-                    <SEQNBR>-<FILE NO>:<FILE LINE NO>
-CZM0046     30      Syntax error.
-                     ( 2-0:2 )
-                                      * * * * *   E N D   O F   M E S S A G E S   * * * * *
+  Generation severity level  . . . :   10
+  Default activation group . . . . :   *YES
+  Compiler options . . . . . . . . :   *XREF      *GEN       *NOSECLVL  *SHOWCPY
+                                       *EXPDDS    *EXT       *NOSHOWSKP *NOSRCSTMT
+                                       *DEBUGIO   *UNREF     *NOEVENTF
+  Debugging views  . . . . . . . . :   *ALL
+  Debug encryption key . . . . . . :   *NONE
+  Output . . . . . . . . . . . . . :   *PRINT
+  Optimization level . . . . . . . :   *NONE
+  Source listing indentation . . . :   *NONE
+  Type conversion options  . . . . :   *NONE
+  Sort sequence  . . . . . . . . . :   *HEX
+  Language identifier  . . . . . . :   *JOBRUN
+  Replace program  . . . . . . . . :   *YES
+  User profile . . . . . . . . . . :   *USER
+  Authority  . . . . . . . . . . . :   *LIBCRTAUT
+  Truncate numeric . . . . . . . . :   *YES
+  Fix numeric  . . . . . . . . . . :   *NONE
+  Target release . . . . . . . . . :   *CURRENT
+  Allow null values  . . . . . . . :   *NO
+  Define condition names . . . . . :   *NONE
+  Enable performance collection  . :   *PEP
+  Profiling data . . . . . . . . . :   *NOCOL
+  Licensed Internal Code options . :
+  Generate program interface . . . :   *NO
+  Include directory  . . . . . . . :
+  Preprocessor options . . . . . . :   *NONE
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/FILEPARM         PASSIST2   06/07/18 20:17:02        Page      2
 
-5770WDS V7R3M0  160422   IBM ILE C compiler      VZC/QCSRC(CPP04)                   PASSIST2    05/27/18 12:11:31 Page           4
-                                       * * * * *   M E S S A G E   S U M M A R Y   * * * * *
-      Total      Informational(00)      Warning(10)      Error(20)      Severe Error(30)      Unrecoverable Error(40)
-        1              0                    0               0                  1                        0
-                               * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
 
-Program CPP04 is not created because statement errors occurred.
-                                   * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *
+                          S o u r c e   L i s t i n g
+
+     1  ***************************************************************************                              000000     000100
+     2  *   Program p edává soubor procedu e jako parametr                                                       000000     000200
+     3  *   Ve volném formátu mohou být definice dat a soubor   promíchány                                       000000     000300
+     4  ***************************************************************************                              000000     000400
+     5   ctl-opt dftactgrp(*no);                                                                                 000000     000500
+        *--------------------------------------------------------------------*
+        * Compiler Options in Effect:                                        *
+        *--------------------------------------------------------------------*
+        *  Text 'description' . . . . . . . :   Member FILEPARM              *
+
+        *  Generation severity level  . . . :   10                           *
+        *  Default activation group . . . . :   *NO                          *
+        *  Compiler options . . . . . . . . :   *XREF      *GEN              *
+        *                                       *NOSECLVL  *SHOWCPY          *
+        *                                       *EXPDDS    *EXT              *
+        *                                       *NOSHOWSKP *NOSRCSTMT        *
+        *                                       *DEBUGIO   *UNREF            *
+        *                                       *NOEVENTF                    *
+        *  Optimization level . . . . . . . :   *NONE                        *
+        *  Source listing indentation . . . :   *NONE                        *
+        *  Type conversion options  . . . . :   *NONE                        *
+        *  Sort sequence  . . . . . . . . . :   *HEX                         *
+        *  Language identifier  . . . . . . :   *JOBRUN                      *
+        *  User profile . . . . . . . . . . :   *USER                        *
+        *  Authority  . . . . . . . . . . . :   *LIBCRTAUT                   *
+        *  Truncate numeric . . . . . . . . :   *YES                         *
+        *  Fix numeric  . . . . . . . . . . :   *NONE                        *
+        *  Allow null values  . . . . . . . :   *NO                          *
+        *  Storage model . . .  . . . . . . :   *SNGLVL                      *
+        *  Binding directory from Command . :   *NONE                        *
+        *  Binding directory from Source  . :   *NONE                        *
+        *  Activation group . . . . . . . . :   *STGMDL                      *
+        *  Enable performance collection  . :   *PEP                         *
+        *  Profiling data . . . . . . . . . :   *NOCOL                       *
+        *  Generate program interface . . . :   *NO                          *
+        *--------------------------------------------------------------------*
+
+
+     6   dcl-f QPRINT printer(120);                                                                              000000     000600
+     7                                                                                                           000000     000700
+     8  //  ablona pro typ souboru "INFILE"                                                                      000000     000800
+     9   dcl-f infile_t TEMPLATE block(*yes) extdesc('VZRPGIV/STAVYP');                                          000000     000900
+        *--------------------------------------------------------------------------------------------*
+        *                               RPG name         External name                               *
+        * File name. . . . . . . . . :  INFILE_T         VZRPGIV/STAVYP                              *
+        * Record format(s) . . . . . :  STAVYPF0         STAVYPF0                                    *
+        *--------------------------------------------------------------------------------------------*
+    10                                                                                                           000000     001000
+    11  //  ablona pro prom nné sdru ené se souborem INFILE                                                      000000     001100
+
+
+    12   dcl-ds infileFlds_t qualified TEMPLATE;                                                                 000000     001200
+    13       extfile char(21);                                                                                   000000     001300
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/FILEPARM         PASSIST2   06/07/18 20:17:02        Page      3
+
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+    14       extmbr  char(10);                                                                                   000000     001400
+    15   end-ds;                                                                                                 000000     001500
+    16                                                                                                           000000     001600
+    17  // Prototyp procedury zpracující soubor INFILE                                                           000000     001700
+    18   dcl-pr PROC_INFILE;                                                                                     000000     001800
+    19       infile  likefile(infile_t);                                                                         000000     001900
+    20       infileFlds   likeds(infileFlds_t);                                                                  000000     002000
+    21   end-pr;                                                                                                 000000     002100
+    22                                                                                                           000000     002200
+    23  // Definuji soubor pomocí LIKEFILE ze  ablony, abych umo nil jeho p edání                                000000     002300
+    24  // jako parametru do procedury PROC_INFILE.                                                              000000     002400
+
+
+    25   dcl-f INFILE likefile(infile_t)                                                                         000000     002500
+    26                extfile(infileFlds.extfile)                                                                000000     002600
+    27                extmbr (infileFlds.extmbr)                                                                 000000     002700
+    28                usropn;                                                                                    000000     002800
+    29                                                                                                           000000     002900
+    30  // Definuji pole souboru jako podpole datové struktury,                                                  000000     003000
+    31  // aby mohly být p edány procedu e jako jediný parametr                                                  000000     003100
+
+
+    32   dcl-ds infileFlds likeds(infileFlds_t);                                                                 000000     003200
+    33                                                                                                           000000     003300
+    34  // Definuji datovou strukturu s poli souboru STAVYP,                                                     000000     003400
+    35  // proto e operace READ v podprocedu e musí pou ít datovou strukturu                                     000000     003500
+    36   dcl-ds inpRec likerec(STAVYPF0);                                                                        000000     003600
+    37                                                                                                           000000     003700
+*RNF2318 00      6 000600  Overflow indicator *INOA is assigned to PRINTER file
+                           QPRINT.
+
+
+    38   infileFlds.extfile = 'VZRPGIV/STAVYP'; // naplním konkrétní jména souboru a  lenu                       000000     003800
+    39   infileFlds.extmbr  = 'STAVYP';                                                                          000000     003900
+    40                                                                                                           000000     004000
+    41   PROC_INFILE (infile : infileFlds);     // provedu proceduru PROC_INFILE                                 000000     004100
+    42                                                                                                           000000     004200
+    43   *inlr = *on;                           // a kon ím                                                      000000     004300
+    44                                                                                                           000000     004400
+
+
+    45 OQPRINT    e            data           1                                                                  000000     004500
+    46 O                       inpRec.ZAVOD                                                                      000000     004600
+    47 O                       inpRec.SKLAD        +1                                                            000000     004700
+    48 O                       inpRec.MATER        +1                                                            000000     004800
+    49 O                       inpRec.MNOZ   P     +1                                                            000000     004900
+    50                                                                                                           000000     005000
+    51  //------------------------------------------------------------------------                               000000     005100
+    52  // procedura PROC_INFILE zpracující soubor INFILE                                                        000000     005200
+    53  //------------------------------------------------------------------------                               000000     005300
+    54   dcl-proc PROC_INFILE;                                                                                   000000     005400
+    55  // procedura má dva parametry:                                                                           000000     005500
+    56  // - soubor                                                                                              000000     005600
+    57  // - datovou strukturu obsahující pole souboru                                                           000000     005700
+
+
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/FILEPARM         PASSIST2   06/07/18 20:17:02        Page      4
+
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+    58       dcl-pi *n;                        // rozhraní procedury bez jména                                   000000     005800
+    59           soubor  likefile(infile_t);        // soubor                                                    000000     005900
+    60           infileFlds  likeds(infileFlds_t);  // pole souboru                                              000000     006000
+    61       end-pi;                                                                                             000000     006100
+    62                                                                                                           000000     006200
+
+
+    63       open soubor;         // musím otev ít soubor                                                        000000     006300
+    64       read soubor inpRec;  // operace READ v podprocedu e musí pou ít datovou strukturu                   000000     006400
+    65       dow not %eof;                                                                             B01       000000     006500
+    66           except data;                                                                           01       000000     006600
+    67           read soubor inpRec;                                                                    01       000000     006700
+    68       enddo;                                                                                    E01       000000     006800
+    69       close soubor;        // nemusím uzav ít soubor, proto e je lokální                                  000000     006900
+    70                                                                                                           000000     007000
+    71   end-proc PROC_INFILE;                                                                                   000000     007100
+
+       * * * * *   E N D   O F   S O U R C E   * * * * *
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/FILEPARM         PASSIST2   06/07/18 20:17:02        Page      5
+
+          A d d i t i o n a l   D i a g n o s t i c   M e s s a g e s
+
+ Msg id  Sv Number Seq     Message text
+*RNF7066 00     25 002500  Record-Format STAVYPF0 not used for input or output.
+*RNF7066 00     59 005900  Record-Format STAVYPF0 not used for input or output.
+*RNF7086 00     25 002500  RPG handles blocking for file INFILE. INFDS is updated only
+                           when blocks of data are transferred.
+*RNF7086 00     59 005900  RPG handles blocking for file SOUBOR. INFDS is updated only
+                           when blocks of data are transferred.
+
+ * * * * *   E N D   O F   A D D I T I O N A L   D I A G N O S T I C   M E S S A G E S   * * * * *
+
+
+                 O u t p u t   B u f f e r   P o s i t i o n s
+
+Line   Start End   Field or Constant
+
+Number Pos   Pos
+    46     1     2 INPREC.ZAVOD
+    47     4     5 INPREC.SKLAD
+    48     7    11 INPREC.MATER
+    49    13    24 INPREC.MNOZ
+
+ * * * * *   E N D   O F   O U T P U T   B U F F E R   P O S I T I O N   *  * * * *
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/FILEPARM         PASSIST2   06/07/18 20:17:02        Page      6
+
+                          C r o s s   R e f e r e n c e
+
+      File and Record References:
+
+         File              Device             References (D=Defined)
+           Record
+*RNF7031 INFILE            DISK                   25D     41
+           STAVYPF0                               25D
+         INFILE_T          DISK                    9D     19      59
+                           TEMPLATE
+           STAVYPF0                                9D     25      36      59
+         QPRINT            PRINTER                 6D     45
+
+      Global Field References:
+
+         Field             Attributes         References (D=Defined M=Modified)
+         *INLR             N(1)                   43M
+         DATA              EXCEPT                 45D     66
+         INFILEFLDS        DS(31)                 26      27      32D     38M
+                                                  39M     41
+           EXTFILE         A(21)                  26      38
+           EXTMBR          A(10)                  27      39
+         INFILEFLDS_T      DS(31)                 12D     20      32      60
+                           TEMPLATE
+*RNF7031   EXTFILE         A(21)                  13D
+*RNF7031   EXTMBR          A(10)                  14D
+         INPREC            DS(15)                 36D     46      47      48
+                                                  49      64M     67M
+           MATER           A(5)                   36D     48
+           MNOZ            P(10,2)                36D     49
+           SKLAD           A(2)                   36D     47
+           ZAVOD           A(2)                   36D     46
+         PROC_INFILE       PROTOTYPE              18D     41M     54      71
+      Field References for subprocedure PROC_INFILE
+
+         File              Device             References (D=Defined)
+           Record
+         SOUBOR            DISK                   59D     63      64      67
+                                                  69
+           STAVYPF0                               59D
+
+         Field             Attributes         References (D=Defined M=Modified)
+*RNF7031 INFILEFLDS        DS(31)                 60D
+                           BASED(_QRNL_PST+)
+
+      Indicator References:
+
+         Indicator                            References (D=Defined M=Modified)
+         LR                                       43M
+
+       * * * * *   E N D   O F   C R O S S   R E F E R E N C E   * * * * *
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/FILEPARM         PASSIST2   06/07/18 20:17:02        Page      7
+
+                      E x t e r n a l   R e f e r e n c e s
+
+      Statically bound procedures:
+         Procedure                            References
+         No references in the source.
+
+      Imported fields:
+         Field             Attributes         Defined
+         No references in the source.
+
+      Exported fields:
+         Field             Attributes         Defined
+         No references in the source.
+
+   * * * * *   E N D   O F   E X T E R N A L   R E F E R E N C E S   * * * * *
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/FILEPARM         PASSIST2   06/07/18 20:17:02        Page      8
+
+                          M e s s a g e   S u m m a r y
+
+ Msg id  Sv Number Message text
+*RNF2318 00      1 No overflow indicator is specified; indicator assigned and
+                   automatic skip to 06 generated.
+*RNF7031 00      6 The name or indicator is not referenced.
+*RNF7066 00      2 Record-Format name of Externally-Described file is not used.
+*RNF7086 00      2 RPG handles blocking for the file. INFDS is updated only when
+                   blocks of data are transferred.
+
+       * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/FILEPARM         PASSIST2   06/07/18 20:17:02        Page      9
+
+                            F i n a l   S u m m a r y
+
+  Message Totals:
+
+    Information  (00) . . . . . . . :       11
+    Warning      (10) . . . . . . . :        0
+    Error        (20) . . . . . . . :        0
+    Severe Error (30+)  . . . . . . :        0
+    ---------------------------------  -------
+    Total . . . . . . . . . . . . . :       11
+
+
+  Source Totals:
+
+    Records . . . . . . . . . . . . :       71
+    Specifications  . . . . . . . . :       37
+    Data records  . . . . . . . . . :        0
+    Comments  . . . . . . . . . . . :       19
+
+         * * * * *   E N D   O F   F I N A L   S U M M A R Y   * * * * *
+Program FILEPARM placed in library VZRPG72. 00 highest severity. Created on 06/07/18 at 20:17:02.
+          * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *

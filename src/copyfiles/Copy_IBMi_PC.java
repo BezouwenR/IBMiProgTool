@@ -222,7 +222,8 @@ public class Copy_IBMi_PC {
 
             //
             // Library system:
-            // ---------------
+            // ===============
+
             // Source physical file MEMBER:
             if (sourcePathString.startsWith("/QSYS.LIB/")) {
 
@@ -269,7 +270,8 @@ public class Copy_IBMi_PC {
             } else {//
                 //
                 // IFS (Integrated File System):
-                // -----------------------------            
+                // =============================
+
                 // From IFS stream file to PC file (no directories are involved)     
                 try {
 
@@ -292,44 +294,45 @@ public class Copy_IBMi_PC {
                         Files.createFile(pcFilePath);
                     }
 
-                    // IFS file with suffix .savf cannot be copied to PC file with different suffix
-                    if (sourcePathString.endsWith(".savf") && !pcPathString.endsWith(".savf")) {
-                        row = "Error: IFS file  " + ifsDirFile + "  ending with suffix \".savf\" cannot be copied to the existing file  "
-                                + pcPathString + "  with a different suffix.";
-                        mainWindow.msgVector.add(row);
-                        mainWindow.showMessages(noNodes);
-                        return "ERROR";
-                    }
                     // Copy "save" file from IFS to PC file
-                    if (sourcePathString.endsWith(".savf") && pcPathString.endsWith(".savf")) {
-
-                        // Copy the PC file to Save file using FTP (File Transfer Protocol)
-                        AS400FTP ftp = new AS400FTP(remoteServer);
-                        try {
-                            // FTP Binary data transfer
-                            // ftp.setDataTransferType(AS400FTP.BINARY); // not necessary when suffix is .savf
-                            // FTP Get command
-                            ftp.get(sourcePathString, pcPathString);
-                            ftp.disconnect();
-                            row = "Comp: IFS save file  " + sourcePathString + "  was copied to PC  save file  " + pcPathString + ".";
-                            mainWindow.msgVector.add(row);
-                            mainWindow.showMessages(noNodes);
-                            return "";
-
-                        } catch (Exception exc) {
-                            exc.printStackTrace();
-                            row = "Error: Copying IFS save file  " + sourcePathString + "  to PC  save file  " + pcPathString
-                                    + "  failed:  " + exc.toString();
+                    // ----------------
+                    if (sourcePathString.endsWith(".savf")) {
+                        if (!pcPathString.endsWith(".savf")) {
+                            // IFS file with suffix .savf cannot be copied to PC file with different suffix
+                            row = "Error: IFS file  " + ifsDirFile + "  ending with suffix \".savf\" cannot be copied to the existing file  "
+                                    + pcPathString + "  with a different suffix.";
                             mainWindow.msgVector.add(row);
                             mainWindow.showMessages(noNodes);
                             return "ERROR";
                         }
+                        if (pcPathString.endsWith(".savf")) {
+                            // Copy the Save file to PC file using FTP (File Transfer Protocol)
+                            AS400FTP ftp = new AS400FTP(remoteServer);
+                            try {
+                                // FTP Binary data transfer
+                                // ftp.setDataTransferType(AS400FTP.BINARY); // not necessary when suffix is .savf
+                                // FTP Get command
+                                ftp.get(sourcePathString, pcPathString);
+                                ftp.disconnect();
+                                row = "Comp: IFS save file  " + sourcePathString + "  was copied to PC  save file  " + pcPathString + ".";
+                                mainWindow.msgVector.add(row);
+                                mainWindow.showMessages(noNodes);
+                                return "";
+
+                            } catch (Exception exc) {
+                                exc.printStackTrace();
+                                row = "Error: Copying IFS save file  " + sourcePathString + "  to PC  save file  " + pcPathString
+                                        + "  failed:  " + exc.toString();
+                                mainWindow.msgVector.add(row);
+                                mainWindow.showMessages(noNodes);
+                                return "ERROR";
+                            }
+                        }
                     }
 
-                    //
+                    // Binary copy
+                    // -----------
                     // If both PC charset and IBM i CCSID is *DEFAULT then no data conversion is done
-                    // ----------------------------------------------
-                    //
                     if (pcCharset.equals("*DEFAULT") && ibmCcsid.equals("*DEFAULT")) {
 
                         // Open input IFS file
@@ -364,7 +367,6 @@ public class Copy_IBMi_PC {
                             mainWindow.showMessages(noNodes);
                         }
 
-                        //
                         // Data conversion is done
                         // -----------------------
                     } else {

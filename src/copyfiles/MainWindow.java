@@ -1178,8 +1178,8 @@ public class MainWindow extends JFrame {
                     ibmCcsidInt = Integer.parseInt(ibmCcsid);
                 } catch (Exception exc) {
                     exc.printStackTrace();
-                    ibmCcsid = "37";
-                    ibmCcsidInt = 37;
+                    ibmCcsid = "500";
+                    ibmCcsidInt = 500;
                     ibmCcsidComboBox.setSelectedItem(ibmCcsid);
                 }
             }

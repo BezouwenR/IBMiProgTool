@@ -48,6 +48,7 @@ public class Copy_PC_IBMi {
     String libraryName;
     String fileName;
     String saveFileName;
+    String classFileName;
     String memberName;
 
     BufferedReader inFile;
@@ -120,8 +121,7 @@ public class Copy_PC_IBMi {
 
         pcCharset = properties.getProperty("PC_CHARSET");
         if (!pcCharset.equals("*DEFAULT")) {
-            // For not *DEFAULT
-            // Check if charset is valid
+            // If not *DEFAULT - Check if charset is valid
             try {
                 Charset chr = Charset.forName(pcCharset);
             } catch (IllegalCharsetNameException
@@ -129,20 +129,18 @@ public class Copy_PC_IBMi {
                 // If pcCharset is invalid, take ISO-8859-1
                 pcCharset = "ISO-8859-1";
             }
-        } else {
-            // For *DEFAULT
-            pcCharset = "ISO-8859-1";
         }
 
         ibmCcsid = properties.getProperty("IBM_CCSID");
         if (!ibmCcsid.equals("*DEFAULT")) {
-            // For non *DEFAULT
+            // If not *DEFAULT
             try {
                 ibmCcsidInt = Integer.parseInt(ibmCcsid);
             } catch (Exception exc) {
                 exc.printStackTrace();
-                ibmCcsid = "819";
-                ibmCcsidInt = 819;
+                // If CCSID is invalid, take 500
+                ibmCcsid = "500";
+                ibmCcsidInt = 500;
             }
         }
     }
@@ -207,23 +205,28 @@ public class Copy_PC_IBMi {
 
                     String outFileName;
                     if (targetPath.isDirectory()) { //
+                        //
                         // to IFS directory:
+                        // -----------------
                         // IFS file name = IFS directory name + PC file name
                         outFileName = targetPathString + "/" + pcFilePath.getFileName();
+
                         if (outFileName.endsWith(".savf")) {
                             copyToSaveFile(sourcePathString, outFileName, notToLibrary);
                             return "";
                         }
-
                     } else { //
+                        //
                         // to IFS file:
+                        // ------------
                         // IFS file name does not change
                         outFileName = targetPathString;
+
+                        // Save file
                         if (outFileName.endsWith(".savf")) {
                             copyToSaveFile(sourcePathString, outFileName, notToLibrary);
                             return "";
                         }
-
                         // If input PC file ends with .savf, output IFS file must also end with .savf
                         if (sourcePathString.endsWith(".savf") && !outFileName.endsWith(".savf")) {
                             row = "Error: PC file  " + sourcePathString
@@ -234,6 +237,7 @@ public class Copy_PC_IBMi {
                             return "ERROR";
                         }
                     }
+
                     // Create IFS file object
                     IFSFile outFilePath = new IFSFile(remoteServer, outFileName);
 
@@ -245,15 +249,61 @@ public class Copy_PC_IBMi {
                         return "ERROR";
                     }
 
-                    // Default CCSID for IFS files is 819
-                    if (ibmCcsid.equals("*DEFAULT")) {
-                        ibmCcsid = "819";
-                        ibmCcsidInt = 819;
+                    if (!outFilePath.exists()) {
+                        outFilePath.createNewFile();
+                        // CCSID for newly created IFS file
+                        outFilePath.setCCSID(819); // Set default: CCSID 819 ASCII International Latin-1
                     }
 
                     //
-                    // No conversion - binary copy
-                    // ---------------------------
+                    // Binary copy
+                    // -----------
+                    //
+
+                    // If both IBM i CCSID and PC charset is *DEFAULT then no data conversion is done
+                    if (ibmCcsid.equals("*DEFAULT") && pcCharset.equals("*DEFAULT")) {
+
+                        // Allocate buffer for data
+                        ByteBuffer byteBuffer = ByteBuffer.allocate(2000000);
+
+                        // Open output IFS file - SHARED for all users, REWRITE data
+                        IFSFileOutputStream ifsOutStream = new IFSFileOutputStream(remoteServer, outFileName, IFSFileOutputStream.SHARE_ALL, false);
+
+                        // Open the input PC file
+                        FileChannel fileChannel = (FileChannel) Files.newByteChannel(pcFilePath);
+
+                        // Copy PC file to IFS file with byte buffer
+                        int bytesRead = fileChannel.read(byteBuffer);
+                        while (bytesRead > 0) {
+                            ifsOutStream.write(byteBuffer.array(), 0, bytesRead);
+                            byteBuffer.rewind(); // Set start of buffer to read next bytes into
+                            bytesRead = fileChannel.read(byteBuffer);
+                        }
+                        // Close files
+                        ifsOutStream.close();
+                        fileChannel.close();
+
+                        if (fromWalk) {
+                            row = "Info: PC file  " + sourcePathString + "  was copied binary to IFS file  " + outFileName + ".";
+                        } else {
+                            row = "Comp: PC file  " + sourcePathString + "  was copied binary to IFS file  " + outFileName + ". "
+                                    + "CCSID " + outFilePath.getCCSID();
+                        }
+                        mainWindow.msgVector.add(row);
+                        mainWindow.showMessages();
+
+                        return "";
+                    }
+
+                    // Default CCSID for IFS files is 500
+                    if (ibmCcsid.equals("*DEFAULT")) {
+                        ibmCcsid = "500";
+                        ibmCcsidInt = 500;
+                    }
+
+                    //
+                    // No conversion of text files
+                    // -------------
                     //
                     // If both sides have corresponding Unicode or single byte European character sets
                     // no conversion id necessary and transfer is faster.
@@ -266,9 +316,9 @@ public class Copy_PC_IBMi {
                             || pcCharset.toUpperCase().equals("CP1251") && ibmCcsid.equals("1251") // ASCII Windows
                             || pcCharset.toUpperCase().equals("ISO-8859-1") && ibmCcsid.equals("819") // ASCII Latin-1
                             || pcCharset.toUpperCase().equals("ISO-8859-1") && ibmCcsid.equals("858") // ASCII Latin-1
+                            || pcCharset.toUpperCase().equals("ISO-8859-2") && ibmCcsid.equals("912") // ASCII Latin-2
                             || pcCharset.toUpperCase().equals("IBM500") && ibmCcsid.equals("500") // EBCDIC Latin-1
                             || pcCharset.toUpperCase().equals("CP500") && ibmCcsid.equals("500") // EBCDIC Latin-1
-                            || pcCharset.toUpperCase().equals("ISO-8859-2") && ibmCcsid.equals("912") // ASCII Latin-2
                             || pcCharset.toUpperCase().equals("IBM870") && ibmCcsid.equals("870") // EBCDIC Latin-2
                             ) {
 
@@ -303,13 +353,13 @@ public class Copy_PC_IBMi {
                         fileChannel.close();
 
                         if (fromWalk) {
-                            row = "Info: PC file  " + sourcePathString + "  was copied unchanged (binary) to IFS file  "
+                            row = "Info: PC file  " + sourcePathString + "  was copied unchanged to IFS file  "
                                     + outFileName
-                                    + ", CCSID " + ibmCcsid + ".";
+                                    + " wigh CCSID " + ibmCcsid + ".";
                         } else {
-                            row = "Comp: PC file  " + sourcePathString + "  was copied unchanged (binary) to IFS file  "
+                            row = "Comp: PC file  " + sourcePathString + "  was copied unchanged to IFS file  "
                                     + outFileName
-                                    + ", CCSID " + ibmCcsid + ".";
+                                    + " with CCSID " + ibmCcsid + ".";
                         }
                         mainWindow.msgVector.add(row);
                         mainWindow.showMessages();
@@ -346,8 +396,7 @@ public class Copy_PC_IBMi {
                                 // Get length in bytes for conversion to Unicode 1200 (UTF-16) and 13488 (UCS-2)
                                 nbrOfBytes = textLine.getBytes(Charset.forName("UTF-16")).length;;
                             } else if (ibmCcsid.equals("1208")) {
-                                // Get length in bytes
-                                // for UTF-8 -> 1208
+                                // Get length in bytes for conversion UTF-8 -> 1208
                                 nbrOfBytes = textLine.getBytes(Charset.forName("UTF-8")).length;
                             } else {
                                 // Get length of bytes of the text line for single byte characters
@@ -388,7 +437,7 @@ public class Copy_PC_IBMi {
                 } //
                 //
                 // PC file to a Library object (LIB, SAVF, PF-SRC, member):
-                // --------------------------------------------------------
+                // ========================================================
                 else if (targetPathString.endsWith(".LIB")) { //
 
                     // Default CCSID for Library objects is 500 (EBCDIC Latin-1)
@@ -414,8 +463,7 @@ public class Copy_PC_IBMi {
 
                     // PC file to SAVE FILE
                 } else if (targetPathString.contains(".LIB")
-                        && targetPathString.endsWith(".SAVF")
-                        //&& targetPath.getSubtype().equals("SAVF")
+                        && targetPathString.endsWith(".SAVF") //&& targetPath.getSubtype().equals("SAVF")
                         ) {
 
                     msgText = copyToSaveFile(sourcePathString, targetPathString, notToLibrary);
@@ -1161,7 +1209,7 @@ public class Copy_PC_IBMi {
 
         // Copy to LIBRARY
         if (toLibrary) {
-            // Save file name is derived from PC file name excluding suffix .savf
+            // Save file name is derived from the PC file name without suffix .savf
             saveFileName = sourcePathString.substring(sourcePathString.lastIndexOf(pcFileSep)
                     + 1, sourcePathString.lastIndexOf(".savf"));
             // Save file path string is derived from the path string of the library by adding the PC file name with suffix
@@ -1247,9 +1295,111 @@ public class Copy_PC_IBMi {
     }
 
     /**
-     * Extract individual names (libraryName, fileName, memberName, saveFileName) from the AS400 IFS path.
+     * Copy PC file to a new or existing Java class file
      *
      * @param targetPathString
+     * @param sourcePathString
+     * @param toLibrary
+     * @return
+     */
+    @SuppressWarnings("UseSpecificCatch")
+    protected String copyToClassFile(String sourcePathString, String targetPathString, boolean toLibrary) {
+
+        // Extract individual names (libraryName, fileName, memberName) from the AS400 IFS path
+        extractNamesFromIfsPath(targetPathString);
+
+        String classFilePathString;
+
+        // Copy to LIBRARY
+        if (toLibrary) {
+            // Save file name is derived from the PC file name without suffix .class
+            classFileName = sourcePathString.substring(sourcePathString.lastIndexOf(pcFileSep)
+                    + 1, sourcePathString.lastIndexOf(".class"));
+            // Save file path string is derived from the path string of the library by adding the PC file name with suffix
+            // .SAVF in upper case
+            classFilePathString = targetPathString + "/"
+                    + sourcePathString.substring(sourcePathString.lastIndexOf(pcFileSep) + 1).toUpperCase();
+
+            // Create a new Save File if it does not exist
+            try {
+                SaveFile classFile = new SaveFile(remoteServer, libraryName, classFileName);
+                if (!classFile.exists()) {
+                    classFile.create();
+                }
+            } catch (Exception exc) {
+                exc.printStackTrace();
+                row = "Error1: " + exc.toString();
+                mainWindow.msgVector.add(row);
+                mainWindow.showMessages();
+                return "ERROR";
+            }
+
+            // Copy the PC file to Save file using FTP (File Transfer Protocol)
+            AS400FTP ftp = new AS400FTP(remoteServer);
+            try {
+
+                // FTP Binary data transfer
+                // ftp.setDataTransferType(AS400FTP.BINARY); // not necessary when suffix is .class
+                // FTP Put command
+                ftp.put(sourcePathString, classFilePathString);
+                ftp.disconnect();
+                row = "Comp: PC file  " + sourcePathString + "  was copied to Java class file  " + libraryName + "/"
+                        + classFileName + ".";
+                mainWindow.msgVector.add(row);
+                mainWindow.showMessages();
+                return "";
+
+            } catch (Exception exc) {
+                exc.printStackTrace();
+                row = "Error: Copying PC file  " + sourcePathString + "  to Java class file  " + libraryName + "/" + classFileName
+                        + "  failed:  " + exc.toString();
+                mainWindow.msgVector.add(row);
+                mainWindow.showMessages();
+                return "ERROR";
+            }
+        } //
+        // Copy to IFS FILE
+        else {
+            // Save file name is derived from PC file name excluding suffix .class
+            classFileName = sourcePathString.substring(sourcePathString.lastIndexOf(pcFileSep) + 1);
+
+            if (!sourcePathString.endsWith(".class")) {
+                row = "Error: Copying PC Java class file  " + sourcePathString
+                        + "  ending with suffix \".class\" cannot be copied to the existing file  " + targetPathString
+                        + "  with a different suffix.";
+                mainWindow.msgVector.add(row);
+                mainWindow.showMessages();
+                return "ERROR";
+            } else {
+                // Copy the PC file to Save file using FTP (File Transfer Protocol)
+                AS400FTP ftp = new AS400FTP(remoteServer);
+                try {
+                    // FTP Binary data transfer
+                    ftp.setDataTransferType(AS400FTP.BINARY);
+                    // FTP Put command
+                    ftp.put(sourcePathString, targetPathString);
+                    ftp.disconnect();
+                    row = "Comp: PC Java class file  " + sourcePathString + "  was copied to IFS Java class file  " + targetPathString
+                            + ".";
+                    mainWindow.msgVector.add(row);
+                    mainWindow.showMessages();
+                    return "";
+
+                } catch (Exception exc) {
+                    exc.printStackTrace();
+                    row = "Error: Copying PC Java class file  " + sourcePathString + "  to IFS Java class file  " + targetPathString
+                            + "  failed:  " + exc.toString();
+                    mainWindow.msgVector.add(row);
+                    mainWindow.showMessages();
+                    return "ERROR";
+                }
+            }
+        }
+    }
+
+    /**
+     * Extract individual names (libraryName, fileName, memberName, saveFileName, classFileName) from the AS400 IFS path.
+     *
      */
     protected void extractNamesFromIfsPath(String as400PathString) {
         try {
@@ -1264,6 +1414,8 @@ public class Copy_PC_IBMi {
                         }
                     } else if (as400PathString.endsWith(".SAVF")) {
                         saveFileName = as400PathString.substring(as400PathString.lastIndexOf("/") + 1, as400PathString.lastIndexOf(".SAVF"));
+                    } else if (as400PathString.endsWith(".CLASS")) {
+                        classFileName = as400PathString.substring(as400PathString.lastIndexOf("/") + 1, as400PathString.lastIndexOf(".CLASS"));
                     }
                 }
             }

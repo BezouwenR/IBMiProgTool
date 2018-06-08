@@ -576,12 +576,10 @@ public class Copy_IBMi_IBMi {
                     // Target file CCSID attribute - not yet ready
                     int outputFileCcsid;
 
-                    // If the output IFS file does not exist - create an empty file
-                    // and continue.
+                    // If the output IFS file does not exist - create an empty file and continue.
                     // -------------------------------------
                     if (!outputDirFile.exists()) {
-                        // If target file does not exist, create one and set its CCSID
-                        // from the input file
+                        // If target file does not exist, create one and set its CCSID from the input file
                         outputDirFile.createNewFile();
                         outputDirFile.setCCSID(inputFileCcsid);
                     }
@@ -591,23 +589,20 @@ public class Copy_IBMi_IBMi {
                     ifsInStream = new IFSFileInputStream(remoteServer, sourcePathString);
 
                     //
-                    // If *DEFAULT then no conversion is done
-                    // ------------------------------
+                    // No conversion (binary)
+                    // ----------------------
                     //
                     if (ibmCcsid.equals("*DEFAULT") || outputFileCcsid == inputFileCcsid) {
 
                         ifsOutStream = new IFSFileOutputStream(remoteServer, targetPathString);
 
-                        // Copy IFS file to IFS file reading input stream to byte
-                        // array and using output stream for output
-                        // Read first portion of bytes
-                        bytesRead = ifsInStream.read(inputByteArray);
+                        // Copy IFS file to IFS file reading input stream to byte array and using output stream for output
+                        bytesRead = ifsInStream.read(inputByteArray); // Read first portion of bytes
                         // Repeat if at least one byte was read
                         while (bytesRead > 0) {
-                            // Write out bytes read before
+                            // Write out the bytes read before
                             ifsOutStream.write(inputByteArray, 0, bytesRead);
-                            // Read next portion of bytes
-                            bytesRead = ifsInStream.read(inputByteArray);
+                            bytesRead = ifsInStream.read(inputByteArray); // Read next portion of bytes
                         }
                         // Close files
                         ifsOutStream.close();

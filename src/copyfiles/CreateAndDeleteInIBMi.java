@@ -74,11 +74,7 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
                 ibmCcsid = "500";
                 ibmCcsidInt = 500;
             }
-        } else {
-            // for *DEFAULT
-            ibmCcsid = "500";
-            ibmCcsidInt = 500;
-        }
+        } 
     }
 
     @Override
@@ -173,6 +169,12 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
      * Create IFS directory.
      */
     protected void createIfsDirectory() {
+
+        // Set default IBM CCSID for *DEFAULT value
+        if (ibmCcsid.equals("*DEFAULT")) {
+            ibmCcsid = "819"; // Default for IFS directory: ASCII ISO-8859-1, Latin Alphabet No. 1
+        }
+        
         // Enable calling CL commands
         CommandCall cmdCall = new CommandCall(remoteServer);
 
@@ -189,13 +191,13 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
         }
         try {
             // Get path to the newly created directory by adding its name to the parent directory path
-            IFSFile ifsFile = new IFSFile(remoteServer, mainWindow.rightPathString + "/" + directoryName);
+            ifsFile = new IFSFile(remoteServer, mainWindow.rightPathString + "/" + directoryName);
             // Create new directory
             ifsFile.mkdir();
 
             // String for command CHGATR to set CCSID attribute of the new directory
             String command_CHGATR = "CHGATR OBJ('" + mainWindow.rightPathString + "/" + directoryName
-                    + "') ATR(*CCSID) VALUE(" + ibmCcsid + ") SUBTREE(*ALL)";
+                    + "') ATR(*CCSID) VALUE(" + ibmCcsid + ") SUBTREE(*NONE)";
             System.out.println(command_CHGATR);
             // Perform the command
             cmdCall.run(command_CHGATR);
@@ -235,6 +237,12 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
      */
     @SuppressWarnings("UseSpecificCatch")
     protected void createIfsFile() {
+        
+        // Set default IBM CCSID for *DEFAULT value
+        if (ibmCcsid.equals("*DEFAULT")) {
+            ibmCcsid = "819"; // Default for a new IFS file: ASCII ISO-8859-1, Latin Alphabet No. 1
+        }
+
         // "false" stands for not changing result to upper case
         String fileName = new GetTextFromDialog("CREATE NEW FILE").getTextFromDialog("Parent directory", "New file name", mainWindow.rightPathString
                 + "/", "", false, currentX, currentY);
@@ -248,7 +256,7 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
         }
         try {
             // Get path to the newly created directory by adding its name to the parent directory path
-            IFSFile ifsFile = new IFSFile(remoteServer, mainWindow.rightPathString + "/" + fileName);
+            ifsFile = new IFSFile(remoteServer, mainWindow.rightPathString + "/" + fileName);
 
             // Create new empty file
             ifsFile.createNewFile();
@@ -288,7 +296,7 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
         // Get library name from the IFS path string
         extractNamesFromIfsPath(mainWindow.rightPathString);
         // "true" stands for changing result to upper case
-        String memberName = new GetTextFromDialog("CREATE NEW SOURCE MEMBER")
+        memberName = new GetTextFromDialog("CREATE NEW SOURCE MEMBER")
                 .getTextFromDialog("Library", "Source member name", libraryName, "", true, currentX, currentY);
         if (memberName == null) {
             return;
@@ -344,6 +352,11 @@ public class CreateAndDeleteInIBMi extends SwingWorker<String, String> {
      * Create Source Physical File.
      */
     protected void createSourcePhysicalFile() {
+        
+        // Set default IBM CCSID for *DEFAULT value
+        if (ibmCcsid.equals("*DEFAULT")) {
+            ibmCcsid = "500"; // Default for a new Source Physical File: EBCDIC ISO-8859-1, Latin Alphabet No. 1
+        }        
 
         // Get library name from the IFS path string
         extractNamesFromIfsPath(mainWindow.rightPathString);
