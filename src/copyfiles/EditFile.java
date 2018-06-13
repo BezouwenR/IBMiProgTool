@@ -2990,9 +2990,6 @@ public final class EditFile extends JFrame {
                             }
 
                             case "RPG **FREE": {
-                                if (!textToHighlight.substring(0, 7).equalsIgnoreCase("**FREE")) {
-                                    break;
-                                }
                                 // Before block statement: all spaces or empty
                                 // After block statement: A space or semicolon or new line
                                 if ((textToHighlight.substring(startOfLine, startOfBlockStmt)
@@ -3007,12 +3004,10 @@ public final class EditFile extends JFrame {
                             } // End of case RPG **FREE
 
                             case "RPG /FREE": {
-                                if (textToHighlight.substring(0, 7).equalsIgnoreCase("**FREE")) {
-                                    break;
-                                }
                                 // Before block statement from column 8: all spaces
                                 // After block statement: a space or new line or semicolon
                                 // No asterisk comment (* in column 7)
+                                // No C in col. 6
                                 if (textToHighlight.length() > 7) {
                                     if ((textToHighlight.substring(startOfLine + 7, startOfBlockStmt)
                                             .equals(fixedLengthSpaces(startOfBlockStmt - (startOfLine + 7)))
@@ -3020,7 +3015,8 @@ public final class EditFile extends JFrame {
                                             && (textToHighlight.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(" ")
                                             || textToHighlight.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(NEW_LINE)
                                             || textToHighlight.substring(endOfBlockStmt, endOfBlockStmt + 1).equals(";"))
-                                            && !textToHighlight.substring(startOfLine + 6, startOfLine + 7).equals("*")) {
+                                            && !textToHighlight.substring(startOfLine + 6, startOfLine + 7).equals("*")
+                                            && !textToHighlight.substring(startOfLine + 5, startOfLine + 6).toUpperCase().equals("C")) {
                                         blockHighlighter.addHighlight(startOfBlockStmt, endOfBlockStmt, blockPainter);
                                     }
                                 }
