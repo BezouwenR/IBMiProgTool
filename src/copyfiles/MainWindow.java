@@ -1955,7 +1955,8 @@ public class MainWindow extends JFrame {
                 // Get list of objects in the directory
                 Stream<Path> stream = Files.list(pathParam);
                 // Process level 2 of objects (children of node level 1 - the root)
-                stream.forEach(pathLevel2 -> {
+                
+                stream.sorted().forEach(pathLevel2 -> {
                     Path relativePathLevel2;
                     // Eliminate directories whose names begin with a dot
                     if (!pathLevel2.toString().contains(pcFileSep + ".")) {
@@ -1975,7 +1976,7 @@ public class MainWindow extends JFrame {
                                 // Get list of objects in the directory level 2
                                 Stream<Path> stream2 = Files.list(pathLevel2);
                                 // Process each node level 2 if it is a directory. Resulting in nodes level 3
-                                stream2.forEach(pathLevel3 -> {
+                                stream2.sorted().forEach(pathLevel3 -> {
                                     Path relativePathLevel3;
                                     // Eliminate directories whose names begin with a dot
                                     if (!pathLevel3.toString().contains(pcFileSep + ".")) {
@@ -1998,7 +1999,7 @@ public class MainWindow extends JFrame {
                                                     // directory level 3
                                                     Stream<Path> stream3 = Files.list(pathLevel3);
                                                     // Process each node level 3 if it is a directory. Resulting in nodes level 4
-                                                    stream3.forEach(pathLevel4 -> {
+                                                    stream3.sorted().forEach(pathLevel4 -> {
                                                         Path relativePathLevel4;
                                                         // Eliminate directories whose names begin with a dot
                                                         if (!pathLevel4.toString().contains(pcFileSep + ".")) {
