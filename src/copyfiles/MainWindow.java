@@ -1836,7 +1836,7 @@ public class MainWindow extends JFrame {
         // The third parameter (password) should NOT be specified. The user must sign on.
         remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
         // The following statement can replace the preceding one when debugging in order to better comfort.
-        // !!!!remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText(), "ZUP047");
+        // !!!!remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText(), "......");
         // Connect FILE service of the IBM i server.
         try {
             // Introductory message - waiting for the server.

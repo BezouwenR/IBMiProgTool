@@ -1316,7 +1316,7 @@ public class Compile extends JFrame {
         try {
             // Create object for calling CL commands
             CommandCall cmdCall = new CommandCall(remoteServer);
-            // Build command DSPJOBLOG so that the job log is printed after the current job ends
+            // Build command DSPJOBLOG so that the job log is printed
             String commandDspJobLog = "DSPJOBLOG JOB(*) OUTPUT(*PRINT) MSGF(*MSG) DUPJOBOPT(*MSG)";
             // Perform the DSPJOBLOG command
             cmdCall.run(commandDspJobLog);

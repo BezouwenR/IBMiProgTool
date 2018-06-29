@@ -696,19 +696,15 @@ public final class DisplayFile extends JFrame {
 
         this.setTitle("Display member  '" + as400PathString + "'");
 
-        IFSFile ifsFile = new IFSFile(remoteServer, as400PathString);
         // Create an AS400FileRecordDescription object that represents the file
         AS400FileRecordDescription inRecDesc = new AS400FileRecordDescription(remoteServer, as400PathString);
 
         try {
-            // Decide what CCSID is appropriate for displaying the member
-            int ccsidAttribute = ifsFile.getCCSID();
-            characterSetLabel.setText("CCSID " + ccsidAttribute + " was used for display.");
-
             // Get list of record formats of the database file
             RecordFormat[] format = inRecDesc.retrieveRecordFormat();
             // Create an AS400File object that represents the file
             SequentialFile as400seqFile = new SequentialFile(remoteServer, as400PathString);
+            
             // Set the record format (the only one)
             as400seqFile.setRecordFormat(format[0]);
 
@@ -762,9 +758,6 @@ public final class DisplayFile extends JFrame {
 
             // Display the window.
             setVisible(true);
-            row = "Info: Source member  " + as400PathString + "  has CCSID  " + ccsidAttribute + ".";
-            mainWindow.msgVector.add(row);
-            mainWindow.showMessages(nodes);
         } catch (Exception exc) {
             exc.printStackTrace();
             row = "Error: " + exc.toString();

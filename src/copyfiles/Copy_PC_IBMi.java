@@ -197,13 +197,13 @@ public class Copy_PC_IBMi {
 
                 // IFS file or directory object
                 IFSFile targetPath = new IFSFile(remoteServer, targetPathString);
+                String outFileName;
 
                 // PC file to general IFS directory or file:
                 // =========================================
                 //
                 if (!targetPathString.startsWith("/QSYS.LIB")) {
 
-                    String outFileName;
                     if (targetPath.isDirectory()) { //
                         //
                         // to IFS directory:
@@ -249,10 +249,14 @@ public class Copy_PC_IBMi {
                         return "ERROR";
                     }
 
+                    // If the IFS file does not exist - create one with a CCSID
                     if (!outFilePath.exists()) {
                         outFilePath.createNewFile();
-                        // CCSID for newly created IFS file
-                        outFilePath.setCCSID(819); // Set default: CCSID 819 ASCII International Latin-1
+                        if (ibmCcsid.equals("*DEFAULT")) {
+                            outFilePath.setCCSID(819); // set CCSID 819 as a default for IFS files
+                        } else {
+                            outFilePath.setCCSID(ibmCcsidInt); // set CCSID as it is in the IBM i CCSID parameter
+                        }
                     }
 
                     //
@@ -295,12 +299,16 @@ public class Copy_PC_IBMi {
                         return "";
                     }
 
-                    // Default CCSID for IFS files is 500
-                    if (ibmCcsid.equals("*DEFAULT")) {
-                        ibmCcsid = "500";
-                        ibmCcsidInt = 500;
+                    // Convert CCSID from text to integer
+                    try {
+                        ibmCcsidInt = Integer.parseInt(ibmCcsid);
+                    } catch (Exception exc) {
+                        exc.printStackTrace();
+                        // If invalid, take IFS default CCSID 819
+                        ibmCcsid = "819";
+                        ibmCcsidInt = 819;
                     }
-
+                    
                     //
                     // No conversion of text files
                     // -------------
@@ -371,6 +379,7 @@ public class Copy_PC_IBMi {
                         // -------------------------------------
                         //
 
+                        System.out.println("ibmCcsidInt Conv: " + ibmCcsidInt);
                         byte[] byteArray = new byte[2000000];
 
                         // Open input

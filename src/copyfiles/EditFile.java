@@ -1446,10 +1446,7 @@ public final class EditFile extends JFrame {
     protected void displaySourceMember() {
 
         this.setTitle("Edit member  '" + filePathString + "'");
-        // Extract individual names (libraryName, fileName, memberName) from the AS400 IFS path
-        extractNamesFromIfsPath(filePathString);
 
-        IFSFile ifsFile = new IFSFile(remoteServer, filePathString);
         // Create an AS400FileRecordDescription object that represents the file
         AS400FileRecordDescription inRecDesc = new AS400FileRecordDescription(remoteServer, filePathString);
 
@@ -1457,9 +1454,6 @@ public final class EditFile extends JFrame {
         textArea.setEditable(true);
         textArea.setText("");
         try {
-            ccsidAttribute = ifsFile.getCCSID();
-            characterSetLabel.setText("CCSID " + ccsidAttribute + " was used for display.");
-
             // Get list of record formats of the database file
             RecordFormat[] format = inRecDesc.retrieveRecordFormat();
             // Create an AS400File object that represents the file
@@ -1509,7 +1503,6 @@ public final class EditFile extends JFrame {
                 // Read next source member record
                 inRecord = as400seqFile.readNext();
             }
-
             // Close the file
             as400seqFile.close();
         } catch (Exception exc) {
