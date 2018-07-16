@@ -11,8 +11,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
 
-import javax.swing.tree.DefaultMutableTreeNode;
-
 import com.sun.jna.platform.FileUtils;
 
 /**
