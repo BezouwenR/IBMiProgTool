@@ -1,17 +1,17 @@
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/EXTF             PASSIST2   06/19/18 11:24:58        Page      1
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL5/NESTDS           PASSIST2   07/25/18 15:46:07        Page      1
 
   Command  . . . . . . . . . . . . :   CRTBNDRPG
     Issued by  . . . . . . . . . . :     VZUPKA
-  Program  . . . . . . . . . . . . :   EXTF
-    Library  . . . . . . . . . . . :     VZRPG72
+  Program  . . . . . . . . . . . . :   NESTDS
+    Library  . . . . . . . . . . . :     VZTOOL5
   Text 'description' . . . . . . . :   *SRCMBRTXT
 
-  Source Member  . . . . . . . . . :   EXTF
+  Source Member  . . . . . . . . . :   NESTDS
   Source File  . . . . . . . . . . :   QRPGLESRC
-    Library  . . . . . . . . . . . :     VZRPG72
-    CCSID  . . . . . . . . . . . . :     870
+    Library  . . . . . . . . . . . :     VZTOOL5
+    CCSID  . . . . . . . . . . . . :     1208
   Text 'description' . . . . . . . :
-  Last Change  . . . . . . . . . . :   06/18/18  11:48:42
+  Last Change  . . . . . . . . . . :   07/25/18  15:46:00
 
   Generation severity level  . . . :   10
   Default activation group . . . . :   *YES
@@ -40,61 +40,97 @@
   Generate program interface . . . :   *NO
   Include directory  . . . . . . . :
   Preprocessor options . . . . . . :   *NONE
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/EXTF             PASSIST2   06/19/18 11:24:58        Page      2
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL5/NESTDS           PASSIST2   07/25/18 15:46:07        Page      2
 
 Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
 Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
 
                           S o u r c e   L i s t i n g
 
-     1  **************************************************************************                               000000     000100
-     2  *   Použití EXTFILE k definici externího jména souboru pro výpočet                                       000000     000200
-     3  *   Volá se CALL EXTF ('VZRPGIV/CENIKP')                                                                 000000     000300
-     4  **************************************************************************                               000000     000400
-     5   // rozhraní programu                                                                                    000000     000500
+     1 Á                                                                                                     ĂĘÁ 000000     000100
+======>a
+*RNF0257 30 a      000100  Form-Type entry for main procedure not valid or out of
+                           sequence.
+     2                                                                                                           000000     000200
+======>a
+*RNF0257 30 a      000200  Form-Type entry for main procedure not valid or out of
+                           sequence.
+     3 Ë Ć>Ă? ÉÍ/%ĆĂĆÁ˝                                                                                    ˝Ä% ˝ 000000     000300
+======>a
+*RNF0257 30 a      000300  Form-Type entry for main procedure not valid or out of
+                           sequence.
+     4 _Á Î/ĘÄÇ/Ę                                                                                             >/ 000000     000400
+======>a
+*RNF0257 30 a      000400  Form-Type entry for main procedure not valid or out of
+                           sequence.
+     5 % ˝Ë /˝˝ĘÁËË                                                                                           ˝Ä 000000     000500
+======>a
+*RNF0257 30 a      000500  Form-Type entry for main procedure not valid or out of
+                           sequence.
+     6  ËŮĘÁÁŮ Î/ĘÄÇ/Ę                                                                                           000000     000600
+======>a
+*RNF0257 30 a      000600  Form-Type entry for main procedure not valid or out of
+                           sequence.
+     7  ÄĆŮ` Î/ĘÄÇ/Ę                                                                                             000000     000700
+======>a
+*RNF0257 30 a      000700  Form-Type entry for main procedure not valid or out of
+                           sequence.
+     8 ˝ ˝Ë                                                                                                   Á> 000000     000800
+======>a
+*RNF0257 30 a      000800  Form-Type entry for main procedure not valid or out of
+                           sequence.
+     9 Ë                                                                                                   Á>˝ ˝ 000000     000900
+======>a
+*RNF0257 30 a      000900  Form-Type entry for main procedure not valid or out of
+                           sequence.
+    10                                                                                                           000000     001000
+======>a
+*RNF0257 30 a      001000  Form-Type entry for main procedure not valid or out of
+                           sequence.
+    11 /˝˝ĘÁËË ËŮĘÁÁŮ        çÍ__Ć>ČÂĆĘ˝ </>Á                                                              Ć>Ă?  000000     001100
+======>a
+*RNF0257 30 a      001100  Form-Type entry for main procedure not valid or out of
+                           sequence.
+    12                                                                                                           000000     001200
+======>a
+*RNF0257 30 a      001200  Form-Type entry for main procedure not valid or out of
+                           sequence.
+    13 /   +áëůáţ ţë                                                                                       ˝Í_ˇ  000000     001300
+======>a
+*RNF0257 30 a      001300  Form-Type entry for main procedure not valid or out of
+                           sequence.
+    14                                                                                                           000000     001400
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL5/NESTDS           PASSIST2   07/25/18 15:46:07        Page      3
+
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+======>a
+*RNF0257 30 a      001400  Form-Type entry for main procedure not valid or out of
+                           sequence.
+    15 >                                                                                                   ĘÁŮÍĘ 000000     001500
+======>a
+*RNF0257 30 a      001500  Form-Type entry for main procedure not valid or out of
+                           sequence.
 
 
-     6   dcl-pi *n extpgm('EXTF');       // jméno programu                                                       000000     000600
-     7      filename char(21); // vstupní parametr                                                               000000     000700
-     8   end-pi;                                                                                                 000000     000800
-     9                                                                                                           000000     000900
-
-
-    10   dcl-f cenikp EXTFILE(filename);                                                                         000000     001000
-        *--------------------------------------------------------------------------------------------*
-        *                               RPG name         External name                               *
-        * File name. . . . . . . . . :  CENIKP           VZRPG72/CENIKP                              *
-        * Record format(s) . . . . . :  CENIKPF0         CENIKPF0                                    *
-        *--------------------------------------------------------------------------------------------*
-
-
-    11=ICENIKPF0                                                                                                           1000001
-        *--------------------------------------------------------------------------------------------*                     1
-        * RPG record format  . . . . :  CENIKPF0                                                     *                     1
-        * External format  . . . . . :  CENIKPF0 : VZRPG72/CENIKP                                    *                     1
-        *--------------------------------------------------------------------------------------------*                     1
-    12=I                             A    1    5  MATER                           Cislo mater.                             1000002
-    13=I                             P    6   11 2CENA                            Cena                                     1000003
-    14=I                             A   12   61  NAZEV                           Nazev materialu                          1000004
-
-
-    15   read cenikp;                                                                                            000000     001100
-    16   dsply nazev;                                                                                            000000     001200
-    17                                                                                                           000000     001300
-    18   *inlr = *on;                                                                                            000000     001400
+    16                                                                                                           000000     001600
+======>       aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+*RNF0604 20 a      001600  The token is not valid; token is ignored.
+*RNF5344 30     16 001600  The Extended-Factor-2 entry must not be blank.
+*RNF5507 30     16 001600  A semi-colon is not specified at the end of a free-format
+                           statement.
 
        * * * * *   E N D   O F   S O U R C E   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/EXTF             PASSIST2   06/19/18 11:24:58        Page      3
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL5/NESTDS           PASSIST2   07/25/18 15:46:07        Page      4
 
           A d d i t i o n a l   D i a g n o s t i c   M e s s a g e s
 
  Msg id  Sv Number Seq     Message text
-*RNF7066 00     10 001000  Record-Format CENIKPF0 not used for input or output.
-*RNF7086 00     10 001000  RPG handles blocking for file CENIKP. INFDS is updated only
-                           when blocks of data are transferred.
+*RNF7023 40      0         The Compiler cannot determine how the program can end.
 
  * * * * *   E N D   O F   A D D I T I O N A L   D I A G N O S T I C   M E S S A G E S   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/EXTF             PASSIST2   06/19/18 11:24:58        Page      4
+    17                                                                                                           000000     001600
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL5/NESTDS           PASSIST2   07/25/18 15:46:07        Page      5
 
                           C r o s s   R e f e r e n c e
 
@@ -102,26 +138,21 @@ Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+...
 
          File              Device             References (D=Defined)
            Record
-         CENIKP            DISK                   10D     15
-           CENIKPF0                               10D     11
+
+         No references in the source.
 
       Global Field References:
 
          Field             Attributes         References (D=Defined M=Modified)
-         *INLR             N(1)                   18M
-*RNF7031 CENA              P(10,2)                13D
-         FILENAME          A(21)                   7D     10
-                           BASED(_QRNL_PRM+)
-*RNF7031 MATER             A(5)                   12D
-         NAZEV             A(50)                  14D     16
+
+         No references in the source.
 
       Indicator References:
 
          Indicator                            References (D=Defined M=Modified)
-         LR                                       18M
 
        * * * * *   E N D   O F   C R O S S   R E F E R E N C E   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/EXTF             PASSIST2   06/19/18 11:24:58        Page      5
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL5/NESTDS           PASSIST2   07/25/18 15:46:07        Page      6
 
                       E x t e r n a l   R e f e r e n c e s
 
@@ -138,38 +169,41 @@ Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+...
          No references in the source.
 
    * * * * *   E N D   O F   E X T E R N A L   R E F E R E N C E S   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/EXTF             PASSIST2   06/19/18 11:24:58        Page      6
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL5/NESTDS           PASSIST2   07/25/18 15:46:07        Page      7
 
                           M e s s a g e   S u m m a r y
 
  Msg id  Sv Number Message text
-*RNF7031 00      2 The name or indicator is not referenced.
-*RNF7066 00      1 Record-Format name of Externally-Described file is not used.
-*RNF7086 00      1 RPG handles blocking for the file. INFDS is updated only when
-                   blocks of data are transferred.
+*RNF0604 20      1 The token is not valid; token is ignored.
+*RNF0257 30     15 Form-Type entry for main procedure not valid or out of
+                   sequence.
+*RNF5344 30      1 The Extended-Factor-2 entry must not be blank.
+*RNF5507 30      1 A semi-colon is not specified at the end of a free-format
+                   statement.
+*RNF7023 40      1 The Compiler cannot determine how the program can end.
 
        * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/EXTF             PASSIST2   06/19/18 11:24:58        Page      7
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL5/NESTDS           PASSIST2   07/25/18 15:46:07        Page      8
 
                             F i n a l   S u m m a r y
 
   Message Totals:
 
-    Information  (00) . . . . . . . :        4
+    Information  (00) . . . . . . . :        0
     Warning      (10) . . . . . . . :        0
-    Error        (20) . . . . . . . :        0
-    Severe Error (30+)  . . . . . . :        0
+    Error        (20) . . . . . . . :        1
+    Severe Error (30+)  . . . . . . :       18
     ---------------------------------  -------
-    Total . . . . . . . . . . . . . :        4
+    Total . . . . . . . . . . . . . :       19
 
 
   Source Totals:
 
-    Records . . . . . . . . . . . . :       18
-    Specifications  . . . . . . . . :       11
+    Records . . . . . . . . . . . . :       17
+    Specifications  . . . . . . . . :       17
     Data records  . . . . . . . . . :        0
-    Comments  . . . . . . . . . . . :        5
+    Comments  . . . . . . . . . . . :        0
 
          * * * * *   E N D   O F   F I N A L   S U M M A R Y   * * * * *
-Program EXTF placed in library VZRPG72. 00 highest severity. Created on 06/19/18 at 11:24:59.
+Compilation stopped. Severity 40 errors found in program.
           * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *

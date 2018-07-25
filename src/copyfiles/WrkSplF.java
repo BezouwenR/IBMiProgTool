@@ -265,7 +265,7 @@ public class WrkSplF extends JFrame {
         // Select all spooled files for the user
         splf = selectSpooledFiles("", "", "", "", userPar, "", "", "");
         if (splf == null) {
-            row = "Error: Spooled file list cannot be obtained. Check for connection to the server.";
+            row = "Error: Spooled file list cannot be obtained. It may be empty.";
             mainWindow.msgVector.add(row);
             mainWindow.showMessages(noNodes); // do not add child nodes
             mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
@@ -512,7 +512,7 @@ public class WrkSplF extends JFrame {
             // Select spooled files again
             splf = selectSpooledFiles(namePar, numberPar, pagesPar, jobPar, userPar, jobNumberPar, datePar, timePar);
             if (splf == null) {
-                row = "Error: Spooled file list cannot be obtained. Check for connection to the server." + userPar;
+                row = "Error: Spooled file list cannot be obtained. It may be empty.";
                 mainWindow.msgVector.add(row);
                 mainWindow.showMessages(noNodes); // do not add child nodes
                 mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
@@ -912,6 +912,9 @@ public class WrkSplF extends JFrame {
        * + splf.getJobName()); System.out.print(" \tUser name: " + splf.getJobUser());
        * System.out.print(" \tJob number: " + splf.getJobNumber()); System.out.print(" \tDate: " +
        * splf.getCreateDate()); System.out.print(" \tTime: " + splf.getCreateTime()); System.out.println(); */
+        if (splf == null) {
+            return null;
+        }
         try {
             Integer numberParInt = splf.getNumber();
 

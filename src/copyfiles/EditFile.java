@@ -12,6 +12,7 @@ import com.ibm.as400.access.IFSFileOutputStream;
 import com.ibm.as400.access.Record;
 import com.ibm.as400.access.RecordFormat;
 import com.ibm.as400.access.SequentialFile;
+import com.ibm.as400.access.FileAttributes;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -304,6 +305,7 @@ public final class EditFile extends JFrame {
     String pcCharset;
     String ibmCcsid;
     int ibmCcsidInt;
+    int sourceCcsidInt;
     int ccsidAttribute;
     String editorFont;
     String[] fontNamesMac = {
@@ -501,7 +503,7 @@ public final class EditFile extends JFrame {
         } else if (methodName.equals("rewriteSourceMember")) {
             // Prepare editing and make editor visible
             prepareEditingAndShow();
-            row = "Info: Source member  " + filePathString + "  has CCSID  " + ccsidAttribute + ".";
+            row = "Info: Source member  " + filePathString + "  has CCSID of its parent" + ".";
             mainWindow.msgVector.add(row);
             mainWindow.showMessages(nodes);
         }
@@ -1447,6 +1449,8 @@ public final class EditFile extends JFrame {
 
         this.setTitle("Edit member  '" + filePathString + "'");
 
+        FileAttributes fileAttributes = new FileAttributes(remoteServer, filePathString);
+
         // Create an AS400FileRecordDescription object that represents the file
         AS400FileRecordDescription inRecDesc = new AS400FileRecordDescription(remoteServer, filePathString);
 
@@ -1454,6 +1458,9 @@ public final class EditFile extends JFrame {
         textArea.setEditable(true);
         textArea.setText("");
         try {
+            sourceCcsidInt = fileAttributes.getCcsid();
+            characterSetLabel.setText("CCSID " + sourceCcsidInt + " was used for display.");
+
             // Get list of record formats of the database file
             RecordFormat[] format = inRecDesc.retrieveRecordFormat();
             // Create an AS400File object that represents the file
@@ -1676,13 +1683,17 @@ public final class EditFile extends JFrame {
             IFSFile ifsTmpFilePath = new IFSFile(remoteServer, tmpFileString);
             ifsTmpFile.createNewFile();
             // Force the memeber CCSID to the IFS file as an attribute
-            ifsTmpFilePath.setCCSID(ibmCcsidInt);
+            ifsTmpFilePath.setCCSID(sourceCcsidInt);
 
             // Copy edited text area to the temporary IFS file
             outStream = new IFSFileOutputStream(remoteServer, tmpFileString);
             String textAreaString = textArea.getText();
+            int textLength = textAreaString.length();
+            if (sourceCcsidInt == 1208) {
+                textLength = 2 * textLength;
+            }
             byte[] byteArray;
-            AS400Text textConverter = new AS400Text(textAreaString.length(), ibmCcsidInt);
+            AS400Text textConverter = new AS400Text(textLength, sourceCcsidInt);
             byteArray = textConverter.toBytes(textAreaString);
             // Write text from the text area to the file
             outStream.write(byteArray);
@@ -1691,7 +1702,7 @@ public final class EditFile extends JFrame {
 
             // Copy data from temporary IFS file to the member. If the member does not exist it is created.
             String commandCpyFrmStmfString = "CPYFRMSTMF FROMSTMF('" + tmpFileString
-                    + "') TOMBR('" + outMemberPathString + "') MBROPT(*REPLACE) CVTDTA(*AUTO)";
+                    + "') TOMBR('" + outMemberPathString + "') MBROPT(*REPLACE) CVTDTA(*AUTO) DBFCCSID(*FILE)";
             // Perform the command
             cmdCall.run(commandCpyFrmStmfString);
 

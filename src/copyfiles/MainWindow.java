@@ -2770,7 +2770,7 @@ public class MainWindow extends JFrame {
                 }
             } catch (Exception exc) {
                 exc.printStackTrace();
-                row = "Error: Connection lost.";
+                row = "Error: Some serious error.";
                 msgVector.add(row);
                 showMessages(nodes);
                 // Remove message scroll listener (cancel scrolling to the last message)

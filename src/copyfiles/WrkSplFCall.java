@@ -62,7 +62,7 @@ public class WrkSplFCall extends SwingWorker<String, String> {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        
+
         userPar = properties.getProperty("USERNAME");
 
         ibmCcsid = properties.getProperty("IBM_CCSID");
@@ -124,14 +124,15 @@ public class WrkSplFCall extends SwingWorker<String, String> {
     protected void displayLastSpooledFile() {
         // Change cursor to wait cursor
         mainWindow.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        
+
         // Resulting splf is the last from the list of all spooled files belonging to the current user.
         SpooledFile splf = wrkSplf.selectSpooledFiles("", "", "", userPar, "", "", "", "");
-        String spoolTextAreaString = wrkSplf.convertSpooledFile(splf);
-        JTextArea textArea = new JTextArea();
-        DisplayFile dspf = new DisplayFile(textArea, mainWindow);
-        dspf.displayTextArea(spoolTextAreaString, ibmCcsid);
-        
+        if (splf != null) {
+            String spoolTextAreaString = wrkSplf.convertSpooledFile(splf);
+            JTextArea textArea = new JTextArea();
+            DisplayFile dspf = new DisplayFile(textArea, mainWindow);
+            dspf.displayTextArea(spoolTextAreaString, ibmCcsid);
+        } 
         // Change cursor to default
         mainWindow.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         // Remove message scroll listener (cancel scrolling to the last message)

@@ -1174,7 +1174,7 @@ public class Copy_IBMi_IBMi {
             cmdCall.run(commandText);
 
             // Obtain CCSID attribute of the target IFS file
-            //targetPath = new IFSFile(remoteServer, newTargetPathString);
+            targetPath = new IFSFile(remoteServer, newTargetPathString);
             int sourceCcsid = sourcePath.getCCSID();
             sourceCcsidStr = String.valueOf(sourceCcsid);
             int targetCcsid = 0;

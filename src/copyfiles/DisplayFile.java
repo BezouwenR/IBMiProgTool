@@ -4,6 +4,7 @@ import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400File;
 import com.ibm.as400.access.AS400FileRecordDescription;
 import com.ibm.as400.access.AS400Text;
+import com.ibm.as400.access.FileAttributes;
 
 import com.ibm.as400.access.IFSFile;
 import com.ibm.as400.access.IFSFileInputStream;
@@ -180,7 +181,8 @@ public final class DisplayFile extends JFrame {
     String pcCharset;
     String ibmCcsid;
     int ibmCcsidInt;
-
+    int sourceCcsidInt;
+    
     String operatingSystem;
 
     JComboBox<String> fontComboBox = new JComboBox<>();
@@ -696,15 +698,20 @@ public final class DisplayFile extends JFrame {
 
         this.setTitle("Display member  '" + as400PathString + "'");
 
+        FileAttributes fileAttributes = new FileAttributes(remoteServer, as400PathString);
+
         // Create an AS400FileRecordDescription object that represents the file
         AS400FileRecordDescription inRecDesc = new AS400FileRecordDescription(remoteServer, as400PathString);
 
         try {
+            sourceCcsidInt = fileAttributes.getCcsid();
+            characterSetLabel.setText("CCSID " + sourceCcsidInt + " was used for display.");
+
             // Get list of record formats of the database file
             RecordFormat[] format = inRecDesc.retrieveRecordFormat();
             // Create an AS400File object that represents the file
             SequentialFile as400seqFile = new SequentialFile(remoteServer, as400PathString);
-            
+
             // Set the record format (the only one)
             as400seqFile.setRecordFormat(format[0]);
 
@@ -813,7 +820,7 @@ public final class DisplayFile extends JFrame {
             pattern = pattern.replace(")", "\\)");
             pattern = pattern.replace("`", "\\`");
             pattern = pattern.replace("%", "\\%");
-            
+
             pattern = String.format("%1$s", pattern); // 1 = first argument, s = string conversion
             int flags = matchCaseButton.getSelectedIcon().equals(matchCaseIconDark) ? 0
                     : Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
