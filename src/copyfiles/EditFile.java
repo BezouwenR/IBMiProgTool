@@ -503,7 +503,7 @@ public final class EditFile extends JFrame {
         } else if (methodName.equals("rewriteSourceMember")) {
             // Prepare editing and make editor visible
             prepareEditingAndShow();
-            row = "Info: Source member  " + filePathString + "  has CCSID of its parent" + ".";
+            row = "Info: Source member  " + filePathString + "  has CCSID  " + sourceCcsidInt + ".";
             mainWindow.msgVector.add(row);
             mainWindow.showMessages(nodes);
         }
@@ -1740,12 +1740,7 @@ public final class EditFile extends JFrame {
             }
             exc.printStackTrace();
             row = "Error: 3 Data cannot be written to the source member  " + libraryName
-                    + "/"
-                    + fileName
-                    + "("
-                    + memberName
-                    + ")  -  "
-                    + exc.toString();
+                    + "/" + fileName + "(" + memberName + ")  -  " + exc.toString();
             mainWindow.msgVector.add(row);
             mainWindow.showMessages();
             return "ERROR"; // Must not continue in order not to lock an object
@@ -1767,13 +1762,8 @@ public final class EditFile extends JFrame {
         extractNamesFromIfsPath(filePathString);
 
         // Path to the output source member
-        String outMemberPathString = "/QSYS.LIB/" + libraryName
-                + ".LIB/"
-                + fileName
-                + ".FILE"
-                + "/"
-                + memberName
-                + ".MBR";
+        String outMemberPathString = "/QSYS.LIB/" + libraryName + ".LIB/" + fileName
+                + ".FILE/" + memberName + ".MBR";
 
         try {
             Files.delete(tmpFilePath);
@@ -1782,13 +1772,8 @@ public final class EditFile extends JFrame {
             // If overwrite is not allowed - return
             // ------------------------------------
             if (!properties.getProperty("OVERWRITE_FILE").equals("Y")) {
-                row = "Info: Member  " + libraryName
-                        + "/"
-                        + fileName
-                        + "("
-                        + memberName
-                        + ")   cannot be overwtitten. "
-                        + " Overwriting files is not allowed.";
+                row = "Info: Member  " + libraryName + "/" + fileName + "(" + memberName
+                        + ")   cannot be overwtitten. " + " Overwriting files is not allowed.";
                 mainWindow.msgVector.add(row);
                 mainWindow.showMessages();
                 return "ERROR";
@@ -1899,13 +1884,8 @@ public final class EditFile extends JFrame {
 
                     } catch (Exception exc) {
                         exc.printStackTrace();
-                        row = "Error: 1 Data cannot be written to the source member  " + libraryName
-                                + "/"
-                                + fileName
-                                + "("
-                                + memberName
-                                + ")  -  "
-                                + exc.toString();
+                        row = "Error: 1 Data cannot be written to the source member  " + libraryName + "/"
+                                + fileName + "(" + memberName + ")  -  " + exc.toString();
                         mainWindow.msgVector.add(row);
                         mainWindow.showMessages();
                         msgText = "ERROR";
@@ -1931,13 +1911,8 @@ public final class EditFile extends JFrame {
                 exce.printStackTrace();
             }
             exc.printStackTrace();
-            row = "Error: 3 Data cannot be written to the source member  " + libraryName
-                    + "/"
-                    + fileName
-                    + "("
-                    + memberName
-                    + ")  -  "
-                    + exc.toString();
+            row = "Error: 3 Data cannot be written to the source member  " + libraryName + "/" + fileName
+                    + "(" + memberName + ")  -  " + exc.toString();
             mainWindow.msgVector.add(row);
             mainWindow.showMessages();
             return "ERROR"; // Must not continue in order not to lock an object
