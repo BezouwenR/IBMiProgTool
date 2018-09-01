@@ -552,13 +552,16 @@ public class MainWindow extends JFrame {
             connectReconnectButton.setForeground(DIM_BLUE);
 
             chkConn = new CheckConnection(remoteServer);
-
+            
             printDebugCheckBox.setSelected(properties.getProperty("PRINT_DEBUG").isEmpty() ? false : true);
-            if (printDebugCheckBox.isSelected()) {
-                printDebugCheckBox.setToolTipText("Print debug messages.");
-            } else {
-                printDebugCheckBox.setToolTipText("Don't print debug messages.");
-            }
+
+            /// Force checking connection in background
+            printDebugCheckBox.setSelected(true);
+            ///if (printDebugCheckBox.isSelected()) {
+            ///    printDebugCheckBox.setToolTipText("Print debug messages.");
+            ///} else {
+            ///    printDebugCheckBox.setToolTipText("Don't print debug messages.");
+            ///}
 
             // Text field to specify IBM i host IP address or domain name
             hostTextField.setText(properties.getProperty("HOST"));
@@ -721,7 +724,7 @@ public class MainWindow extends JFrame {
                         .addComponent(hostLabel)
                         .addComponent(hostTextField)
                         .addComponent(connectReconnectButton)
-                        .addComponent(printDebugCheckBox)
+                        //.addComponent(printDebugCheckBox)
                         .addGap(5)
                         .addComponent(libraryPatternLabel)
                         .addComponent(libraryPatternTextField)
@@ -755,7 +758,7 @@ public class MainWindow extends JFrame {
                         .addComponent(hostLabel)
                         .addComponent(hostTextField)
                         .addComponent(connectReconnectButton)
-                        .addComponent(printDebugCheckBox)
+                        //.addComponent(printDebugCheckBox)
                         .addGap(5)
                         .addComponent(libraryPatternLabel)
                         .addComponent(libraryPatternTextField)
