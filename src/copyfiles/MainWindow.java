@@ -198,6 +198,7 @@ public class MainWindow extends JFrame {
 
     AS400 remoteServer;
     CheckConnection chkConn;
+
     String language = "cs-CZ";
 
     JLabel userNameLabel = new JLabel("User name:");
@@ -206,8 +207,18 @@ public class MainWindow extends JFrame {
     JLabel hostLabel = new JLabel("IBM i server:");
     JTextField hostTextField = new JTextField();
 
-    JLabel disksLabel = new JLabel("Windows disks:");
-    JComboBox<String> disksComboBox = new JComboBox<>();
+    JButton connectReconnectButton = new JButton("Connect/Reconnect");
+
+    JCheckBox printDebugCheckBox = new JCheckBox();
+
+    JLabel libraryPatternLabel = new JLabel("LIB:");
+    JTextField libraryPatternTextField = new JTextField();
+
+    JLabel filePatternLabel = new JLabel("FILE:");
+    JTextField filePatternTextField = new JTextField();
+
+    JLabel memberPatternLabel = new JLabel("MBR:");
+    JTextField memberPatternTextField = new JTextField();
 
     ArrayList<String> charsets;
     String pcCharset;
@@ -310,14 +321,8 @@ public class MainWindow extends JFrame {
     JLabel overwriteOutputFileLabel = new JLabel("Overwrite data:");
     JCheckBox overwriteOutputFileCheckBox = new JCheckBox();
 
-    JLabel libraryPatternLabel = new JLabel("LIB:");
-    JTextField libraryPatternTextField = new JTextField();
-
-    JLabel filePatternLabel = new JLabel("FILE:");
-    JTextField filePatternTextField = new JTextField();
-
-    JLabel memberPatternLabel = new JLabel("MBR:");
-    JTextField memberPatternTextField = new JTextField();
+    JLabel disksLabel = new JLabel("Windows disks:");
+    JComboBox<String> disksComboBox = new JComboBox<>();
 
     JLabel leftPathLabel = new JLabel("Local Path:");
     JComboBox<String> leftPathComboBox = new JComboBox<>();
@@ -327,8 +332,6 @@ public class MainWindow extends JFrame {
     JComboBox<String> rightPathComboBox = new JComboBox<>();
 
     JScrollPane scrollMessagePane = new JScrollPane(messageList);
-
-    JButton connectReconnectButton = new JButton("Connect/Reconnect");
 
     Compile compile;
 
@@ -514,6 +517,7 @@ public class MainWindow extends JFrame {
                 properties.setProperty("PC_CHARSET", "*DEFAULT");
                 properties.setProperty("SOURCE_RECORD_PREFIX", ""); // or "Y"
                 properties.setProperty("OVERWRITE_FILE", ""); // or "Y"
+                properties.setProperty("PRINT_DEBUG", ""); // or "Y"
                 properties.setProperty("LIBRARY_PATTERN", "");
                 properties.setProperty("FILE_PATTERN", "");
                 properties.setProperty("MEMBER_PATTERN", "");
@@ -546,6 +550,15 @@ public class MainWindow extends JFrame {
 
             // Set color to button text
             connectReconnectButton.setForeground(DIM_BLUE);
+
+            chkConn = new CheckConnection(remoteServer);
+
+            printDebugCheckBox.setSelected(properties.getProperty("PRINT_DEBUG").isEmpty() ? false : true);
+            if (printDebugCheckBox.isSelected()) {
+                printDebugCheckBox.setToolTipText("Print debug messages.");
+            } else {
+                printDebugCheckBox.setToolTipText("Don't print debug messages.");
+            }
 
             // Text field to specify IBM i host IP address or domain name
             hostTextField.setText(properties.getProperty("HOST"));
@@ -708,6 +721,7 @@ public class MainWindow extends JFrame {
                         .addComponent(hostLabel)
                         .addComponent(hostTextField)
                         .addComponent(connectReconnectButton)
+                        .addComponent(printDebugCheckBox)
                         .addGap(5)
                         .addComponent(libraryPatternLabel)
                         .addComponent(libraryPatternTextField)
@@ -741,6 +755,7 @@ public class MainWindow extends JFrame {
                         .addComponent(hostLabel)
                         .addComponent(hostTextField)
                         .addComponent(connectReconnectButton)
+                        .addComponent(printDebugCheckBox)
                         .addGap(5)
                         .addComponent(libraryPatternLabel)
                         .addComponent(libraryPatternTextField)
@@ -1136,6 +1151,43 @@ public class MainWindow extends JFrame {
         // -------------------------------
         connectReconnectButton.addActionListener(ae -> {
             connectReconnectRefresh();
+        });
+        //
+        // Print debug info check box - Yes = "Y", No = ""
+        // -----------------------------------------------
+        printDebugCheckBox.addItemListener(il -> {
+            Object source = il.getSource();
+            if (source == printDebugCheckBox) {
+                String check;
+                if (printDebugCheckBox.isSelected()) {
+                    check = "Y";
+                    // Check connection and keep connection alive in background.
+                    chkConn = new CheckConnection(remoteServer);
+                    System.out.println("chkConn.execute()");
+                    chkConn.execute();
+                } else {
+                    check = "";
+                    // Stop checking connection.
+                    //chkConn = new CheckConnection(remoteServer);
+                    System.out.println("chkConn.cancel()");
+                    if (chkConn != null) {
+                        chkConn.cancel(true);
+                        chkConn = null;
+                    }
+                }
+                // Create the updated text file in directory "paramfiles"
+                try {
+                    infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+                    properties.load(infile);
+                    infile.close();
+                    outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+                    properties.setProperty("PRINT_DEBUG", check);
+                    properties.store(outfile, PROP_COMMENT);
+                    outfile.close();
+                } catch (Exception exc) {
+                    exc.printStackTrace();
+                }
+            }
         });
         //
         // PC charset combo box
@@ -1897,9 +1949,19 @@ public class MainWindow extends JFrame {
         // Remove setting last element of messages
         scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
 
-        // Check connection and keep connection alive in background.
-        chkConn = new CheckConnection(remoteServer);
-        chkConn.execute();
+        if (printDebugCheckBox.isSelected()) {
+            // Check connection and keep connection alive in background.
+            chkConn = new CheckConnection(remoteServer);
+            System.out.println("chkConn.execute()");
+            chkConn.execute();
+        } else {
+            // Stop checking connection.
+            System.out.println("chkConn.cancel()");
+            if (chkConn != null) {
+                chkConn.cancel(true);
+                chkConn = null;
+            }
+        }
 
         return true;
     }
@@ -2761,7 +2823,7 @@ public class MainWindow extends JFrame {
             rightPathString = correctRightPathString(rightPathString);
             IFSFile ifsFile = new IFSFile(remoteServer, rightPathString);
             try {
-                remoteServer.connectService(AS400.FILE);
+                /// remoteServer.connectService(AS400.FILE);
                 fileName = ifsFile.getName();
                 if (rightPathString.endsWith(".FILE") && ifsFile.getSubtype().equals("SAVF")) {
                     String bareFileName = fileName.substring(0, fileName.indexOf(".FILE"));
@@ -3370,18 +3432,21 @@ public class MainWindow extends JFrame {
             int delay = 10000;
             // Endless loop
             while (true) {
+                boolean isCancelled = isCancelled();
+                // System.out.println("isCancelled: " + isCancelled);
+                // When cancel(true) was issued on this object stop running
+                if (isCancelled) {
+                    return null;
+                }
                 // Ping to the server for host server services.
                 ping_FILE = pingObject.ping(AS400.FILE);
                 ping_COMMAND = pingObject.ping(AS400.COMMAND);
                 ping_RECORDACCESS = pingObject.ping(AS400.RECORDACCESS);
                 ping_PRINT = pingObject.ping(AS400.PRINT);
-                
+
                 while (!ping_FILE) {
-                    //row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting FILE service.";
-                    //msgVector.add(row);
-                    //showMessages(noNodes);
                     try {
-                        remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
+                        System.out.println("FILE");
                         // Try to connect service again
                         remoteServer.connectService(AS400.FILE);
                         row = "Comp: FILE service reconnected.";
@@ -3403,11 +3468,8 @@ public class MainWindow extends JFrame {
                 }
 
                 while (!ping_COMMAND) {
-                    //row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting COMMAND service.";
-                    //msgVector.add(row);
-                    //showMessages(noNodes);
                     try {
-                        remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
+                        System.out.println("COMMAND");
                         // Try to connect service again
                         remoteServer.connectService(AS400.COMMAND);
                         row = "Comp: COMMAND service reconnected.";
@@ -3429,11 +3491,8 @@ public class MainWindow extends JFrame {
                 }
 
                 while (!ping_RECORDACCESS) {
-                    //row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting RECORDACCESS service.";
-                    //msgVector.add(row);
-                    //showMessages(noNodes);
                     try {
-                        remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
+                        System.out.println("RECORDACCESS");
                         // Try to connect service again
                         remoteServer.connectService(AS400.RECORDACCESS);
                         row = "Comp: RECORDACCESS service reconnected.";
@@ -3455,11 +3514,8 @@ public class MainWindow extends JFrame {
                 }
 
                 while (!ping_PRINT) {
-                    //row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting PRINT service.";
-                    //msgVector.add(row);
-                    //showMessages(noNodes);
                     try {
-                        remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
+                        System.out.println("PRINT");
                         // Try to connect service again
                         remoteServer.connectService(AS400.PRINT);
                         row = "Comp: PRINT service reconnected.";
@@ -3479,8 +3535,11 @@ public class MainWindow extends JFrame {
                         continue;
                     }
                 }
+                try {
+                    Thread.sleep(delay);
+                } catch (InterruptedException iex) {
+                }
             }
-            //return null;
         }
     }
 

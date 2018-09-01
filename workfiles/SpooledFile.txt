@@ -1,17 +1,17 @@
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/INFLEF_PGM       PASSIST2   08/31/18 12:45:21        Page      1
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/ALIASDQ          PASSIST2   09/01/18 12:41:40        Page      1
 
   Command  . . . . . . . . . . . . :   CRTBNDRPG
     Issued by  . . . . . . . . . . :     VZUPKA
-  Program  . . . . . . . . . . . . :   INFLEF_PGM
+  Program  . . . . . . . . . . . . :   ALIASDQ
     Library  . . . . . . . . . . . :     VZRPG72
   Text 'description' . . . . . . . :   *SRCMBRTXT
 
-  Source Member  . . . . . . . . . :   INFLEF_PGM
+  Source Member  . . . . . . . . . :   ALIASDQ
   Source File  . . . . . . . . . . :   QRPGLESRC
     Library  . . . . . . . . . . . :     VZRPG72
     CCSID  . . . . . . . . . . . . :     870
   Text 'description' . . . . . . . :
-  Last Change  . . . . . . . . . . :   07/21/18  17:07:18
+  Last Change  . . . . . . . . . . :   08/29/18  11:35:23
 
   Generation severity level  . . . :   10
   Default activation group . . . . :   *YES
@@ -40,223 +40,67 @@
   Generate program interface . . . :   *NO
   Include directory  . . . . . . . :
   Preprocessor options . . . . . . :   *NONE
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/INFLEF_PGM       PASSIST2   08/31/18 12:45:21        Page      2
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/ALIASDQ          PASSIST2   09/01/18 12:41:40        Page      2
 
 Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
 Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
 
                           S o u r c e   L i s t i n g
 
-     1  ***************************************************************************                              000000     000100
-     2  *   Program předává soubor proceduře jako parametr                                                       000000     000200
-     3  *   Ve volném formátu mohou být definice dat a souborů promíchány                                        000000     000300
-     4  ***************************************************************************                              000000     000400
-     5   ctl-opt dftactgrp(*no) alwnull(*usrctl);                                                                000000     000500
-        *--------------------------------------------------------------------*
-        * Compiler Options in Effect:                                        *
-        *--------------------------------------------------------------------*
-        *  Text 'description' . . . . . . . :                                *
-
-        *  Generation severity level  . . . :   10                           *
-        *  Default activation group . . . . :   *NO                          *
-        *  Compiler options . . . . . . . . :   *XREF      *GEN              *
-        *                                       *NOSECLVL  *SHOWCPY          *
-        *                                       *EXPDDS    *EXT              *
-        *                                       *NOSHOWSKP *NOSRCSTMT        *
-        *                                       *DEBUGIO   *UNREF            *
-        *                                       *NOEVENTF                    *
-        *  Optimization level . . . . . . . :   *NONE                        *
-        *  Source listing indentation . . . :   *NONE                        *
-        *  Type conversion options  . . . . :   *NONE                        *
-        *  Sort sequence  . . . . . . . . . :   *HEX                         *
-        *  Language identifier  . . . . . . :   *JOBRUN                      *
-        *  User profile . . . . . . . . . . :   *USER                        *
-        *  Authority  . . . . . . . . . . . :   *LIBCRTAUT                   *
-        *  Truncate numeric . . . . . . . . :   *YES                         *
-        *  Fix numeric  . . . . . . . . . . :   *NONE                        *
-        *  Allow null values  . . . . . . . :   *USRCTL                      *
-        *  Storage model . . .  . . . . . . :   *SNGLVL                      *
-        *  Binding directory from Command . :   *NONE                        *
-        *  Binding directory from Source  . :   *NONE                        *
-        *  Activation group . . . . . . . . :   *STGMDL                      *
-        *  Enable performance collection  . :   *PEP                         *
-        *  Profiling data . . . . . . . . . :   *NOCOL                       *
-        *  Generate program interface . . . :   *NO                          *
-        *--------------------------------------------------------------------*
+     1  **************************************************************************                               000000     000100
+     2  *   ALIAS u popisu datové struktury s klíčovým slovem QUALIFIED.                                         000000     000200
+     3  *   U pole NAZEV v souboru CENIKP je zadáno ALIAS(NAZEV_MATERIALU).                                      000000     000300
+     4  **************************************************************************                               000000     000400
 
 
-     6   dcl-f QPRINT printer(120);                                                                              000000     000600
-     7                                                                                                           000000     000700
-     8  // Začlením definice šablon a prototypů pohromadě pro soubory i data                                     000000     000800
-     9  /define FILE_DEFINITIONS                                                                                 000000     000900
-    10  /COPY INFILE_DEF                                                                                         000000     001000
-        *--------------------------------------------------------------------------------------------*
-        * RPG member name  . . . . . :  INFILE_DEF                                                   *                     1
-        * External name  . . . . . . :  VZRPG72/QRPGLESRC(INFILE_DEF)                                *                     1
-        * Last change  . . . . . . . :  05/22/14  17:55:11                                           *                     1
-        *--------------------------------------------------------------------------------------------*
-    11+ ***************************************************************************                              140522    1000100
-    12+ *   /COPY člen s definicemi šablon (template)                                                            140522    1000200
-    13+ *   pro soubor a s ním sdružené proměnné                                                                 140522    1000300
-    14+ ***************************************************************************                              140522    1000400
-    15+ /if defined(FILE_DEFINITIONS)                                                                            140522    1000500
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/INFLEF_PGM       PASSIST2   08/31/18 12:45:21        Page      3
-
-Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
-Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
-    16+                                                                                                          140522    1000600
-    17+ // Šablona pro typ souboru "INFILE"                                                                      140522    1000700
-    18+Finfile_t  if   e             disk    template block(*yes)                                                140522    1000800
-    19+F                                     extdesc('VZRPGIV/STAVYP')                                           140522    1000900
-    20+ /eof                                                                                                     140522    1001000
-    21  /undefine FILE_DEFINITIONS                                                                               000000     001100
-    22  /define DATA_DEFINITIONS                                                                                 000000     001200
-    23  /COPY INFILE_DEF                                                                                         000000     001300
-        *--------------------------------------------------------------------------------------------*
-        * RPG member name  . . . . . :  INFILE_DEF                                                   *                     2
-        * External name  . . . . . . :  VZRPG72/QRPGLESRC(INFILE_DEF)                                *                     2
-        * Last change  . . . . . . . :  05/22/14  17:55:11                                           *                     2
-        *--------------------------------------------------------------------------------------------*
-    24+ ***************************************************************************                              140522    2000100
-    25+ *   /COPY člen s definicemi šablon (template)                                                            140522    2000200
-    26+ *   pro soubor a s ním sdružené proměnné                                                                 140522    2000300
-    27+ ***************************************************************************                              140522    2000400
-    28+ /if defined(FILE_DEFINITIONS)                                                                            140522    2000500
-            LINES EXCLUDED: 5
-    29+ /endif                                                                                                   140522    2001100
-    30+                                                                                                          140522    2001200
-    31+ /if defined(DATA_DEFINITIONS)                                                                            140522    2001300
-    32+                                                                                                          140522    2001400
-    33+ // Šablona pro proměnné sdružené se souborem INFILE                                                      140522    2001500
+     5   dcl-f cenikp;                                                                                           000000     000500
         *--------------------------------------------------------------------------------------------*
         *                               RPG name         External name                               *
-        * File name. . . . . . . . . :  INFILE_T         VZRPGIV/STAVYP                              *
-        * Record format(s) . . . . . :  STAVYPF0         STAVYPF0                                    *
+        * File name. . . . . . . . . :  CENIKP           VZRPG72/CENIKP                              *
+        * Record format(s) . . . . . :  CENIKPF0         CENIKPF0                                    *
         *--------------------------------------------------------------------------------------------*
 
 
-    34+D infileVars_t    ds                  qualified template                                                  140522    2001600
-    35+D    extfile                    21a                                                                       140522    2001700
-    36+D    extmbr                     10a                                                                       140522    2001800
-    37+                                                                                                          140522    2001900
-    38+ // Prototyp procedury zpracující soubor INFILE                                                           140522    2002000
-    39+D proc_infile     pr                                                                                      140522    2002100
-    40+D    theFile                          likefile(infile_t)                                                  140522    2002200
-    41+D    kwVars                           likeds(infileVars_t)                                                140522    2002300
-    42+D                                     options(*nullind)                                                   140522    2002400
-    43+ /eof                                                                                                     140522    2002500
-    44  /undefine DATA_DEFINITIONS                                                                               000000     001400
-    45                                                                                                           000000     001500
-    46  // Definuji soubor pomocí LIKEFILE, abych umožnil jeho předání                                           000000     001600
-    47  // jako parametru do procedury "proc_infile".                                                            000000     001700
+     6   dcl-ds dsCenik ext ALIAS QUALIFIED extname('CENIKP': *input);                                           000000     000600
+     7      NAZEV_MAT extfld('NAZEV_MATERIALU');   // přejmenuji ALIAS jméno                                     000000     000700
+     8   end-ds;                                                                                                 000000     000800
+        *--------------------------------------------------------------------------------------------*                     1
+        * Data structure . . . . . . :  DSCENIK                                                      *                     1
+        * External format  . . . . . :  CENIKPF0 : VZRPG72/CENIKP                                    *                     1
+        *--------------------------------------------------------------------------------------------*                     1
+     9=D MATER                          5A                                        Cislo mater.                             1000001
+    10=D CENA                          10P 2                                      Cena                                     1000002
+    11=D NAZEV_MAT                     50A   EXTFLD (NAZEV_MATERIALU)             Nazev materialu                          1000003
+    12                                                                                                           000000     000900
 
 
-    48   dcl-f infile likefile(infile_t)                                                                         000000     001800
-    49                extfile(infileVars.extfile)                                                                000000     001900
-    50                extmbr(infileVars.extmbr)                                                                  000000     002000
-    51                usropn;                                                                                    000000     002100
-    52  // Definuji sdružené proměnné jako podpole datové struktury,                                             000000     002200
-    53  // aby mohly být předány proceduře jako jediný parametr                                                  000000     002300
+    13=ICENIKPF0                                                                                                           2000001
+        *--------------------------------------------------------------------------------------------*                     2
+        * RPG record format  . . . . :  CENIKPF0                                                     *                     2
+        * External format  . . . . . :  CENIKPF0 : VZRPG72/CENIKP                                    *                     2
+        *--------------------------------------------------------------------------------------------*                     2
+    14=I                             A    1    5  MATER                           Cislo mater.                             2000002
+    15=I                             P    6   11 2CENA                            Cena                                     2000003
+    16=I                             A   12   61  NAZEV                           Nazev materialu                          2000004
 
 
-    54   dcl-ds infileVars likeds(infileVars_t);                                                                 000000     002400
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/INFLEF_PGM       PASSIST2   08/31/18 12:45:21        Page      4
-
-Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
-Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
-    55  // Definuji datovou strukturu s poli souboru STAVYP,                                                     000000     002500
-    56  // protože operace READ v podproceduře musí použít datovou strukturu                                     000000     002600
-    57   dcl-ds inpRec likerec(STAVYPF0);                                                                        000000     002700
-    58                                                                                                           000000     002800
-*RNF2318 00      6 000600  Overflow indicator *INOA is assigned to PRINTER file
-                           QPRINT.
-
-
-    59   infileVars.extfile = 'VZRPGIV/STAVYP'; // naplním konkrétní jména souboru a členu                       000000     002900
-    60   infileVars.extmbr  = 'STAVYP';                                                                          000000     003000
-    61                                                                                                           000000     003100
-    62   proc_infile (infile : infileVars);     // provedu proceduru proc_infile                                 000000     003200
-    63                                                                                                           000000     003300
-    64   *inlr = *on;                           // a končím                                                      000000     003400
-    65                                                                                                           000000     003500
-    66 O*.............N01N02N03Field+++++++++YB.End++PConstant/editword/DTformat++Comments++++++++++++     ..... 000000     003600
-
-
-    67 OQPRINT    e            data           1                                                                  000000     003700
-    68 P*ame+++++++++++..T...................Keywords+++++++++++++++++++++++++++++Comments++++++++++++     ..... 000000     003800
-    69 O                       inpRec.ZAVOD                                                                      000000     003900
-    70 O                       inpRec.SKLAD        +1                                                            000000     004000
-    71 O                       inpRec.MATER        +1                                                            000000     004100
-    72 O                       inpRec.MNOZ   P     +1                                                            000000     004200
-    73                                                                                                           000000     004300
-    74  //------------------------------------------------------------------------                               000000     004400
-    75  // procedura proc_file zpracující soubor INFILE                                                          000000     004500
-    76  //------------------------------------------------------------------------                               000000     004600
-    77   dcl-proc proc_infile;                                                                                   000000     004700
-    78  // procedura má dva parametry:                                                                           000000     004800
-    79  // - soubor                                                                                              000000     004900
-    80  // - datovou strukturu obsahující proměnné sdružené se souborem                                          000000     005000
-
-
-    81      dcl-pi *n;                          // rozhraní procedury bez jména                                  000000     005100
-    82      soubor  likefile(infile_t);                      // soubor                                           000000     005200
-    83      kwVars  likeds(infileVars_t) options(*nullind);  // sdružené proměnné                                000000     005300
-    84      end-pi;                                                                                              000000     005400
-    85                                                                                                           000000     005500
-
-
-    86      if not %open(soubor);                                                                      B01       000000     005600
-    87        // modifikujeme přijaté proměnné "infileVars", které použije operace OPEN                          000000     005700
-    88        kwVars.extfile = 'VZRPG72/STAVYP';                                                        01       000000     005800
-    89        kwVars.extmbr = '*FIRST';                                                                 01       000000     005900
-    90        open soubor;  // operace OPEN otevře soubor VZRPG72/STAVYP(*FIRST)                        01       000000     006000
-    91      endif;                                                                                     E01       000000     006100
-    92      read soubor inpRec;  // operace v podproceduře musí použít datovou strukturu                         000000     006200
-    93      dow not %eof;                                                                              B01       000000     006300
-    94         except data;                                                                             01       000000     006400
-    95         read soubor inpRec;                                                                      01       000000     006500
-    96      enddo;                                                                                     E01       000000     006600
-    97   end-proc proc_infile;                                                                                   000000     006700
+    17   read cenikp dsCenik;                                                                                    000000     001000
+    18   dsCenik.NAZEV_MAT = 'Materiál s DS QUALIFIED';                                                          000000     001100
+    19   dsply dsCenik.NAZEV_MAT;                                                                                000000     001200
+    20   *inlr = *on;                                                                                            000000     001300
 
        * * * * *   E N D   O F   S O U R C E   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/INFLEF_PGM       PASSIST2   08/31/18 12:45:21        Page      5
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/ALIASDQ          PASSIST2   09/01/18 12:41:40        Page      3
 
           A d d i t i o n a l   D i a g n o s t i c   M e s s a g e s
 
  Msg id  Sv Number Seq     Message text
-*RNF7066 00     48 001800  Record-Format STAVYPF0 not used for input or output.
-*RNF7066 00     82 005200  Record-Format STAVYPF0 not used for input or output.
-*RNF7086 00     48 001800  RPG handles blocking for file INFILE. INFDS is updated only
-                           when blocks of data are transferred.
-*RNF7086 00     82 005200  RPG handles blocking for file SOUBOR. INFDS is updated only
+*RNF7066 00      5 000500  Record-Format CENIKPF0 not used for input or output.
+*RNF7086 00      5 000500  RPG handles blocking for file CENIKP. INFDS is updated only
                            when blocks of data are transferred.
 
  * * * * *   E N D   O F   A D D I T I O N A L   D I A G N O S T I C   M E S S A G E S   * * * * *
-
-
-                 O u t p u t   B u f f e r   P o s i t i o n s
-
-Line   Start End   Field or Constant
-
-Number Pos   Pos
-    69     1     2 INPREC.ZAVOD
-    70     4     5 INPREC.SKLAD
-    71     7    11 INPREC.MATER
-    72    13    24 INPREC.MNOZ
-
- * * * * *   E N D   O F   O U T P U T   B U F F E R   P O S I T I O N   *  * * * *
-
-
-                            / C o p y   M e m b e r s
-
-Line   Src  RPG name   <-------- External name -------> CCSID  <- Last change ->
-
-Number Id              Library    File       Member            Date     Time
-    10    1 INFILE_DEF VZRPG72    QRPGLESRC  INFILE_DEF   870  05/22/14 17:55:11
-    23    2 INFILE_DEF VZRPG72    QRPGLESRC  INFILE_DEF   870  05/22/14 17:55:11
-
-         * * * * *   E N D   O F   / C O P Y   M E M B E R S   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/INFLEF_PGM       PASSIST2   08/31/18 12:45:21        Page      6
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/ALIASDQ          PASSIST2   09/01/18 12:41:40        Page      4
 
                           C r o s s   R e f e r e n c e
 
@@ -264,54 +108,28 @@ Number Id              Library    File       Member            Date     Time
 
          File              Device             References (D=Defined)
            Record
-*RNF7031 INFILE            DISK                   48D     62
-           STAVYPF0                               48D
-         INFILE_T          DISK                   18D     40      82
-                           TEMPLATE
-           STAVYPF0                               18D     48      57      82
-         QPRINT            PRINTER                 6D     67
+         CENIKP            DISK                    5D     17
+           CENIKPF0                                5D     13
 
       Global Field References:
 
          Field             Attributes         References (D=Defined M=Modified)
-         *INLR             N(1)                   64M
-         DATA              EXCEPT                 67D     94
-         INFILEVARS        DS(31)                 49      50      54D     59M
-                                                  60M     62
-           EXTFILE         A(21)                  49      59
-           EXTMBR          A(10)                  50      60
-         INFILEVARS_T      DS(31)                 34D     41      54      83
-                           TEMPLATE
-*RNF7031   EXTFILE         A(21)                  35D
-*RNF7031   EXTMBR          A(10)                  36D
-         INPREC            DS(15)                 57D     69      70      71
-                                                  72      92M     95M
-           MATER           A(5)                   57D     71
-           MNOZ            P(10,2)                57D     72
-           SKLAD           A(2)                   57D     70
-           ZAVOD           A(2)                   57D     69
-         PROC_INFILE       PROTOTYPE              39D     62M     77      97
-      Field References for subprocedure PROC_INFILE
-
-         File              Device             References (D=Defined)
-           Record
-         SOUBOR            DISK                   82D     86      90      92
-                                                  95
-           STAVYPF0                               82D
-
-         Field             Attributes         References (D=Defined M=Modified)
-         KWVARS            DS(31)                 83D     88M     89M
-                           BASED(_QRNL_NUL+)
-           EXTFILE         A(21)                  88
-           EXTMBR          A(10)                  89
+         *INLR             N(1)                   20M
+*RNF7031 CENA              P(10,2)                15D
+         DSCENIK           DS(61)                  6D     17M     18M     19
+*RNF7031   CENA            P(10,2)                10D
+*RNF7031   MATER           A(5)                    9D
+           NAZEV_MAT       A(50)                  11D     18      19
+*RNF7031 MATER             A(5)                   14D
+*RNF7031 NAZEV             A(50)                  16D
 
       Indicator References:
 
          Indicator                            References (D=Defined M=Modified)
-         LR                                       64M
+         LR                                       20M
 
        * * * * *   E N D   O F   C R O S S   R E F E R E N C E   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/INFLEF_PGM       PASSIST2   08/31/18 12:45:21        Page      7
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/ALIASDQ          PASSIST2   09/01/18 12:41:40        Page      5
 
                       E x t e r n a l   R e f e r e n c e s
 
@@ -328,40 +146,38 @@ Number Id              Library    File       Member            Date     Time
          No references in the source.
 
    * * * * *   E N D   O F   E X T E R N A L   R E F E R E N C E S   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/INFLEF_PGM       PASSIST2   08/31/18 12:45:21        Page      8
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/ALIASDQ          PASSIST2   09/01/18 12:41:40        Page      6
 
                           M e s s a g e   S u m m a r y
 
  Msg id  Sv Number Message text
-*RNF2318 00      1 No overflow indicator is specified; indicator assigned and
-                   automatic skip to 06 generated.
-*RNF7031 00      3 The name or indicator is not referenced.
-*RNF7066 00      2 Record-Format name of Externally-Described file is not used.
-*RNF7086 00      2 RPG handles blocking for the file. INFDS is updated only when
+*RNF7031 00      5 The name or indicator is not referenced.
+*RNF7066 00      1 Record-Format name of Externally-Described file is not used.
+*RNF7086 00      1 RPG handles blocking for the file. INFDS is updated only when
                    blocks of data are transferred.
 
        * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/INFLEF_PGM       PASSIST2   08/31/18 12:45:21        Page      9
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/ALIASDQ          PASSIST2   09/01/18 12:41:40        Page      7
 
                             F i n a l   S u m m a r y
 
   Message Totals:
 
-    Information  (00) . . . . . . . :        8
+    Information  (00) . . . . . . . :        7
     Warning      (10) . . . . . . . :        0
     Error        (20) . . . . . . . :        0
     Severe Error (30+)  . . . . . . :        0
     ---------------------------------  -------
-    Total . . . . . . . . . . . . . :        8
+    Total . . . . . . . . . . . . . :        7
 
 
   Source Totals:
 
-    Records . . . . . . . . . . . . :       97
-    Specifications  . . . . . . . . :       40
+    Records . . . . . . . . . . . . :       20
+    Specifications  . . . . . . . . :       15
     Data records  . . . . . . . . . :        0
-    Comments  . . . . . . . . . . . :       31
+    Comments  . . . . . . . . . . . :        4
 
          * * * * *   E N D   O F   F I N A L   S U M M A R Y   * * * * *
-Program INFLEF_PGM placed in library VZRPG72. 00 highest severity. Created on 08/31/18 at 12:45:21.
+Program ALIASDQ placed in library VZRPG72. 00 highest severity. Created on 09/01/18 at 12:41:41.
           * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *
