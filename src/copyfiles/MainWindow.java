@@ -1877,9 +1877,9 @@ public class MainWindow extends JFrame {
             scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
 
             // Check connection and keep connection alive in background.
-            chkConn = new CheckConnection(remoteServer);
-            chkConn.execute();
-            
+///            chkConn = new CheckConnection(remoteServer);
+///            chkConn.execute();
+
             return true;
         }
         //
@@ -1955,7 +1955,7 @@ public class MainWindow extends JFrame {
                 // Get list of objects in the directory
                 Stream<Path> stream = Files.list(pathParam);
                 // Process level 2 of objects (children of node level 1 - the root)
-                
+
                 stream.sorted().forEach(pathLevel2 -> {
                     Path relativePathLevel2;
                     // Eliminate directories whose names begin with a dot
@@ -3367,76 +3367,120 @@ public class MainWindow extends JFrame {
         @Override
         @SuppressWarnings("UseSpecificCatch")
         public Void doInBackground() {
+            int delay = 10000;
+            // Endless loop
             while (true) {
-                // Ping to the server for FILE and COMMAND services.
+                // Ping to the server for host server services.
                 ping_FILE = pingObject.ping(AS400.FILE);
                 ping_COMMAND = pingObject.ping(AS400.COMMAND);
                 ping_RECORDACCESS = pingObject.ping(AS400.RECORDACCESS);
                 ping_PRINT = pingObject.ping(AS400.PRINT);
-                if (!ping_FILE) {
-                    row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting FILE service.";
-                    msgVector.add(row);
-                    showMessages(noNodes);
+                
+                while (!ping_FILE) {
+                    //row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting FILE service.";
+                    //msgVector.add(row);
+                    //showMessages(noNodes);
                     try {
                         remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
+                        // Try to connect service again
                         remoteServer.connectService(AS400.FILE);
+                        row = "Comp: FILE service reconnected.";
+                        msgVector.add(row);
+                        showMessages(noNodes);
+                        break; // break the loop when the connection attempt is successful
                     } catch (Exception exc) {
                         row = "Error: getting new connection to FILE service: " + exc.toString();
                         msgVector.add(row);
                         showMessages(noNodes);
-                        exc.printStackTrace();
+                        //exc.printStackTrace();
+                        // Delay in milliseconds before a new connection attempt
+                        try {
+                            Thread.sleep(delay);
+                        } catch (InterruptedException iex) {
+                        }
                         continue;
                     }
                 }
 
-                if (!ping_COMMAND) {
-                    row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting COMMAND service.";
-                    msgVector.add(row);
-                    showMessages(noNodes);
+                while (!ping_COMMAND) {
+                    //row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting COMMAND service.";
+                    //msgVector.add(row);
+                    //showMessages(noNodes);
                     try {
                         remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
+                        // Try to connect service again
                         remoteServer.connectService(AS400.COMMAND);
+                        row = "Comp: COMMAND service reconnected.";
+                        msgVector.add(row);
+                        showMessages(noNodes);
+                        break; // break the loop when the connection attempt is successful
                     } catch (Exception exc) {
                         row = "Error: getting new connection to COMMAND service: " + exc.toString();
                         msgVector.add(row);
                         showMessages(noNodes);
-                        exc.printStackTrace();
+                        //exc.printStackTrace();
+                        // Delay in milliseconds before a new connection attempt
+                        try {
+                            Thread.sleep(delay);
+                        } catch (InterruptedException iex) {
+                        }
                         continue;
                     }
                 }
 
-                if (!ping_RECORDACCESS) {
-                    row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting RECORDACCESS service.";
-                    msgVector.add(row);
-                    showMessages(noNodes);
+                while (!ping_RECORDACCESS) {
+                    //row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting RECORDACCESS service.";
+                    //msgVector.add(row);
+                    //showMessages(noNodes);
                     try {
                         remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
+                        // Try to connect service again
                         remoteServer.connectService(AS400.RECORDACCESS);
+                        row = "Comp: RECORDACCESS service reconnected.";
+                        msgVector.add(row);
+                        showMessages(noNodes);
+                        break; // break the loop when the connection attempt is successful
                     } catch (Exception exc) {
                         row = "Error: getting new connection to RECORDACCESS service: " + exc.toString();
                         msgVector.add(row);
                         showMessages(noNodes);
-                        exc.printStackTrace();
+                        //exc.printStackTrace();
+                        // Delay in milliseconds before a new connection attempt
+                        try {
+                            Thread.sleep(delay);
+                        } catch (InterruptedException iex) {
+                        }
                         continue;
                     }
                 }
 
-                if (!ping_PRINT) {
-                    row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting PRINT service.";
-                    msgVector.add(row);
-                    showMessages(noNodes);
+                while (!ping_PRINT) {
+                    //row = "Error: Ping to server  " + properties.getProperty("HOST") + "  failed. Reconnecting PRINT service.";
+                    //msgVector.add(row);
+                    //showMessages(noNodes);
                     try {
                         remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
+                        // Try to connect service again
                         remoteServer.connectService(AS400.PRINT);
+                        row = "Comp: PRINT service reconnected.";
+                        msgVector.add(row);
+                        showMessages(noNodes);
+                        break; // break the loop when the connection attempt is successful
                     } catch (Exception exc) {
                         row = "Error: getting new connection to PRINT service: " + exc.toString();
                         msgVector.add(row);
                         showMessages(noNodes);
-                        exc.printStackTrace();
+                        //exc.printStackTrace();
+                        // Delay in milliseconds before a new connection attempt
+                        try {
+                            Thread.sleep(delay);
+                        } catch (InterruptedException iex) {
+                        }
                         continue;
                     }
                 }
             }
+            //return null;
         }
     }
 
