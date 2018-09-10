@@ -1000,6 +1000,17 @@ public class Compile extends JFrame {
         switch (compileCommand) {
             // CLLE, CLP 
             case "CRTBNDCL": // CLLE 
+            {
+                commandText = compileCommand + " PGM(  " + libNamePar + "/" + objNamePar + "  ) ";
+                if (ifs) {
+                    // IFS not available.
+                    return null;
+                } else {
+                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) ";
+                }
+                commandText += " OUTPUT(  *PRINT  ) DBGVIEW( *ALL  )";
+                break;
+            }
             case "CRTCLPGM": // CLP
             {
                 commandText = compileCommand + " PGM(  " + libNamePar + "/" + objNamePar + "  ) ";
@@ -1009,7 +1020,7 @@ public class Compile extends JFrame {
                 } else {
                     commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) ";
                 }
-                commandText += " OUTPUT(  *PRINT  ) DBGVIEW(  *ALL  )";
+                commandText += " OUTPUT(  *PRINT  )";
                 break;
             }
             case "CRTCLMOD": // CLLE
@@ -1021,7 +1032,7 @@ public class Compile extends JFrame {
                 } else {
                     commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) ";
                 }
-                commandText += " OUTPUT(  *PRINT  ) DBGVIEW(  *ALL  )";
+                commandText += " OUTPUT(  *PRINT  ) DBGVIEW( *ALL  )";
                 break;
             }
 

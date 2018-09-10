@@ -1,183 +1,78 @@
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/ALIASDQ          PASSIST2   09/01/18 12:41:40        Page      1
+                                                                                                                           Page    1
+ ILE RPG FORMATTED DUMP
 
-  Command  . . . . . . . . . . . . :   CRTBNDRPG
-    Issued by  . . . . . . . . . . :     VZUPKA
-  Program  . . . . . . . . . . . . :   ALIASDQ
-    Library  . . . . . . . . . . . :     VZRPG72
-  Text 'description' . . . . . . . :   *SRCMBRTXT
+ Program Status Area:
+ Procedure Name . . . . . . . . . . . . :   DSPLY
+ Program Name . . . . . . . . . . . . . :   DSPLY
+    Library . . . . . . . . . . . . . . :   VZRPG72
+ Module Name. . . . . . . . . . . . . . :   DSPLY
+ Program Status . . . . . . . . . . . . :   00000
+ Previous Status  . . . . . . . . . . . :   00000
+ Statement in Error . . . . . . . . . . :   00000000
+ RPG Routine  . . . . . . . . . . . . . :   *DETC
+ Number of Parameters . . . . . . . . . :
+ Message Type . . . . . . . . . . . . . :
+ Additional Message Info  . . . . . . . :
+ Message Data . . . . . . . . . . . . . :
 
-  Source Member  . . . . . . . . . :   ALIASDQ
-  Source File  . . . . . . . . . . :   QRPGLESRC
-    Library  . . . . . . . . . . . :     VZRPG72
-    CCSID  . . . . . . . . . . . . :     870
-  Text 'description' . . . . . . . :
-  Last Change  . . . . . . . . . . :   08/29/18  11:35:23
+ Status that caused RNX9001 . . . . . . :
+ Last File Used . . . . . . . . . . . . :
+ Last File Status . . . . . . . . . . . :
+ Last File Operation  . . . . . . . . . :
+ Last File Routine  . . . . . . . . . . :
+ Last File Statement  . . . . . . . . . :
+ Last File Record Name  . . . . . . . . :
+ Job Name . . . . . . . . . . . . . . . :   QPADEV0007
+ User Name  . . . . . . . . . . . . . . :   VZUPKA
+ Job Number . . . . . . . . . . . . . . :   416277
+ Date Entered System  . . . . . . . . . :   09032018
+    Century . . . . . . . . . . . . . . :   20
+ Date Started . . . . . . . . . . . . . :   *N/A*
+ Time Started . . . . . . . . . . . . . :   *N/A*
+ Compile Date . . . . . . . . . . . . . :   090318
+ Compile Time . . . . . . . . . . . . . :   191322
+ Compiler Level . . . . . . . . . . . . :   0001
+ Source File  . . . . . . . . . . . . . :   QRPGLESRC
+    Library . . . . . . . . . . . . . . :   VZRPG72
+ Member . . . . . . . . . . . . . . . . :   DSPLY
+                                                                                                                           Page    2
+ ILE RPG FORMATTED DUMP
+ Module Name. . . . . . . . . . . . . . :   DSPLY
+ Optimization Level . . . . . . . . . . :   *NONE
+ Halt Indicators:
+ H1 '0'    H2 '0'    H3 '0'    H4 '0'    H5 '0'    H6 '0'    H7 '0'    H8 '0'    H9 '0'
+ Command/Function Key Indicators:
+ KA '0'    KB '0'    KC '0'    KD '0'    KE '0'    KF '0'    KG '0'    KH '0'    KI '0'    KJ '0'
+ KK '0'    KL '0'    KM '0'    KN '0'    KP '0'    KQ '0'    KR '0'    KS '0'    KT '0'    KU '0'
+ KV '0'    KW '0'    KX '0'    KY '0'
+ Control Level Indicators:
+ L1 '0'    L2 '0'    L3 '0'    L4 '0'    L5 '0'    L6 '0'    L7 '0'    L8 '0'    L9 '0'
+ Overflow Indicators:
+ OA '0'    OB '0'    OC '0'    OD '0'    OE '0'    OF '0'    OG '0'    OV '0'
+ External Indicators:
+ U1 '0'    U2 '0'    U3 '0'    U4 '0'    U5 '0'    U6 '0'    U7 '0'    U8 '0'
+ General Indicators:
+ 01 '0'    02 '0'    03 '0'    04 '0'    05 '0'    06 '0'    07 '0'    08 '0'    09 '0'    10 '0'
+ 11 '0'    12 '0'    13 '0'    14 '0'    15 '0'    16 '0'    17 '0'    18 '0'    19 '0'    20 '0'
+ 21 '0'    22 '0'    23 '0'    24 '0'    25 '0'    26 '0'    27 '0'    28 '0'    29 '0'    30 '0'
+ 31 '0'    32 '0'    33 '0'    34 '0'    35 '0'    36 '0'    37 '0'    38 '0'    39 '0'    40 '0'
+ 41 '0'    42 '0'    43 '0'    44 '0'    45 '0'    46 '0'    47 '0'    48 '0'    49 '0'    50 '0'
+ 51 '0'    52 '0'    53 '0'    54 '0'    55 '0'    56 '0'    57 '0'    58 '0'    59 '0'    60 '0'
+ 61 '0'    62 '0'    63 '0'    64 '0'    65 '0'    66 '0'    67 '0'    68 '0'    69 '0'    70 '0'
+ 71 '0'    72 '0'    73 '0'    74 '0'    75 '0'    76 '0'    77 '0'    78 '0'    79 '0'    80 '0'
+ 81 '0'    82 '0'    83 '0'    84 '0'    85 '0'    86 '0'    87 '0'    88 '0'    89 '0'    90 '0'
+ 91 '0'    92 '0'    93 '0'    94 '0'    95 '0'    96 '0'    97 '0'    98 '0'    99 '0'
+ Internal Indicators:
+ LR '0'    MR '0'    RT '0'    1P '0'
 
-  Generation severity level  . . . :   10
-  Default activation group . . . . :   *YES
-  Compiler options . . . . . . . . :   *XREF      *GEN       *NOSECLVL  *SHOWCPY
-                                       *EXPDDS    *EXT       *NOSHOWSKP *NOSRCSTMT
-                                       *DEBUGIO   *UNREF     *NOEVENTF
-  Debugging views  . . . . . . . . :   *ALL
-  Debug encryption key . . . . . . :   *NONE
-  Output . . . . . . . . . . . . . :   *PRINT
-  Optimization level . . . . . . . :   *NONE
-  Source listing indentation . . . :   *NONE
-  Type conversion options  . . . . :   *NONE
-  Sort sequence  . . . . . . . . . :   *HEX
-  Language identifier  . . . . . . :   *JOBRUN
-  Replace program  . . . . . . . . :   *YES
-  User profile . . . . . . . . . . :   *USER
-  Authority  . . . . . . . . . . . :   *LIBCRTAUT
-  Truncate numeric . . . . . . . . :   *YES
-  Fix numeric  . . . . . . . . . . :   *NONE
-  Target release . . . . . . . . . :   *CURRENT
-  Allow null values  . . . . . . . :   *NO
-  Define condition names . . . . . :   *NONE
-  Enable performance collection  . :   *PEP
-  Profiling data . . . . . . . . . :   *NOCOL
-  Licensed Internal Code options . :
-  Generate program interface . . . :   *NO
-  Include directory  . . . . . . . :
-  Preprocessor options . . . . . . :   *NONE
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/ALIASDQ          PASSIST2   09/01/18 12:41:40        Page      2
+ NAME                  ATTRIBUTES           VALUE
+ NUMERIC               PACKED(10,2)         00000156.00      '00000015600F'X
+ RESULT                CHAR(1)              ' '              '40'X
+ VARCHAR40             CHAR(40) VARYING(2)  'Zpráva 40'
+                       VALUE IN HEX         '0009E9979945A58140F4F00000000000000000000000000000000000000000000000000000000000'X
+                         41                 '0000'X
+ VARCHAR50             CHAR(50) VARYING(2)  'Zpráva 50'
+                       VALUE IN HEX         '0009E9979945A58140F5F00000000000000000000000000000000000000000000000000000000000'X
+                         41                 '000000000000000000000000'X
 
-Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
-Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
-
-                          S o u r c e   L i s t i n g
-
-     1  **************************************************************************                               000000     000100
-     2  *   ALIAS u popisu datové struktury s klíčovým slovem QUALIFIED.                                         000000     000200
-     3  *   U pole NAZEV v souboru CENIKP je zadáno ALIAS(NAZEV_MATERIALU).                                      000000     000300
-     4  **************************************************************************                               000000     000400
-
-
-     5   dcl-f cenikp;                                                                                           000000     000500
-        *--------------------------------------------------------------------------------------------*
-        *                               RPG name         External name                               *
-        * File name. . . . . . . . . :  CENIKP           VZRPG72/CENIKP                              *
-        * Record format(s) . . . . . :  CENIKPF0         CENIKPF0                                    *
-        *--------------------------------------------------------------------------------------------*
-
-
-     6   dcl-ds dsCenik ext ALIAS QUALIFIED extname('CENIKP': *input);                                           000000     000600
-     7      NAZEV_MAT extfld('NAZEV_MATERIALU');   // přejmenuji ALIAS jméno                                     000000     000700
-     8   end-ds;                                                                                                 000000     000800
-        *--------------------------------------------------------------------------------------------*                     1
-        * Data structure . . . . . . :  DSCENIK                                                      *                     1
-        * External format  . . . . . :  CENIKPF0 : VZRPG72/CENIKP                                    *                     1
-        *--------------------------------------------------------------------------------------------*                     1
-     9=D MATER                          5A                                        Cislo mater.                             1000001
-    10=D CENA                          10P 2                                      Cena                                     1000002
-    11=D NAZEV_MAT                     50A   EXTFLD (NAZEV_MATERIALU)             Nazev materialu                          1000003
-    12                                                                                                           000000     000900
-
-
-    13=ICENIKPF0                                                                                                           2000001
-        *--------------------------------------------------------------------------------------------*                     2
-        * RPG record format  . . . . :  CENIKPF0                                                     *                     2
-        * External format  . . . . . :  CENIKPF0 : VZRPG72/CENIKP                                    *                     2
-        *--------------------------------------------------------------------------------------------*                     2
-    14=I                             A    1    5  MATER                           Cislo mater.                             2000002
-    15=I                             P    6   11 2CENA                            Cena                                     2000003
-    16=I                             A   12   61  NAZEV                           Nazev materialu                          2000004
-
-
-    17   read cenikp dsCenik;                                                                                    000000     001000
-    18   dsCenik.NAZEV_MAT = 'Materiál s DS QUALIFIED';                                                          000000     001100
-    19   dsply dsCenik.NAZEV_MAT;                                                                                000000     001200
-    20   *inlr = *on;                                                                                            000000     001300
-
-       * * * * *   E N D   O F   S O U R C E   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/ALIASDQ          PASSIST2   09/01/18 12:41:40        Page      3
-
-          A d d i t i o n a l   D i a g n o s t i c   M e s s a g e s
-
- Msg id  Sv Number Seq     Message text
-*RNF7066 00      5 000500  Record-Format CENIKPF0 not used for input or output.
-*RNF7086 00      5 000500  RPG handles blocking for file CENIKP. INFDS is updated only
-                           when blocks of data are transferred.
-
- * * * * *   E N D   O F   A D D I T I O N A L   D I A G N O S T I C   M E S S A G E S   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/ALIASDQ          PASSIST2   09/01/18 12:41:40        Page      4
-
-                          C r o s s   R e f e r e n c e
-
-      File and Record References:
-
-         File              Device             References (D=Defined)
-           Record
-         CENIKP            DISK                    5D     17
-           CENIKPF0                                5D     13
-
-      Global Field References:
-
-         Field             Attributes         References (D=Defined M=Modified)
-         *INLR             N(1)                   20M
-*RNF7031 CENA              P(10,2)                15D
-         DSCENIK           DS(61)                  6D     17M     18M     19
-*RNF7031   CENA            P(10,2)                10D
-*RNF7031   MATER           A(5)                    9D
-           NAZEV_MAT       A(50)                  11D     18      19
-*RNF7031 MATER             A(5)                   14D
-*RNF7031 NAZEV             A(50)                  16D
-
-      Indicator References:
-
-         Indicator                            References (D=Defined M=Modified)
-         LR                                       20M
-
-       * * * * *   E N D   O F   C R O S S   R E F E R E N C E   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/ALIASDQ          PASSIST2   09/01/18 12:41:40        Page      5
-
-                      E x t e r n a l   R e f e r e n c e s
-
-      Statically bound procedures:
-         Procedure                            References
-         No references in the source.
-
-      Imported fields:
-         Field             Attributes         Defined
-         No references in the source.
-
-      Exported fields:
-         Field             Attributes         Defined
-         No references in the source.
-
-   * * * * *   E N D   O F   E X T E R N A L   R E F E R E N C E S   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/ALIASDQ          PASSIST2   09/01/18 12:41:40        Page      6
-
-                          M e s s a g e   S u m m a r y
-
- Msg id  Sv Number Message text
-*RNF7031 00      5 The name or indicator is not referenced.
-*RNF7066 00      1 Record-Format name of Externally-Described file is not used.
-*RNF7086 00      1 RPG handles blocking for the file. INFDS is updated only when
-                   blocks of data are transferred.
-
-       * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZRPG72/ALIASDQ          PASSIST2   09/01/18 12:41:40        Page      7
-
-                            F i n a l   S u m m a r y
-
-  Message Totals:
-
-    Information  (00) . . . . . . . :        7
-    Warning      (10) . . . . . . . :        0
-    Error        (20) . . . . . . . :        0
-    Severe Error (30+)  . . . . . . :        0
-    ---------------------------------  -------
-    Total . . . . . . . . . . . . . :        7
-
-
-  Source Totals:
-
-    Records . . . . . . . . . . . . :       20
-    Specifications  . . . . . . . . :       15
-    Data records  . . . . . . . . . :        0
-    Comments  . . . . . . . . . . . :        4
-
-         * * * * *   E N D   O F   F I N A L   S U M M A R Y   * * * * *
-Program ALIASDQ placed in library VZRPG72. 00 highest severity. Created on 09/01/18 at 12:41:41.
-          * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *
+             * * * * *   E N D   O F   R P G   D U M P   * * * * *

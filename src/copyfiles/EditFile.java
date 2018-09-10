@@ -37,6 +37,8 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -1330,8 +1332,8 @@ public final class EditFile extends JFrame {
             ccsidAttribute = ifsFile.getCCSID();
             characterSetLabel.setText("CCSID " + ccsidAttribute + " was used for display.");
 
-            byte[] inputBuffer = new byte[100000];
-            byte[] workBuffer = new byte[100000];
+            byte[] inputBuffer = new byte[1000000];
+            byte[] workBuffer = new byte[1000000];
             textArea.setText("");
 
             //System.out.println("displayIfsFile - ccsidAttribute: " + ccsidAttribute);
@@ -1414,16 +1416,34 @@ public final class EditFile extends JFrame {
                 }
                 characterSetLabel.setText(pcCharset + " character set was used for display.");
                 // Use PC charset parameter for conversion
-                list = Files.readAllLines(filePath, Charset.forName(pcCharset));
-                if (list != null) {
-                    // Concatenate all text lines from the list obtained from the file
-                    textArea.setText("");
-                    Object[] obj = (Object[]) list.stream().toArray();
-                    for (int idx = 0; idx < obj.length; idx++) {
-                        String text = obj[idx].toString();
-                        textArea.append(text + NEW_LINE);
-                    }
+                textArea.setText("");
+
+                
+                
+                // Input will be decoded using PC charset parameter.
+                BufferedReader bufferedReader = Files.newBufferedReader(filePath, Charset.forName(pcCharset));
+                textLine = bufferedReader.readLine();
+                while (textLine != null) {
+                    textLine += NEW_LINE;
+                    textArea.append(textLine);
+                    // Read next line
+                    textLine = bufferedReader.readLine();
                 }
+                bufferedReader.close();
+
+                
+                //list = Files.readAllLines(filePath, Charset.forName(pcCharset));
+                //if (list != null) {
+                //    // Concatenate all text lines from the list obtained from the file
+                //    textArea.setText("");
+                //    Object[] obj = (Object[]) list.stream().toArray();
+                //    for (int idx = 0; idx < obj.length; idx++) {
+                //        String text = obj[idx].toString();
+                //        textArea.append(text + NEW_LINE);
+                //    }
+                //}
+                
+                
             }
         } catch (Exception exc) {
             isError = true;
@@ -1435,7 +1455,6 @@ public final class EditFile extends JFrame {
             // Remove message scroll listener (cancel scrolling to the last message)
             mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
         }
-
     }
 
     /**
