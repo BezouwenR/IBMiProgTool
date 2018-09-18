@@ -1,78 +1,1130 @@
-                                                                                                                           Page    1
- ILE RPG FORMATTED DUMP
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page      1
 
- Program Status Area:
- Procedure Name . . . . . . . . . . . . :   DSPLY
- Program Name . . . . . . . . . . . . . :   DSPLY
-    Library . . . . . . . . . . . . . . :   VZRPG72
- Module Name. . . . . . . . . . . . . . :   DSPLY
- Program Status . . . . . . . . . . . . :   00000
- Previous Status  . . . . . . . . . . . :   00000
- Statement in Error . . . . . . . . . . :   00000000
- RPG Routine  . . . . . . . . . . . . . :   *DETC
- Number of Parameters . . . . . . . . . :
- Message Type . . . . . . . . . . . . . :
- Additional Message Info  . . . . . . . :
- Message Data . . . . . . . . . . . . . :
+  Command  . . . . . . . . . . . . :   CRTBNDRPG
+    Issued by  . . . . . . . . . . :     VZUPKA
+  Program  . . . . . . . . . . . . :   CLIENT
+    Library  . . . . . . . . . . . :     VZAPI
+  Text 'description' . . . . . . . :   *SRCMBRTXT
 
- Status that caused RNX9001 . . . . . . :
- Last File Used . . . . . . . . . . . . :
- Last File Status . . . . . . . . . . . :
- Last File Operation  . . . . . . . . . :
- Last File Routine  . . . . . . . . . . :
- Last File Statement  . . . . . . . . . :
- Last File Record Name  . . . . . . . . :
- Job Name . . . . . . . . . . . . . . . :   QPADEV0007
- User Name  . . . . . . . . . . . . . . :   VZUPKA
- Job Number . . . . . . . . . . . . . . :   416277
- Date Entered System  . . . . . . . . . :   09032018
-    Century . . . . . . . . . . . . . . :   20
- Date Started . . . . . . . . . . . . . :   *N/A*
- Time Started . . . . . . . . . . . . . :   *N/A*
- Compile Date . . . . . . . . . . . . . :   090318
- Compile Time . . . . . . . . . . . . . :   191322
- Compiler Level . . . . . . . . . . . . :   0001
- Source File  . . . . . . . . . . . . . :   QRPGLESRC
-    Library . . . . . . . . . . . . . . :   VZRPG72
- Member . . . . . . . . . . . . . . . . :   DSPLY
-                                                                                                                           Page    2
- ILE RPG FORMATTED DUMP
- Module Name. . . . . . . . . . . . . . :   DSPLY
- Optimization Level . . . . . . . . . . :   *NONE
- Halt Indicators:
- H1 '0'    H2 '0'    H3 '0'    H4 '0'    H5 '0'    H6 '0'    H7 '0'    H8 '0'    H9 '0'
- Command/Function Key Indicators:
- KA '0'    KB '0'    KC '0'    KD '0'    KE '0'    KF '0'    KG '0'    KH '0'    KI '0'    KJ '0'
- KK '0'    KL '0'    KM '0'    KN '0'    KP '0'    KQ '0'    KR '0'    KS '0'    KT '0'    KU '0'
- KV '0'    KW '0'    KX '0'    KY '0'
- Control Level Indicators:
- L1 '0'    L2 '0'    L3 '0'    L4 '0'    L5 '0'    L6 '0'    L7 '0'    L8 '0'    L9 '0'
- Overflow Indicators:
- OA '0'    OB '0'    OC '0'    OD '0'    OE '0'    OF '0'    OG '0'    OV '0'
- External Indicators:
- U1 '0'    U2 '0'    U3 '0'    U4 '0'    U5 '0'    U6 '0'    U7 '0'    U8 '0'
- General Indicators:
- 01 '0'    02 '0'    03 '0'    04 '0'    05 '0'    06 '0'    07 '0'    08 '0'    09 '0'    10 '0'
- 11 '0'    12 '0'    13 '0'    14 '0'    15 '0'    16 '0'    17 '0'    18 '0'    19 '0'    20 '0'
- 21 '0'    22 '0'    23 '0'    24 '0'    25 '0'    26 '0'    27 '0'    28 '0'    29 '0'    30 '0'
- 31 '0'    32 '0'    33 '0'    34 '0'    35 '0'    36 '0'    37 '0'    38 '0'    39 '0'    40 '0'
- 41 '0'    42 '0'    43 '0'    44 '0'    45 '0'    46 '0'    47 '0'    48 '0'    49 '0'    50 '0'
- 51 '0'    52 '0'    53 '0'    54 '0'    55 '0'    56 '0'    57 '0'    58 '0'    59 '0'    60 '0'
- 61 '0'    62 '0'    63 '0'    64 '0'    65 '0'    66 '0'    67 '0'    68 '0'    69 '0'    70 '0'
- 71 '0'    72 '0'    73 '0'    74 '0'    75 '0'    76 '0'    77 '0'    78 '0'    79 '0'    80 '0'
- 81 '0'    82 '0'    83 '0'    84 '0'    85 '0'    86 '0'    87 '0'    88 '0'    89 '0'    90 '0'
- 91 '0'    92 '0'    93 '0'    94 '0'    95 '0'    96 '0'    97 '0'    98 '0'    99 '0'
- Internal Indicators:
- LR '0'    MR '0'    RT '0'    1P '0'
+  Source Member  . . . . . . . . . :   CLIENT
+  Source File  . . . . . . . . . . :   QRPGLESRC
+    Library  . . . . . . . . . . . :     VZAPI
+    CCSID  . . . . . . . . . . . . :     870
+  Text 'description' . . . . . . . :   CLIENT
+  Last Change  . . . . . . . . . . :   09/11/18  12:00:06
 
- NAME                  ATTRIBUTES           VALUE
- NUMERIC               PACKED(10,2)         00000156.00      '00000015600F'X
- RESULT                CHAR(1)              ' '              '40'X
- VARCHAR40             CHAR(40) VARYING(2)  'Zpráva 40'
-                       VALUE IN HEX         '0009E9979945A58140F4F00000000000000000000000000000000000000000000000000000000000'X
-                         41                 '0000'X
- VARCHAR50             CHAR(50) VARYING(2)  'Zpráva 50'
-                       VALUE IN HEX         '0009E9979945A58140F5F00000000000000000000000000000000000000000000000000000000000'X
-                         41                 '000000000000000000000000'X
+  Generation severity level  . . . :   10
+  Default activation group . . . . :   *YES
+  Compiler options . . . . . . . . :   *XREF      *GEN       *NOSECLVL  *SHOWCPY
+                                       *EXPDDS    *EXT       *NOSHOWSKP *NOSRCSTMT
+                                       *DEBUGIO   *UNREF     *NOEVENTF
+  Debugging views  . . . . . . . . :   *ALL
+  Debug encryption key . . . . . . :   *NONE
+  Output . . . . . . . . . . . . . :   *PRINT
+  Optimization level . . . . . . . :   *NONE
+  Source listing indentation . . . :   *NONE
+  Type conversion options  . . . . :   *NONE
+  Sort sequence  . . . . . . . . . :   *HEX
+  Language identifier  . . . . . . :   *JOBRUN
+  Replace program  . . . . . . . . :   *YES
+  User profile . . . . . . . . . . :   *USER
+  Authority  . . . . . . . . . . . :   *LIBCRTAUT
+  Truncate numeric . . . . . . . . :   *YES
+  Fix numeric  . . . . . . . . . . :   *NONE
+  Target release . . . . . . . . . :   *CURRENT
+  Allow null values  . . . . . . . :   *NO
+  Define condition names . . . . . :   *NONE
+  Enable performance collection  . :   *PEP
+  Profiling data . . . . . . . . . :   *NOCOL
+  Licensed Internal Code options . :
+  Generate program interface . . . :   *NO
+  Include directory  . . . . . . . :
+  Preprocessor options . . . . . . :   *NONE
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page      2
 
-             * * * * *   E N D   O F   R P G   D U M P   * * * * *
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+
+                          S o u r c e   L i s t i n g
+
+     1 H Debug                                                                                                   000000     000100
+     2                                                                                                           000000     000200
+     3 H DFTACTGRP(*NO) ACTGRP('QILE') BNDDIR('QC2LE')                                                           000000     000300
+     4                                                                                                           000000     000400
+     5  *   Obrazovkovy soubor k vyzve a zobrazeni dat ze serveru                                                000000     000500
+        *--------------------------------------------------------------------*
+        * Compiler Options in Effect:                                        *
+        *--------------------------------------------------------------------*
+        *  Text 'description' . . . . . . . :   CLIENT                       *
+
+        *  Generation severity level  . . . :   10                           *
+        *  Default activation group . . . . :   *NO                          *
+        *  Compiler options . . . . . . . . :   *XREF      *GEN              *
+        *                                       *NOSECLVL  *SHOWCPY          *
+        *                                       *EXPDDS    *EXT              *
+        *                                       *NOSHOWSKP *NOSRCSTMT        *
+        *                                       *DEBUGIO   *UNREF            *
+        *                                       *NOEVENTF                    *
+        *  Optimization level . . . . . . . :   *NONE                        *
+        *  Source listing indentation . . . :   *NONE                        *
+        *  Type conversion options  . . . . :   *NONE                        *
+        *  Sort sequence  . . . . . . . . . :   *HEX                         *
+        *  Language identifier  . . . . . . :   *JOBRUN                      *
+        *  User profile . . . . . . . . . . :   *USER                        *
+        *  Authority  . . . . . . . . . . . :   *LIBCRTAUT                   *
+        *  Truncate numeric . . . . . . . . :   *YES                         *
+        *  Fix numeric  . . . . . . . . . . :   *NONE                        *
+        *  Allow null values  . . . . . . . :   *NO                          *
+        *  Storage model . . .  . . . . . . :   *SNGLVL                      *
+        *  Binding directory from Command . :   *NONE                        *
+        *  Binding directory from Source  . :   QC2LE                        *
+        *    Library  . . . . . . . . . . . :     *LIBL                      *
+        *  Activation group . . . . . . . . :   QILE                         *
+        *  Enable performance collection  . :   *PEP                         *
+        *  Profiling data . . . . . . . . . :   *NOCOL                       *
+        *  Generate program interface . . . :   *NO                          *
+        *--------------------------------------------------------------------*
+
+
+     6 FZBOZIW    CF   E             WORKSTN                                                                     000000     000600
+     7                                                                                                           000000     000700
+        *--------------------------------------------------------------------------------------------*
+        *                               RPG name         External name                               *
+        * File name. . . . . . . . . :  ZBOZIW           VZAPI_FREE/ZBOZIW                           *
+        * Record format(s) . . . . . :  ZBOZIW0          ZBOZIW0                                     *
+        *                               ZBOZIW1          ZBOZIW1                                     *
+        *--------------------------------------------------------------------------------------------*
+
+
+     8 D SocketData    E Ds                  ExtName ('ZBOZI')                                                   000000     000800
+        *--------------------------------------------------------------------------------------------*                     1
+        * Data structure . . . . . . :  SOCKETDATA                                                   *                     1
+        * External format  . . . . . :  ZBOZIR : VZAPI_FREE/ZBOZI                                    *                     1
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page      3
+
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+        *--------------------------------------------------------------------------------------------*                     1
+     9=D CZBOZI                         5A                                        Cislo zbozi                              1000001
+    10=D CENAJ                          9P 2                                      Jednotkova cena                          1000002
+    11=D POPIS                         50A                                        Popis zbozi                              1000003
+    12 D SockDtaLen      S             10I 0 Inz (%Size(SocketData))                                             000000     000900
+    13 D PortNumber      S             10I 0 Inz(3005)                                                           000000     001000
+    14  *   Cislo "socket description" pro klienta                                                               000000     001100
+    15 D SD              S             10I 0                                                                     000000     001200
+    16  *   Navratovy kod pro sokety                                                                             000000     001300
+    17 D RC              S             10I 0                                                                     000000     001400
+    18                                                                                                           000000     001500
+    19  *   Jmeno serveru (pocitace, hosta) a ukazatele                                                          000000     001600
+    20 D ServerName      S            255A   Inz('LOCALHOST')                                                    000000     001700
+    21 D Server@         S               *   Inz                                                                 000000     001800
+    22 D HostEnt@        S               *   Inz                                                                 000000     001900
+    23                                                                                                           000000     002000
+    24  *   Prototypy podprocedur pro sokety a potrebne popisy dat                                               000000     002100
+    25  /COPY QRPGLESRC,PROTOTYPY                                                                                000000     002200
+        *--------------------------------------------------------------------------------------------*
+        * RPG member name  . . . . . :  PROTOTYPY                                                    *                     2
+        * External name  . . . . . . :  VZAPI_FREE/QRPGLESRC(PROTOTYPY)                              *                     2
+        * Last change  . . . . . . . :  11/19/16  11:07:43                                           *                     2
+        * Text 'description' . . . . :  PROTOTYPY                                                    *                     2
+        *--------------------------------------------------------------------------------------------*
+    26+ *****************************************************************                                        161119    2000100
+    27+ *                                                                                                        161119    2000200
+    28+ *   Popisy dat k procedurám                                                                              161119    2000300
+    29+ *                                                                                                        161119    2000400
+    30+ *****************************************************************                                        161119    2000500
+    31+                                                                                                          161119    2000600
+    32+ *   Data pro sokety                                                                                      161119    2000700
+    33+ *   ---------------                                                                                      161119    2000800
+    34+ *   Socket address information structure                                                                 161119    2000900
+    35+D SocketAddr      DS                                                                                      161119    2001000
+    36+D   SinFamily                    5I 0                                                                     161119    2001100
+    37+D   SinPort                      5U 0                                                                     161119    2001200
+    38+D   SinAddr                     10U 0                                                                     161119    2001300
+    39+D   SinZero                      8A   Inz( *ALLX'00' )                                                    161119    2001400
+    40+D SockAddr        S               *   Inz( %Addr(SocketAddr) )                                            161119    2001500
+    41+D AddressLength   S             10I 0                                                                     161119    2001600
+    42+D AddrLen         S               *   Inz( %Addr(AddressLength) )                                         161119    2001700
+    43+                                                                                                          161119    2001800
+    44+ *   Internet address structure                                                                           161119    2001900
+    45+D InAddr          DS                                                                                      161119    2002000
+    46+D   BinAddr                     10U 0                                                                     161119    2002100
+    47+D InAddrLen       S             10I 0 Inz( %Size(InAddr) )                                                161119    2002200
+    48+D InAddrP         S               *   Inz( %Addr(InAddr) )                                                161119    2002300
+    49+                                                                                                          161119    2002400
+    50+ *   Host entry returned pointers and data                                                                161119    2002500
+    51+D HostEnt         DS                  Align Based(HostEntP)                                               161119    2002600
+    52+D  HNameP                         *                                                                       161119    2002700
+    53+D  HAliasesP                      *                                                                       161119    2002800
+    54+D  HAddrType                    10I 0                                                                     161119    2002900
+    55+D  HLength                      10I 0                                                                     161119    2003000
+    56+D  HAddrListP                     *                                                                       161119    2003100
+    57+D  HAddrList      S               *   Based(HAddrListP) Dim(100)                                          161119    2003200
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page      4
+
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+    58+D  HAddr          S             10U 0 Based(HAddrP)                                                       161119    2003300
+    59+D  HAddrP         S               *                                                                       161119    2003400
+    60+                                                                                                          161119    2003500
+    61+ *   I/O options (Fcntl)                                                                                  161119    2003600
+    62+D F_SETFL         S             10I 0 Inz(7)                                                        VZ    161119    2003700
+    63+D O_NONBLOCK      S             10I 0 Inz(128)                                                      VZ    161119    2003800
+    64+D EWOULDBLOCK     C                   3406                                                                161119    2003900
+    65+                                                                                                          161119    2004000
+    66+ *   Error related data                                                                                   161119    2004100
+    67+D ErrNo           S             10I 0 Based(ErrNoP)                                                       161119    2004200
+    68+D ErrNoP          S               *   Inz                                                                 161119    2004300
+    69+D ErrMsg          S             60A   Based(ErrMsgP)                                                      161119    2004400
+    70+D ErrMsgP         S               *   Inz                                                                 161119    2004500
+    71+                                                                                                          161119    2004600
+    72+ *   Address families                                                                                     161119    2004700
+    73+D AF_UNIX         C                   1                                                                   161119    2004800
+    74+D AF_INET         C                   2                                                                   161119    2004900
+    75+D AF_NS           C                   6                                                                   161119    2005000
+    76+D AF_TELEPHONY    C                   99                                                                  161119    2005100
+    77+                                                                                                          161119    2005200
+    78+ *   Socket types                                                                                         161119    2005300
+    79+D SOCK_STREAM     C                   1                                                                   161119    2005400
+    80+D SOCK_DGRAM      C                   2                                                                   161119    2005500
+    81+D SOCK_RAW        C                   3                                                                   161119    2005600
+    82+D SOCK_SEQPACKET  C                   5                                                                   161119    2005700
+    83+D SOL_SOCKET      C                   -1                                                                  161119    2005800
+    84+                                                                                                          161119    2005900
+    85+ *   Socket level options                                                                                 161119    2006000
+    86+D SO_BROADCAST    C                   5                                                                   161119    2006100
+    87+D SO_DEBUG        C                   10                                                                  161119    2006200
+    88+D SO_DONTROUTE    C                   15                                                                  161119    2006300
+    89+D SO_ERROR        C                   20                                                                  161119    2006400
+    90+D SO_KEEPALIVE    C                   25                                                                  161119    2006500
+    91+D SO_LINGER       C                   30                                                                  161119    2006600
+    92+D SO_REUSEADDR    C                   55                                                                  161119    2006700
+    93+                                                                                                          161119    2006800
+    94+ *   Internet address specifications                                                                      161119    2006900
+    95+D INADDR_ANY      C                   0                                                                   161119    2007000
+    96+D INADDR_BROADCA  C                   -1                                                                  161119    2007100
+    97+D INADDR_LOOPBCK  C                   X'7F000000'                                                         161119    2007200
+    98+D INADDR_NONE     C                   -1                                                                  161119    2007300
+    99+                                                                                                          161119    2007400
+   100+ *   Konstanty pro Open Stream File                                                                       161119    2007500
+   101+ *   ------------------------------                                                                       161119    2007600
+   102+ *   File Access Modes                                                                                    161119    2007700
+   103+D O_RDONLY        S             10I 0 Inz(X'01')                                                          161119    2007800
+   104+D O_WRONLY        S             10I 0 Inz(x'02')                                                          161119    2007900
+   105+D O_RDWR          S             10I 0 Inz(x'04')                                                          161119    2008000
+   106+D O_CREAT         S             10I 0 Inz(x'08')                                                          161119    2008100
+   107+D O_CREATE        S             10I 0 Inz(x'08')                                                          161119    2008200
+   108+D O_EXCL          S             10I 0 Inz(x'10')                                                          161119    2008300
+   109+D O_TRUNC         S             10I 0 INZ(x'40')                                                          161119    2008400
+   110+                                                                                                          161119    2008500
+   111+ *   File Status Flags                                                                                    161119    2008600
+   112+D O_CODEPAGE      S             10I 0 INZ(x'800000')                                                      161119    2008700
+   113+D O_CCSID         S             10i 0 INZ(x'20')                                                          161119    2008800
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page      5
+
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+   114+D O_TEXTDATA      S             10I 0 INZ(x'01000000')                                                    161119    2008900
+   115+D O_TEXT_CREAT    S             10I 0 INZ(x'02000000')                                                    161119    2009000
+   116+D O_APPEND        S             10I 0 INZ(x'0100')                                                        161119    2009100
+   117+D O_LARGEFILE     S             10I 0 INZ(x'20000000')                                                    161119    2009200
+   118+D O_INHERITMODE   S             10I 0 INZ(x'08000000')                                                    161119    2009300
+   119+                                                                                                          161119    2009400
+   120+ *   Share Mode Values                                                                                    161119    2009500
+   121+D O_SHARE_RDONLY  S             10I 0 INZ(x'010000')                                                      161119    2009600
+   122+D O_SHARE_WRONLY  S             10I 0 INZ(x'020000')                                                      161119    2009700
+   123+D O_SHARE_RDWR    S             10I 0 INZ(x'040000')                                                      161119    2009800
+   124+D O_SHARE_NONE    S             10I 0 INZ(x'080000')                                                      161119    2009900
+   125+                                                                                                          161119    2010000
+   126+ *   Definitions of File Modes and File Types                                                             161119    2010100
+   127+D S_IRUSR         S             10I 0 INZ(x'0100')                                                        161119    2010200
+   128+D S_IWUSR         S             10I 0 INZ(x'80')                                                          161119    2010300
+   129+D S_IXUSR         S             10I 0 INZ(x'40')                                                          161119    2010400
+   130+D S_IRWXU         S             10I 0 INZ(x'01C0')                                                        161119    2010500
+   131+                                                                                                          161119    2010600
+   132+D S_IRGRP         S             10I 0 INZ(x'20')                                                          161119    2010700
+   133+D S_IWGRP         S             10I 0 INZ(x'10')                                                          161119    2010800
+   134+D S_IXGRP         S             10I 0 INZ(x'08')                                                          161119    2010900
+   135+D S_IRWXG         S             10I 0 INZ(x'38')                                                          161119    2011000
+   136+                                                                                                          161119    2011100
+   137+D S_IROTH         S             10I 0 INZ(x'04')                                                          161119    2011200
+   138+D S_IWOTH         S             10I 0 INZ(x'02')                                                          161119    2011300
+   139+D S_IXOTH         S             10I 0 INZ(x'01')                                                          161119    2011400
+   140+D S_IRWXO         S             10I 0 INZ(x'07')                                                          161119    2011500
+   141+                                                                                                          161119    2011600
+   142+ *   Result Structure for Stat function                                                                   161119    2011700
+   143+ *   ----------------------------------                                                                   161119    2011800
+   144+D StatBuf         Ds                                                                                      161119    2011900
+   145+D  st_mode                      10u 0                                                                     161119    2012000
+   146+D  st_ino                       10u 0                                                                     161119    2012100
+   147+D  st_nlink                      5u 0                                                                     161119    2012200
+   148+D  st_reserved1                  5u 0                                                                     161119    2012300
+   149+D  st_uid                       10u 0                                                                     161119    2012400
+   150+D  st_gid                       10u 0                                                                     161119    2012500
+   151+D  st_size                      10i 0                                                                     161119    2012600
+   152+D  st_atime                     10i 0                                                                     161119    2012700
+   153+D  st_mtime                     10i 0                                                                     161119    2012800
+   154+D  st_ctime                     10i 0                                                                     161119    2012900
+   155+D  st_dev                       10u 0                                                                     161119    2013000
+   156+D  st_blksize                   10u 0                                                                     161119    2013100
+   157+D  st_allocsize                 10u 0                                                                     161119    2013200
+   158+D  st_objtype                   11a                                                                       161119    2013300
+   159+D  st_reserved2                  1a                                                                       161119    2013400
+   160+D  st_codepage                   5u 0                                                                     161119    2013500
+   161+D  st_ccsid                      5u 0                                                                     161119    2013600
+   162+D  st_rdev                      10u 0                                                                     161119    2013700
+   163+D  st_nlink32                   10u 0                                                                     161119    2013800
+   164+D  st_rdev64                    20u 0                                                                     161119    2013900
+   165+D  st_dev64                     20u 0                                                                     161119    2014000
+   166+D  st_vfs                       10u 0                                                                     161119    2014100
+   167+D  st_reserved3                 32a                                                                       161119    2014200
+   168+D  st_ino_gen_id                10u 0                                                                     161119    2014300
+   169+                                                                                                          161119    2014400
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page      6
+
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+   170+ *   Path Name structure for QlgMkdir function                                                            161119    2014500
+   171+ *   -----------------------------------------                                                            161119    2014600
+   172+D QlgPathNameT    ds                                                                                      161119    2014700
+   173+D  QlgCCSID                     10i 0 inz(870)                                                            161119    2014800
+   174+D  QlgCountryID                  2a   inz('CZ')                                                           161119    2014900
+   175+D  QlgLanguageID                 3a   inz('CSY')                                                          161119    2015000
+   176+D  QlgReserved                   3a   inz(x'000000')                                                      161119    2015100
+   177+D  QlgPathType                  10u 0 inz(0)                                                              161119    2015200
+   178+D  QlgPathLen                   10i 0 inz(255)                                                            161119    2015300
+   179+D  QlgPathDelim                  2a   inz('/ ')                                                           161119    2015400
+   180+D  QlgReserved2                 10a   inz(*allx'00')                                                      161119    2015500
+   181+D  QlgPathName                 255a                                                                       161119    2015600
+   182+                                                                                                          161119    2015700
+   183+ *   Structure for ReadDir                                                                                161119    2015800
+   184+ *   ---------------------                                                                                161119    2015900
+   185+D DirEnt          DS                  Based(DirEntP)                                                      161119    2016000
+   186+D  d_reserved                   16A                                                                       161119    2016100
+   187+D  d_fno_gen_id                 10U 0                                                                     161119    2016200
+   188+D  d_fileno                     10U 0                                                                     161119    2016300
+   189+D  d_reclen                     10U 0                                                                     161119    2016400
+   190+D  d_reserved3                  10I 0                                                                     161119    2016500
+   191+D  d_reserved4                   6A                                                                       161119    2016600
+   192+D  d_reserved5                   2A                                                                       161119    2016700
+   193+D  d_ccsid                      10I 0                                                                     161119    2016800
+   194+D  d_country_id                  2A                                                                       161119    2016900
+   195+D  d_language_id                 3A                                                                       161119    2017000
+   196+D  d_nls_reserv                  3A                                                                       161119    2017100
+   197+D  d_namelen                    10U 0                                                                     161119    2017200
+   198+D  d_name                      640A                                                                       161119    2017300
+   199+                                                                                                          161119    2017400
+   200+ *   Constants for whence parameter of lseek function                                                     161119    2017500
+   201+ *   ------------------------------------------------                                                     161119    2017600
+   202+D SEEK_SET        C                   0                                                                   161119    2017700
+   203+D SEEK_CUR        C                   1                                                                   161119    2017800
+   204+D SEEK_END        C                   2                                                                   161119    2017900
+   205+                                                                                                          161119    2018000
+   206+ *****************************************************************                                        161119    2018100
+   207+ *                                                                                                        161119    2018200
+   208+ *   Prototypy podprocedur                                                                                161119    2018300
+   209+ *                                                                                                        161119    2018400
+   210+ *****************************************************************                                        161119    2018500
+   211+                                                                                                          161119    2018600
+   212+ *-- Socket --- Create a socket ----------------------------------                                        161119    2018700
+   213+                                                                                                          161119    2018800
+   214+ *   int socket(int address_family,                                                                       161119    2018900
+   215+ *              int type,                                                                                 161119    2019000
+   216+ *              int protocol)                                                                             161119    2019100
+   217+                                                                                                          161119    2019200
+   218+D Socket          Pr            10I 0 Extproc('socket')                                                   161119    2019300
+   219+D  AddrFamily                   10I 0 Value                                                               161119    2019400
+   220+D  SocketType                   10I 0 Value                                                               161119    2019500
+   221+D  Protocol                     10I 0 Value                                                               161119    2019600
+   222+                                                                                                          161119    2019700
+   223+                                                                                                          161119    2019800
+   224+ *-- Setsockopt --- Set socket options                                                                    161119    2019900
+   225+                                                                                                          161119    2020000
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page      7
+
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+   226+ *   int setsockopt(int socket_descriptor,                                                                161119    2020100
+   227+ *                  int level,                                                                            161119    2020200
+   228+ *                  int option_name,                                                                      161119    2020300
+   229+ *                  char *option_value,                                                                   161119    2020400
+   230+ *                  int option_length)                                                                    161119    2020500
+   231+ *                                                                                                        161119    2020600
+   232+D SetsockOpt      Pr            10I 0 Extproc('setsockopt')                                               161119    2020700
+   233+D  SocketDescr                  10I 0 Value                                                               161119    2020800
+   234+D  Level                        10I 0 Value                                                               161119    2020900
+   235+D  OptionName                   10I 0 Value                                                               161119    2021000
+   236+D  OptionValueP                   *   Value                                                               161119    2021100
+   237+D  OptionLength                 10I 0 Value                                                               161119    2021200
+   238+                                                                                                          161119    2021300
+   239+                                                                                                          161119    2021400
+   240+ *-- Bind --- Bind to a socket -----------------------------------                                        161119    2021500
+   241+                                                                                                          161119    2021600
+   242+ *   int bind(int socket_descriptor,                                                                      161119    2021700
+   243+ *            struct sockaddr *local_address,                                                             161119    2021800
+   244+ *            int address_length)                                                                         161119    2021900
+   245+                                                                                                          161119    2022000
+   246+D Bind            Pr            10I 0 ExtProc('bind')                                                     161119    2022100
+   247+D  SocketDescr                  10I 0 Value                                                               161119    2022200
+   248+D  LocalAddrP                     *   Value                                                               161119    2022300
+   249+D  AddrLength                   10I 0 Value                                                               161119    2022400
+   250+                                                                                                          161119    2022500
+   251+                                                                                                          161119    2022600
+   252+ *-- Listen --- Invite for the incoming connections requests                                              161119    2022700
+   253+                                                                                                          161119    2022800
+   254+ *   int listen(int socket_descriptor,                                                                    161119    2022900
+   255+ *              int back_log);                                                                            161119    2023000
+   256+                                                                                                          161119    2023100
+   257+D Listen          Pr            10I 0 ExtProc('listen')                                                   161119    2023200
+   258+D  SocketDescr                  10I 0 Value                                                               161119    2023300
+   259+D  BackLog                      10I 0 Value                                                               161119    2023400
+   260+                                                                                                          161119    2023500
+   261+                                                                                                          161119    2023600
+   262+ *-- Accept --- Accept an incoming connections request                                                    161119    2023700
+   263+                                                                                                          161119    2023800
+   264+ *   int accept(int socket_descriptor,                                                                    161119    2023900
+   265+ *              struct sockaddr *address,                                                                 161119    2024000
+   266+ *              int *address_length);                                                                     161119    2024100
+   267+                                                                                                          161119    2024200
+   268+D Accept          Pr            10I 0 ExtProc('accept')                                                   161119    2024300
+   269+D  SocketDescr                  10I 0 Value                                                               161119    2024400
+   270+D  SocketAddrP                    *   Value                                                               161119    2024500
+   271+D  AddrLengthP                    *   Value                                                               161119    2024600
+   272+                                                                                                          161119    2024700
+   273+                                                                                                          161119    2024800
+   274+ *-- InetAddr --- Transform IP address from dotted form ----------                                        161119    2024900
+   275+                                                                                                          161119    2025000
+   276+ *   unsigned long inet_addr(char *address_string);                                                       161119    2025100
+   277+                                                                                                          161119    2025200
+   278+D InetAddr        Pr            10U 0 ExtProc('inet_addr')                                                161119    2025300
+   279+D  AddrStringP                    *   Value                                                               161119    2025400
+   280+                                                                                                          161119    2025500
+   281+                                                                                                          161119    2025600
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page      8
+
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+   282+ *-- GetHostByName --- Get host address from name ----------------                                        161119    2025700
+   283+                                                                                                          161119    2025800
+   284+ *   struct HostEnt {                                                                                     161119    2025900
+   285+ *      char   *h_name;                                                                                   161119    2026000
+   286+ *      char   **h_aliases;                                                                               161119    2026100
+   287+ *      int    h_addrtype;                                                                                161119    2026200
+   288+ *      int    h_length;                                                                                  161119    2026300
+   289+ *      char   **h_addr_list;                                                                             161119    2026400
+   290+ *   };                                                                                                   161119    2026500
+   291+                                                                                                          161119    2026600
+   292+ *   struct HostEnt *GetHostByName(char *host_name);                                                      161119    2026700
+   293+                                                                                                          161119    2026800
+   294+D GetHostByName   Pr              *   Extproc('gethostbyname')                                            161119    2026900
+   295+D  HostNameP                      *   Value                                                               161119    2027000
+   296+                                                                                                          161119    2027100
+   297+                                                                                                          161119    2027200
+   298+ *-- Connect --- Connect to the server                                                                    161119    2027300
+   299+                                                                                                          161119    2027400
+   300+ *   int connect(int socket_descriptor,                                                                   161119    2027500
+   301+ *               struct sockaddr *destination_address,                                                    161119    2027600
+   302+ *               int address_length);                                                                     161119    2027700
+   303+                                                                                                          161119    2027800
+   304+D Connect         Pr            10I 0 Extproc('connect')                                                  161119    2027900
+   305+D  SocketDescr                  10I 0 Value                                                               161119    2028000
+   306+D  DestinAddrP                    *   Value                                                               161119    2028100
+   307+D  AddrLength                   10I 0 Value                                                               161119    2028200
+   308+                                                                                                          161119    2028300
+   309+                                                                                                          161119    2028400
+   310+ *-- Read --- Read data from the socket                                                                   161119    2028500
+   311+                                                                                                          161119    2028600
+   312+ *   ssize_t read(int descriptor,                                                                         161119    2028700
+   313+ *                void *buffer,                                                                           161119    2028800
+   314+ *                size_t buffer_length);                                                                  161119    2028900
+   315+                                                                                                          161119    2029000
+   316+D Read            Pr            10I 0 Extproc('read')                                                     161119    2029100
+   317+D  Descriptor                   10I 0 Value                                                               161119    2029200
+   318+D  BufferP                        *   Value                                                               161119    2029300
+   319+D  BufferLength                 10U 0 Value                                                               161119    2029400
+   320+                                                                                                          161119    2029500
+   321+                                                                                                          161119    2029600
+   322+ *-- Write --- Write data to the socket                                                                   161119    2029700
+   323+                                                                                                          161119    2029800
+   324+ *   ssize_t write(int file_descriptor,                                                                   161119    2029900
+   325+ *                 const void *buffer,                                                                    161119    2030000
+   326+ *                 size_t buffer_length);                                                                 161119    2030100
+   327+                                                                                                          161119    2030200
+   328+D Write           Pr            10I 0 ExtProc('write')                                                    161119    2030300
+   329+D  Descriptor                   10I 0 Value                                                               161119    2030400
+   330+D  BufferP                        *   Value                                                               161119    2030500
+   331+D  BufferLength                 10U 0 Value                                                               161119    2030600
+   332+                                                                                                          161119    2030700
+   333+                                                                                                          161119    2030800
+   334+ *-- Close --- Close a socket                                                                             161119    2030900
+   335+                                                                                                          161119    2031000
+   336+ *   int close(int descriptor)                                                                            161119    2031100
+   337+                                                                                                          161119    2031200
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page      9
+
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+   338+D Close           Pr            10I 0 ExtProc('close')                                                    161119    2031300
+   339+D  Descriptor                   10I 0 Value                                                               161119    2031400
+   340+                                                                                                          161119    2031500
+   341+                                                                                                          161119    2031600
+   342+ *-- GetErrNo ---- Get error number ----------------------------------                                    161119    2031700
+   343+                                                                                                          161119    2031800
+   344+ *   extern int * __errno(void);                                                                          161119    2031900
+   345+                                                                                                          161119    2032000
+   346+D GetErrNo        Pr              *   ExtProc('__errno')                                                  161119    2032100
+   347+                                                                                                          161119    2032200
+   348+                                                                                                          161119    2032300
+   349+ *-- StrError ---- Get error text ------------------------------------                                    161119    2032400
+   350+                                                                                                          161119    2032500
+   351+ *   char *strerror(int errnum);                                                                          161119    2032600
+   352+                                                                                                          161119    2032700
+   353+D StrError        Pr              *   ExtProc('strerror')                                                 161119    2032800
+   354+D  ErrNumber                    10I 0 Value                                                               161119    2032900
+   355+                                                                                                          161119    2033000
+   356+                                                                                                          161119    2033100
+   357+ *-- Open -------- Open Stream File ----------------------------------                                    161119    2033200
+   358+                                                                                                          161119    2033300
+   359+ *  int open(const char *path, int oflag, . . .);                                                         161119    2033400
+   360+                                                                                                          161119    2033500
+   361+D Open            Pr            10I 0 ExtProc('open')                                                     161119    2033600
+   362+D  PathP                          *   Value Options(*String)                                              161119    2033700
+   363+D  Oflag                        10I 0 Value                                                               161119    2033800
+   364+D  Mode                         10U 0 Value Options(*Nopass)                                              161119    2033900
+   365+D  CCSID1                       10U 0 Value Options(*Nopass)                                              161119    2034000
+   366+D  CCSID2                       10U 0 Value Options(*Nopass)                                              161119    2034100
+   367+                                                                                                          161119    2034200
+   368+ *-- Stat  --- Get File Information                                                                       161119    2034300
+   369+                                                                                                          161119    2034400
+   370+ *   int stat(const char *path, struct stat *buf);                                                        161119    2034500
+   371+                                                                                                          161119    2034600
+   372+D Stat            Pr            10i 0 ExtProc('stat')                                                     161119    2034700
+   373+D  PathP                          *   Value                                                               161119    2034800
+   374+D  StatBufP                       *   Value                                                               161119    2034900
+   375+                                                                                                          161119    2035000
+   376+                                                                                                          161119    2035100
+   377+ *-- OpenDir ------ Open Directory -----------------------------------                                    161119    2035200
+   378+                                                                                                          161119    2035300
+   379+ *   DIR *opendir(const char *dirname);                                                                   161119    2035400
+   380+                                                                                                          161119    2035500
+   381+D OpenDir         Pr              *   ExtProc('opendir')                   Pointer to                     161119    2035600
+   382+D  DirNameP                       *   Value                                Pointer to                     161119    2035700
+   383+                                                                                                          161119    2035800
+   384+                                                                                                          161119    2035900
+   385+ *-- ReadDir ------ Read directory entry -----------------------------                                    161119    2036000
+   386+                                                                                                          161119    2036100
+   387+ *   struct dirent *readdir(unsigned int *DIR);                                                           161119    2036200
+   388+                                                                                                          161119    2036300
+   389+D ReadDir         Pr              *   ExtProc('readdir')                   Pointer to                     161119    2036400
+   390+D  DirP                           *   Value                                Pointer to                     161119    2036500
+   391+                                                                                                          161119    2036600
+   392+                                                                                                          161119    2036700
+   393+ *-- CloseDir ----- Close directory ----------------------------------                                    161119    2036800
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page     10
+
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+   394+                                                                                                          161119    2036900
+   395+ *   int closedir(unsigned int *DIR);                                                                     161119    2037000
+   396+                                                                                                          161119    2037100
+   397+D CloseDir        Pr              *   ExtProc('closedir')                  Pointer to                     161119    2037200
+   398+D  DirP                           *   Value                                Pointer to                     161119    2037300
+   399+                                                                                                          161119    2037400
+   400+                                                                                                          161119    2037500
+   401+ *-- Rename ------- Rename directory ---------------------------------                                    161119    2037600
+   402+                                                                                                          161119    2037700
+   403+ *   int rename(const char *old, const char *new);                                                        161119    2037800
+   404+                                                                                                          161119    2037900
+   405+D Rename          Pr            10I 0 ExtProc('Qp0lRenameKeep')            Return cod                     161119    2038000
+   406+D  OldNameP                       *   Value                                Pointer to                     161119    2038100
+   407+D  NewNameP                       *   Value                                Pointer to                     161119    2038200
+   408+                                                                                                          161119    2038300
+   409+                                                                                                          161119    2038400
+   410+ *-- Unlink ------- Delete file --------------------------------------                                    161119    2038500
+   411+                                                                                                          161119    2038600
+   412+ *   int unlink(char *path);                                                                              161119    2038700
+   413+                                                                                                          161119    2038800
+   414+D Unlink          Pr            10I 0 ExtProc('unlink')                    Return cod                     161119    2038900
+   415+D  PathP                          *   Value                                Pointer to                     161119    2039000
+   416+                                                                                                          161119    2039100
+   417+                                                                                                          161119    2039200
+   418+ *-- RmDir -------- Remove directory ---------------------------------                                    161119    2039300
+   419+                                                                                                          161119    2039400
+   420+ *   int rmdir(char *path);                                                                               161119    2039500
+   421+                                                                                                          161119    2039600
+   422+D RmDir           Pr            10I 0 ExtProc('rmdir')                     Return cod                     161119    2039700
+   423+D  PathP                          *   Value                                Pointer to                     161119    2039800
+   424+                                                                                                          161119    2039900
+   425+                                                                                                          161119    2040000
+   426+ *-- MkDir -------- Make directory -----------------------------------                                    161119    2040100
+   427+                                                                                                          161119    2040200
+   428+ *   int mkdir(const char *path, mode_t mode);                                                            161119    2040300
+   429+                                                                                                          161119    2040400
+   430+D MkDir           Pr            10I 0 ExtProc('mkdir')                     Return cod                     161119    2040500
+   431+D  PathP                          *   Value Options(*String)               Pointer to                     161119    2040600
+   432+D  Mode                         10U 0 Value                                Permission                     161119    2040700
+   433+                                                                                                          161119    2040800
+   434+ *-- QlgMkdir ----- Make directory -----------------------------------                                    161119    2040900
+   435+                                                                                                          161119    2041000
+   436+ *   int QlgMkdir(Qlg_Path_Name_T *path, mode_t mode);                                                    161119    2041100
+   437+                                                                                                          161119    2041200
+   438+D QlgMkdir        Pr            10I 0 ExtProc('QlgMkdir')                  Return cod                     161119    2041300
+   439+D  PathStructP                    *   Value                                Ptr to Pat                     161119    2041400
+   440+D  Mode                         10U 0 Value                                Permission                     161119    2041500
+   441+                                                                                                          161119    2041600
+   442+ *-- getcwd ------- Get Current Directory ----------------------------                                    161119    2041700
+   443+                                                                                                          161119    2041800
+   444+ *   char *getcwd(char *buf, size_t size);                                                                161119    2041900
+   445+                                                                                                          161119    2042000
+   446+D getcwd          Pr              *   ExtProc('getcwd')                    Ptr to Buf                     161119    2042100
+   447+D  BufP                           *   Value                                Ptr to Buf                     161119    2042200
+   448+D  Mode                         10U 0 Value                                Size of Bu                     161119    2042300
+   449+                                                                                                          161119    2042400
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page     11
+
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+   450+ *-- lseek -------- Set File Read/Write Offset -----------------------                                    161119    2042500
+   451+                                                                                                          161119    2042600
+   452+ *   char *getcwd(char *buf, size_t size);                                                                161119    2042700
+   453+                                                                                                          161119    2042800
+   454+D lseek           Pr            10I 0 ExtProc('lseek')                     New File O                     161119    2042900
+   455+D  Descriptor                   10I 0 Value                                File Descr                     161119    2043000
+   456+D  Offset                       10I 0 Value                                File Offse                     161119    2043100
+   457+D  Whence                       10U 0 Value                                Whence Off                     161119    2043200
+   458                                                                                                           000000     002300
+   459  *   Prototyp procedury pro obsluhu chyb                                                                  000000     002400
+   460 D ErrorHdlr       Pr                                                                                      000000     002500
+   461 D DumpText                      12    Value                                                               000000     002600
+   462                                                                                                           000000     002700
+   463                                                                                                           000000     002800
+   464  *   Ziskat "socket descriptor"                                                                           000000     002900
+
+
+   465=IZBOZIW0                                                                                                            3000001
+        *--------------------------------------------------------------------------------------------*                     3
+        * RPG record format  . . . . :  ZBOZIW0                                                      *                     3
+        * External format  . . . . . :  ZBOZIW0 : VZAPI_FREE/ZBOZIW                                  *                     3
+        *--------------------------------------------------------------------------------------------*                     3
+   466=I                             N    1    1  *IN03                           Konec                                    3000002
+   467=I                             A    2    6  CZBOZI                          Cislo zbozi                              3000003
+   468=IZBOZIW1                                                                                                            4000001
+        *--------------------------------------------------------------------------------------------*                     4
+        * RPG record format  . . . . :  ZBOZIW1                                                      *                     4
+        * External format  . . . . . :  ZBOZIW1 : VZAPI_FREE/ZBOZIW                                  *                     4
+        *--------------------------------------------------------------------------------------------*                     4
+   469=I                             N    1    1  *IN03                           Konec                                    4000002
+
+
+   470 C                   Eval      SD = Socket( AF_INET : SOCK_STREAM : 0)                                     000000     003000
+   471                                                                                                           000000     003100
+   472  *   Je-li chyba ve funkci socket - ukoncit program, dump                                                 000000     003200
+   473 C                   If        SD < 0                                                            B01       000000     003300
+   474 C                   CallP     ErrorHdlr ('ClientSocket')                                         01       000000     003400
+   475 C                   Return                                                                       01       000000     003500
+   476 C                   EndIf                                                                       E01       000000     003600
+   477                                                                                                           000000     003700
+   478  *   Vyplnit potrebna pole ve strukture IP addresy                                                        000000     003800
+   479 C                   Eval      SocketAddr = *ALLX'00'                                                      000000     003900
+   480 C                   Eval      SinFamily = AF_INET                                                         000000     004000
+   481 C                   Eval      SinPort = PortNumber                                                        000000     004100
+   482                                                                                                           000000     004200
+   483  *   Pripravit jmeno serveru pro funkci GetHostByName                                                     000000     004300
+   484 C                   Eval      ServerName = %Trim(ServerName) + X'00'                                      000000     004400
+   485 C                   Eval      Server@ = %Addr(ServerName)                                                 000000     004500
+   486                                                                                                           000000     004600
+   487  *   Ziskat adresu serveru, je-li dano jmeno serveru                                                      000000     004700
+   488 C                   Eval      HostEnt@ = GetHostByName(Server@)                                           000000     004800
+   489                                                                                                           000000     004900
+   490  *   Nelze-li ziskat adresu - ukoncit program, dump                                                       000000     005000
+   491 C                   If        HostEnt@ = *NULL                                                  B01       000000     005100
+   492 C                   CallP     ErrorHdlr ('ClientHostN')                                          01       000000     005200
+   493 C                   Return                                                                       01       000000     005300
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page     12
+
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+   494 C                   EndIf                                                                       E01       000000     005400
+   495                                                                                                           000000     005500
+   496  *   Kopirovat IP addresu ze struktury "host entry" do struktury                                          000000     005600
+   497  *   IP addresy serveru                                                                                   000000     005700
+   498 C                   Eval      HAddrP = HAddrList(1)                                                       000000     005800
+   499 C                   Eval      SinAddr = HAddr                                                             000000     005900
+   500                                                                                                           000000     006000
+   501  *   Pripojit se k serveru                                                                                000000     006100
+   502 C                   Eval      RC = Connect( SD:                                                           000000     006200
+   503 C                                           %Addr(SocketAddr) :                                           000000     006300
+   504 C                                           %Size(SocketAddr)  )                                          000000     006400
+   505  *   Je-li chyba - ukoncit program, dump                                                                  000000     006500
+   506 C                   If        RC < 0                                                            B01       000000     006600
+   507 C                   CallP     ErrorHdlr ('ClientConnect')                                        01       000000     006700
+   508 C                   Return                                                                       01       000000     006800
+   509 C                   EndIf                                                                       E01       000000     006900
+   510                                                                                                           000000     007000
+   511  *   Cyklus write/read                                                                                    000000     007100
+   512 C                   DoW       0 = 0                                                             B01       000000     007200
+   513                                                                                                           000000     007300
+   514  *   Vyzva uzivateli, aby vlozil cislo zbozi                                                              000000     007400
+   515 C                   ExFmt     ZBOZIW0                                                            01       000000     007500
+   516                                                                                                           000000     007600
+   517  *   F3 - opustit cyklus a ukoncit program                                                                000000     007700
+   518 C                   If        *In03                                                             B02       000000     007800
+   519 C                   Leave                                                                        02       000000     007900
+   520 C                   EndIf                                                                       E02       000000     008000
+   521                                                                                                           000000     008100
+   522  *   Poslat cislo zbozi do serveru pres socket                                                            000000     008200
+   523 C                   Eval      RC = Write( SD : %Addr(SocketData) :                               01       000000     008300
+   524 C                                              SockDtaLen )                                      01       000000     008400
+   525                                                                                                           000000     008500
+   526  *   Byla-li chyba - ukoncit program, dump                                                                000000     008600
+   527 C                   If        RC < 0                                                            B02       000000     008700
+   528 C                   CallP     ErrorHdlr ('ClientWrite')                                          02       000000     008800
+   529 C                   EndIf                                                                       E02       000000     008900
+   530                                                                                                           000000     009000
+   531  *   Byl li vstup z obrazovky END - ukoncit program                                                       000000     009100
+   532  *   (zpusobi take ukonceni serveru)                                                                      000000     009200
+   533 C                   If        CZBOZI = 'END'                                                    B02       000000     009300
+   534 C                   Leave                                                                        02       000000     009400
+   535 C                   EndIf                                                                       E02       000000     009500
+   536                                                                                                           000000     009600
+   537  *   Precist odpoved ze serveru                                                                           000000     009700
+   538 C                   Eval      RC = Read ( SD : %Addr(SocketData) :                               01       000000     009800
+   539 C                                             SockDtaLen )                                       01       000000     009900
+   540                                                                                                           000000     010000
+   541  *   Je-li chyba - ukoncit program, dump                                                                  000000     010100
+   542 C                   If        RC < 0                                                            B02       000000     010200
+   543 C                   CallP     ErrorHdlr ('ClientRead')                                           02       000000     010300
+   544 C                   Leave                                                                        02       000000     010400
+   545 C                   EndIf                                                                       E02       000000     010500
+   546                                                                                                           000000     010600
+   547  *   Nejsou-li zadna data ze serveru - ukoncit server, dump                                               000000     010700
+   548 C                   If        RC = 0                                                            B02       000000     010800
+   549 C                   CallP     ErrorHdlr ('ClientRead2')                                          02       000000     010900
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page     13
+
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+   550 C                   Leave                                                                        02       000000     011000
+   551 C                   EndIf                                                                       E02       000000     011100
+   552                                                                                                           000000     011200
+   553  *   Zobrazit data prectena ze serveru                                                                    000000     011300
+   554 C                   ExFmt     ZBOZIW1                                                            01       000000     011400
+   555                                                                                                           000000     011500
+   556  *   F3 - ukoncit program                                                                                 000000     011600
+   557 C                   If        *In03                                                             B02       000000     011700
+   558 C                   Leave                                                                        02       000000     011800
+   559 C                   EndIf                                                                       E02       000000     011900
+   560                                                                                                           000000     012000
+   561  *   Konec cyklu write/read                                                                               000000     012100
+   562 C                   EndDo                                                                       E01       000000     012200
+   563                                                                                                           000000     012300
+   564  *   Konec programu                                                                                       000000     012400
+   565 C                   CallP     Close(SD)                                                                   000000     012500
+   566 C                   Eval      *InLR=*On                                                                   000000     012600
+   567 C                   Return                                                                                000000     012700
+   568                                                                                                           000000     012800
+   569  *---------------------------------------------------------------------                                   000000     012900
+   570  *   ErrorHdlr - Podprocedura "Error handling" -                                                          000000     013000
+   571  *               tiskne vypis pameti (dump).                                                              000000     013100
+   572  *               Vstupni parametr je text k rozeznani vypisu.                                             000000     013200
+   573  *---------------------------------------------------------------------                                   000000     013300
+   574                                                                                                           000000     013400
+
+
+   575=OZBOZIW0                                                                                                            5000001
+        *--------------------------------------------------------------------------------------------*                     5
+        * RPG record format  . . . . :  ZBOZIW0                                                      *                     5
+        * External format  . . . . . :  ZBOZIW0 : VZAPI_FREE/ZBOZIW                                  *                     5
+        *--------------------------------------------------------------------------------------------*                     5
+   576=O                       CZBOZI               5A CHAR        5              Cislo zbozi                              5000002
+   577=OZBOZIW1                                                                                                            6000001
+        *--------------------------------------------------------------------------------------------*                     6
+        * RPG record format  . . . . :  ZBOZIW1                                                      *                     6
+        * External format  . . . . . :  ZBOZIW1 : VZAPI_FREE/ZBOZIW                                  *                     6
+        *--------------------------------------------------------------------------------------------*                     6
+   578=O                       *IN80                1N CHAR        1                                                       6000002
+   579=O                       CZBOZI               6A CHAR        5              Cislo zbozi                              6000003
+   580=O                       CENAJ               15S ZONE      9,2              Jednotkova cena                          6000004
+   581=O                       POPIS               65A CHAR       50              Popis zbozi                              6000005
+   582 PErrorHdlr        B                                                                                       000000     013500
+   583                                                                                                           000000     013600
+
+
+   584 D ErrorHdlr       Pr                                                                                      000000     013700
+   585 D DumpText                      12    Value                                                               000000     013800
+   586                                                                                                           000000     013900
+   587 D ErrorHdlr       PI                                                                                      000000     014000
+   588 D  DumpText                     12    Value                                                               000000     014100
+   589                                                                                                           000000     014200
+
+
+   590 C                   Eval      ErrNoP = GetErrNo                                                           000000     014300
+   591 C                   Eval      ErrMsgP = StrError(ErrNo)                                                   000000     014400
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page     14
+
+Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
+Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
+   592                                                                                                           000000     014500
+   593 C     DumpText      Dump                                                                                  000000     014600
+   594 C                   CallP     Close(SD)                                                                   000000     014700
+   595 C                   Eval      *InLR=*On                                                                   000000     014800
+   596                                                                                                           000000     014900
+   597 PErrorHdlr        E                                                                                       000000     015000
+
+       * * * * *   E N D   O F   S O U R C E   * * * * *
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page     15
+
+          A d d i t i o n a l   D i a g n o s t i c   M e s s a g e s
+
+ Msg id  Sv Number Seq     Message text
+*RNF5409 00    565 012500  The prototyped call returns a value which is lost when
+                           CALLP is used.
+*RNF5409 00    594 014700  The prototyped call returns a value which is lost when
+                           CALLP is used.
+
+ * * * * *   E N D   O F   A D D I T I O N A L   D I A G N O S T I C   M E S S A G E S   * * * * *
+
+
+                 O u t p u t   B u f f e r   P o s i t i o n s
+
+Line   Start End   Field or Constant
+
+Number Pos   Pos
+   576     1     5 CZBOZI
+   578     1     1 *IN80
+   579     2     6 CZBOZI
+   580     7    15 CENAJ
+   581    16    65 POPIS
+
+ * * * * *   E N D   O F   O U T P U T   B U F F E R   P O S I T I O N   *  * * * *
+
+
+                            / C o p y   M e m b e r s
+
+Line   Src  RPG name   <-------- External name -------> CCSID  <- Last change ->
+
+Number Id              Library    File       Member            Date     Time
+    25    2 PROTOTYPY  VZAPI_FREE QRPGLESRC  PROTOTYPY    870  11/19/16 11:07:43
+
+         * * * * *   E N D   O F   / C O P Y   M E M B E R S   * * * * *
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page     16
+
+                          C r o s s   R e f e r e n c e
+
+      File and Record References:
+
+         File              Device             References (D=Defined)
+           Record
+         ZBOZIW            WORKSTN                 6D
+           ZBOZIW0                                 6D    465     515     575
+           ZBOZIW1                                 6D    468     554     577
+
+      Global Field References:
+
+         Field             Attributes         References (D=Defined M=Modified)
+         *INLR             N(1)                  566M    595M
+         *IN03             N(1)                  466D    469M    518     557
+         *IN80             N(1)                  578
+*RNF7031 ACCEPT            I(10,0)               268D
+                           PROTOTYPE
+         ADDRESSLENGTH     I(10,0)                41D     42
+*RNF7031 ADDRLEN           *(16)                  42D
+         AF_INET           CONST                  74D    470     480
+*RNF7031 AF_NS             CONST                  75D
+*RNF7031 AF_TELEPHONY      CONST                  76D
+*RNF7031 AF_UNIX           CONST                  73D
+*RNF7031 BINADDR           U(10,0)                46D
+*RNF7031 BIND              I(10,0)               246D
+                           PROTOTYPE
+         CENAJ             P(9,2)                 10D    580
+         CLOSE             I(10,0)               338D    565     594
+                           PROTOTYPE
+*RNF7031 CLOSEDIR          *(16)                 397D
+                           PROTOTYPE
+         CONNECT           I(10,0)               304D    502
+                           PROTOTYPE
+         CZBOZI            A(5)                    9D    467M    533     576
+                                                 579
+*RNF7031 D_CCSID           I(10,0)               193D
+*RNF7031 D_COUNTRY_ID      A(2)                  194D
+*RNF7031 D_FILENO          U(10,0)               188D
+*RNF7031 D_FNO_GEN_ID      U(10,0)               187D
+*RNF7031 D_LANGUAGE_ID     A(3)                  195D
+*RNF7031 D_NAME            A(640)                198D
+*RNF7031 D_NAMELEN         U(10,0)               197D
+*RNF7031 D_NLS_RESERV      A(3)                  196D
+*RNF7031 D_RECLEN          U(10,0)               189D
+*RNF7031 D_RESERVED        A(16)                 186D
+*RNF7031 D_RESERVED3       I(10,0)               190D
+*RNF7031 D_RESERVED4       A(6)                  191D
+*RNF7031 D_RESERVED5       A(2)                  192D
+*RNF7031 DIRENT            DS(696)               185D
+                           BASED(DIRENTP)
+         DIRENTP           *(16)                 185
+*RNF7031 ERRMSG            A(60)                  69D
+                           BASED(ERRMSGP)
+         ERRMSGP           *(16)                  69      70D    591M
+         ERRNO             I(10,0)                67D    591
+                           BASED(ERRNOP)
+         ERRNOP            *(16)                  67      68D    590M
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page     17
+
+         ERRORHDLR         PROTOTYPE             460D    474     492     507
+                                                 528     543     549     582
+                                                 587     597
+*RNF7031 EWOULDBLOCK       CONST                  64D
+*RNF7031 F_SETFL           I(10,0)                62D
+*RNF7031 GETCWD            *(16)                 446D
+                           PROTOTYPE
+         GETERRNO          *(16)                 346D    590
+                           PROTOTYPE
+         GETHOSTBYNAME     *(16)                 294D    488
+                           PROTOTYPE
+         HADDR             U(10,0)                58D    499
+                           BASED(HADDRP)
+         HADDRLIST(100)    *(16)                  57D    498
+                           BASED(HADDRLISTP)
+         HADDRLISTP        *(16)                  56D     57
+         HADDRP            *(16)                  58      59D    498M
+*RNF7031 HADDRTYPE         I(10,0)                54D
+*RNF7031 HALIASESP         *(16)                  53D
+*RNF7031 HLENGTH           I(10,0)                55D
+*RNF7031 HNAMEP            *(16)                  52D
+*RNF7031 HOSTENT           DS(64)                 51D
+                           BASED(HOSTENTP)
+         HOSTENT@          *(16)                  22D    488M    491
+         HOSTENTP          *(16)                  51
+         INADDR            DS(4)                  45D     47      48
+*RNF7031 INADDR_ANY        CONST                  95D
+*RNF7031 INADDR_BROADCA    CONST                  96D
+*RNF7031 INADDR_LOOPBCK    CONST                  97D
+*RNF7031 INADDR_NONE       CONST                  98D
+*RNF7031 INADDRLEN         I(10,0)                47D
+*RNF7031 INADDRP           *(16)                  48D
+*RNF7031 INETADDR          U(10,0)               278D
+                           PROTOTYPE
+*RNF7031 LISTEN            I(10,0)               257D
+                           PROTOTYPE
+*RNF7031 LSEEK             I(10,0)               454D
+                           PROTOTYPE
+*RNF7031 MKDIR             I(10,0)               430D
+                           PROTOTYPE
+*RNF7031 O_APPEND          I(10,0)               116D
+*RNF7031 O_CCSID           I(10,0)               113D
+*RNF7031 O_CODEPAGE        I(10,0)               112D
+*RNF7031 O_CREAT           I(10,0)               106D
+*RNF7031 O_CREATE          I(10,0)               107D
+*RNF7031 O_EXCL            I(10,0)               108D
+*RNF7031 O_INHERITMODE     I(10,0)               118D
+*RNF7031 O_LARGEFILE       I(10,0)               117D
+*RNF7031 O_NONBLOCK        I(10,0)                63D
+*RNF7031 O_RDONLY          I(10,0)               103D
+*RNF7031 O_RDWR            I(10,0)               105D
+*RNF7031 O_SHARE_NONE      I(10,0)               124D
+*RNF7031 O_SHARE_RDONLY    I(10,0)               121D
+*RNF7031 O_SHARE_RDWR      I(10,0)               123D
+*RNF7031 O_SHARE_WRONLY    I(10,0)               122D
+*RNF7031 O_TEXT_CREAT      I(10,0)               115D
+*RNF7031 O_TEXTDATA        I(10,0)               114D
+*RNF7031 O_TRUNC           I(10,0)               109D
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page     18
+
+*RNF7031 O_WRONLY          I(10,0)               104D
+*RNF7031 OPEN              I(10,0)               361D
+                           PROTOTYPE
+*RNF7031 OPENDIR           *(16)                 381D
+                           PROTOTYPE
+         POPIS             A(50)                  11D    581
+         PORTNUMBER        I(10,0)                13D    481
+*RNF7031 QLGCCSID          I(10,0)               173D
+*RNF7031 QLGCOUNTRYID      A(2)                  174D
+*RNF7031 QLGLANGUAGEID     A(3)                  175D
+*RNF7031 QLGMKDIR          I(10,0)               438D
+                           PROTOTYPE
+*RNF7031 QLGPATHDELIM      A(2)                  179D
+*RNF7031 QLGPATHLEN        I(10,0)               178D
+*RNF7031 QLGPATHNAME       A(255)                181D
+*RNF7031 QLGPATHNAMET      DS(287)               172D
+*RNF7031 QLGPATHTYPE       U(10,0)               177D
+*RNF7031 QLGRESERVED       A(3)                  176D
+*RNF7031 QLGRESERVED2      A(10)                 180D
+         RC                I(10,0)                17D    502M    506     523M
+                                                 527     538M    542     548
+         READ              I(10,0)               316D    538
+                           PROTOTYPE
+*RNF7031 READDIR           *(16)                 389D
+                           PROTOTYPE
+*RNF7031 RENAME            I(10,0)               405D
+                           PROTOTYPE
+*RNF7031 RMDIR             I(10,0)               422D
+                           PROTOTYPE
+*RNF7031 S_IRGRP           I(10,0)               132D
+*RNF7031 S_IROTH           I(10,0)               137D
+*RNF7031 S_IRUSR           I(10,0)               127D
+*RNF7031 S_IRWXG           I(10,0)               135D
+*RNF7031 S_IRWXO           I(10,0)               140D
+*RNF7031 S_IRWXU           I(10,0)               130D
+*RNF7031 S_IWGRP           I(10,0)               133D
+*RNF7031 S_IWOTH           I(10,0)               138D
+*RNF7031 S_IWUSR           I(10,0)               128D
+*RNF7031 S_IXGRP           I(10,0)               134D
+*RNF7031 S_IXOTH           I(10,0)               139D
+*RNF7031 S_IXUSR           I(10,0)               129D
+         SD                I(10,0)                15D    470M    473     502
+                                                 523     538     565     594
+*RNF7031 SEEK_CUR          CONST                 203D
+*RNF7031 SEEK_END          CONST                 204D
+*RNF7031 SEEK_SET          CONST                 202D
+         SERVER@           *(16)                  21D    485M    488
+         SERVERNAME        A(255)                 20D    484M    484     485
+*RNF7031 SETSOCKOPT        I(10,0)               232D
+                           PROTOTYPE
+         SINADDR           U(10,0)                38D    499M
+         SINFAMILY         I(5,0)                 36D    480M
+         SINPORT           U(5,0)                 37D    481M
+*RNF7031 SINZERO           A(8)                   39D
+*RNF7031 SO_BROADCAST      CONST                  86D
+*RNF7031 SO_DEBUG          CONST                  87D
+*RNF7031 SO_DONTROUTE      CONST                  88D
+*RNF7031 SO_ERROR          CONST                  89D
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page     19
+
+*RNF7031 SO_KEEPALIVE      CONST                  90D
+*RNF7031 SO_LINGER         CONST                  91D
+*RNF7031 SO_REUSEADDR      CONST                  92D
+*RNF7031 SOCK_DGRAM        CONST                  80D
+*RNF7031 SOCK_RAW          CONST                  81D
+*RNF7031 SOCK_SEQPACKET    CONST                  82D
+         SOCK_STREAM       CONST                  79D    470
+*RNF7031 SOCKADDR          *(16)                  40D
+         SOCKDTALEN        I(10,0)                12D    524     539
+         SOCKET            I(10,0)               218D    470
+                           PROTOTYPE
+         SOCKETADDR        DS(16)                 35D     40     479M    503
+                                                 504
+         SOCKETDATA        DS(60)                  8D     12     523     538
+*RNF7031 SOL_SOCKET        CONST                  83D
+*RNF7031 ST_ALLOCSIZE      U(10,0)               157D
+*RNF7031 ST_ATIME          I(10,0)               152D
+*RNF7031 ST_BLKSIZE        U(10,0)               156D
+*RNF7031 ST_CCSID          U(5,0)                161D
+*RNF7031 ST_CODEPAGE       U(5,0)                160D
+*RNF7031 ST_CTIME          I(10,0)               154D
+*RNF7031 ST_DEV            U(10,0)               155D
+*RNF7031 ST_DEV64          U(20,0)               165D
+*RNF7031 ST_GID            U(10,0)               150D
+*RNF7031 ST_INO            U(10,0)               146D
+*RNF7031 ST_INO_GEN_ID     U(10,0)               168D
+*RNF7031 ST_MODE           U(10,0)               145D
+*RNF7031 ST_MTIME          I(10,0)               153D
+*RNF7031 ST_NLINK          U(5,0)                147D
+*RNF7031 ST_NLINK32        U(10,0)               163D
+*RNF7031 ST_OBJTYPE        A(11)                 158D
+*RNF7031 ST_RDEV           U(10,0)               162D
+*RNF7031 ST_RDEV64         U(20,0)               164D
+*RNF7031 ST_RESERVED1      U(5,0)                148D
+*RNF7031 ST_RESERVED2      A(1)                  159D
+*RNF7031 ST_RESERVED3      A(32)                 167D
+*RNF7031 ST_SIZE           I(10,0)               151D
+*RNF7031 ST_UID            U(10,0)               149D
+*RNF7031 ST_VFS            U(10,0)               166D
+*RNF7031 STAT              I(10,0)               372D
+                           PROTOTYPE
+*RNF7031 STATBUF           DS(128)               144D
+         STRERROR          *(16)                 353D    591
+                           PROTOTYPE
+*RNF7031 UNLINK            I(10,0)               414D
+                           PROTOTYPE
+         WRITE             I(10,0)               328D    523
+                           PROTOTYPE
+      Field References for subprocedure ERRORHDLR
+
+         Field             Attributes         References (D=Defined M=Modified)
+         DUMPTEXT          A(12)                 588D    593
+*RNF7031 ERRORHDLR         PROTOTYPE             584D
+
+      Indicator References:
+
+         Indicator                            References (D=Defined M=Modified)
+         *IN                                     578
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page     20
+
+         03                                      466M    469M    518     557
+         LR                                      566M    595M
+
+       * * * * *   E N D   O F   C R O S S   R E F E R E N C E   * * * * *
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page     21
+
+                      E x t e r n a l   R e f e r e n c e s
+
+      Statically bound procedures:
+         Procedure                            References
+         bind                                    246
+         read                                    316     539
+         open                                    361
+         stat                                    372
+         write                                   328     524
+         close                                   338     565     594
+         rmdir                                   422
+         mkdir                                   430
+         lseek                                   454
+         socket                                  218     470
+         listen                                  257
+         accept                                  268
+         unlink                                  414
+         getcwd                                  446
+         connect                                 304     504
+         __errno                                 346     590
+         opendir                                 381
+         readdir                                 389
+         strerror                                353     591
+         closedir                                397
+         QlgMkdir                                438
+         inet_addr                               278
+         setsockopt                              232
+         gethostbyname                           294     488
+         Qp0lRenameKeep                          405
+
+      Imported fields:
+         Field             Attributes         Defined
+         No references in the source.
+
+      Exported fields:
+         Field             Attributes         Defined
+         No references in the source.
+
+   * * * * *   E N D   O F   E X T E R N A L   R E F E R E N C E S   * * * * *
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page     22
+
+                          M e s s a g e   S u m m a r y
+
+ Msg id  Sv Number Message text
+*RNF5409 00      2 The prototyped call returns a value which is lost when CALLP
+                   is used.
+*RNF7031 00    133 The name or indicator is not referenced.
+
+       * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZAPI/CLIENT             PASSIST2   09/18/18 10:55:01        Page     23
+
+                            F i n a l   S u m m a r y
+
+  Message Totals:
+
+    Information  (00) . . . . . . . :      135
+    Warning      (10) . . . . . . . :        0
+    Error        (20) . . . . . . . :        0
+    Severe Error (30+)  . . . . . . :        0
+    ---------------------------------  -------
+    Total . . . . . . . . . . . . . :      135
+
+
+  Source Totals:
+
+    Records . . . . . . . . . . . . :      597
+    Specifications  . . . . . . . . :      299
+    Data records  . . . . . . . . . :        0
+    Comments  . . . . . . . . . . . :      145
+
+         * * * * *   E N D   O F   F I N A L   S U M M A R Y   * * * * *
+Program CLIENT placed in library VZAPI. 00 highest severity. Created on 09/18/18 at 10:55:02.
+          * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *

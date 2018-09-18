@@ -456,26 +456,26 @@ public final class EditFile extends JFrame {
         textArea2.setFont(new Font(editorFont, Font.PLAIN, fontSize));
 
         isError = false;
-        // Get text from the file and set it to the textArea
-        if (methodName.equals("rewritePcFile")) {
-            displayPcFile();
-        } else if (methodName.equals("rewriteIfsFile")) {
-            displayIfsFile();
-        } else if (methodName.equals("rewriteSourceMember")) {
-            displaySourceMember();
-        }
+            // Get text from the file and set it to the textArea
+            if (methodName.equals("rewritePcFile")) {
+                displayPcFile();
+            } else if (methodName.equals("rewriteIfsFile")) {
+                displayIfsFile();
+            } else if (methodName.equals("rewriteSourceMember")) {
+                displaySourceMember();
+            }
 
-        // Create window if there was no error in rewriting the file.
-        // -------------
-        if (!isError) {
-            createWindow();
-        } else {
-            row = "Error: Connection lost.";
-            mainWindow.msgVector.add(row);
-            mainWindow.showMessages(nodes);
-            // Remove message scroll listener (cancel scrolling to the last message)
-            mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
-        }
+            // Create window if there was no error in rewriting the file.
+            // -------------
+            if (!isError) {
+                createWindow();
+            } else {
+                row = "Error: Connection lost.";
+                mainWindow.msgVector.add(row);
+                mainWindow.showMessages(nodes);
+                // Remove message scroll listener (cancel scrolling to the last message)
+                mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
+           }
 
         // Continue constructor
         // --------------------
@@ -1418,8 +1418,8 @@ public final class EditFile extends JFrame {
                 // Use PC charset parameter for conversion
                 textArea.setText("");
 
-                
-                
+
+
                 // Input will be decoded using PC charset parameter.
                 BufferedReader bufferedReader = Files.newBufferedReader(filePath, Charset.forName(pcCharset));
                 textLine = bufferedReader.readLine();
@@ -1431,7 +1431,7 @@ public final class EditFile extends JFrame {
                 }
                 bufferedReader.close();
 
-                
+
                 //list = Files.readAllLines(filePath, Charset.forName(pcCharset));
                 //if (list != null) {
                 //    // Concatenate all text lines from the list obtained from the file
@@ -1442,8 +1442,7 @@ public final class EditFile extends JFrame {
                 //        textArea.append(text + NEW_LINE);
                 //    }
                 //}
-                
-                
+
             }
         } catch (Exception exc) {
             isError = true;
