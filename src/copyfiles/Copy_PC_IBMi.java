@@ -308,7 +308,7 @@ public class Copy_PC_IBMi {
                         ibmCcsid = "819";
                         ibmCcsidInt = 819;
                     }
-                    
+
                     //
                     // No conversion of text files
                     // -------------
@@ -871,7 +871,6 @@ public class Copy_PC_IBMi {
             // If file name does not have a postfix (there is no dot), the source type will be MBR
             sourceType = "MBR";
         }
-
         // Path to input PC text file
         Path inTextFile = Paths.get(sourcePathString);
 
@@ -985,6 +984,7 @@ public class Copy_PC_IBMi {
                     // Change member to set its Source Type
                     chgPfmCommand = "CHGPFM FILE(" + libraryName + "/" + fileName + ") MBR(" + memberName + ") SRCTYPE("
                             + sourceType + ")";
+                    System.out.println("chgPfmCommand: " + chgPfmCommand);
                     // Perform the CL command
                     cmdCall.run(chgPfmCommand);
 
@@ -1054,6 +1054,12 @@ public class Copy_PC_IBMi {
                         + "') MBROPT(*REPLACE) CVTDTA(*AUTO) STMFCCSID(*STMF) DBFCCSID(*FILE)";
                 // Perform the command
                 cmdCall.run(commandCpyFrmStmfString);
+
+                // Change member to set its Source Type
+                chgPfmCommand = "CHGPFM FILE(" + libraryName + "/" + fileName + ") MBR(" + memberName + ") SRCTYPE("
+                        + sourceType + ")";
+                // Perform the CL command
+                cmdCall.run(chgPfmCommand);
 
                 // Delete the temporary file
                 ifsTmpFile.delete();
