@@ -1006,7 +1006,7 @@ public class Compile extends JFrame {
                     // IFS not available.
                     return null;
                 } else {
-                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) ";
+                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) SRCMBR(" + memberName + ") ";
                 }
                 commandText += " OUTPUT(  *PRINT  ) DBGVIEW( *ALL  )";
                 break;
@@ -1018,7 +1018,7 @@ public class Compile extends JFrame {
                     // IFS not available.
                     return null;
                 } else {
-                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) ";
+                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) SRCMBR(" + memberName + ") ";
                 }
                 commandText += " OUTPUT(  *PRINT  )";
                 break;
@@ -1030,7 +1030,7 @@ public class Compile extends JFrame {
                     // IFS not available.
                     return null;
                 } else {
-                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) ";
+                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) SRCMBR(" + memberName + ") ";
                 }
                 commandText += " OUTPUT(  *PRINT  ) DBGVIEW( *ALL  )";
                 break;
@@ -1043,7 +1043,7 @@ public class Compile extends JFrame {
                     // IFS not available.
                     return null;
                 } else {
-                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) ";
+                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) SRCMBR(" + memberName + ") ";
                 }
                 commandText += " OPTION(  *SOURCE  )";
                 break;
@@ -1056,7 +1056,7 @@ public class Compile extends JFrame {
                     // IFS not available.
                     return null;
                 } else {
-                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) ";
+                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) SRCMBR(" + memberName + ") ";
                 }
                 commandText += " OPTION(  *SOURCE *PRINT )";
                 break;
@@ -1070,7 +1070,7 @@ public class Compile extends JFrame {
                 if (ifs) {
                     commandText += "SRCSTMF( '" + pathString + "'  )";
                 } else {
-                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) ";
+                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) SRCMBR(" + memberName + ") ";
                 }
                 commandText += " DBGVIEW(  *ALL  ) OUTPUT(  *PRINT  )";
                 if (compileCommand.equals("CRTBNDC") || compileCommand.equals("CRTBNDCPP")) {
@@ -1087,7 +1087,7 @@ public class Compile extends JFrame {
                 if (ifs) {
                     commandText += "SRCSTMF(  '" + pathString + "'  )";
                 } else {
-                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) ";
+                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) SRCMBR(" + memberName + ") ";
                 }
                 commandText += " DBGVIEW(  *ALL  ) OUTPUT(  *PRINT  )";
                 if (compileCommand.equals("CRTCMOD") || compileCommand.equals("CRTCPPMOD")) {
@@ -1116,7 +1116,7 @@ public class Compile extends JFrame {
                 if (ifs) {
                     commandText += "SRCSTMF(  '" + pathString + "'  )";
                 } else {
-                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) ";
+                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) SRCMBR(" + memberName + ") ";
                 }
                 commandText += " OBJTYPE(  " + commandObjectType + "  ) " // objectType: *MODULE, *PGM, *SRVPGM
                         + " OUTPUT( *PRINT  ) DBGVIEW(*SOURCE)";
@@ -1128,7 +1128,7 @@ public class Compile extends JFrame {
                 if (ifs) {
                     commandText += "SRCSTMF(  '" + pathString + "'  )";
                 } else {
-                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) ";
+                    commandText += "SRCFILE(  " + libraryName + "/" + fileName + "  ) SRCMBR(" + memberName + ") ";
                 }
                 commandText += " OUTPUT(  *PRINT  ) DBGVIEW(  *SOURCE  )";
                 break;
@@ -1141,7 +1141,7 @@ public class Compile extends JFrame {
                     return null;
                 } else {
                     commandText = compileCommand + " PGM(  " + libNamePar + "/" + objNamePar + "  ) "
-                            + "SRCFILE(  " + libraryName + "/" + fileName + "  ) OUTPUT(  *PRINT  )";
+                            + "SRCFILE(  " + libraryName + "/" + fileName + "  ) OUTPUT(  *PRINT  ) SRCMBR(" + memberName + ") ";
                 }
                 break;
             }
@@ -1152,7 +1152,7 @@ public class Compile extends JFrame {
                     return null;
                 } else {
                     commandText = compileCommand + " FILE(  " + libNamePar + "/" + objNamePar + "  ) "
-                            + "SRCFILE(  " + libraryName + "/" + fileName + "  ) "
+                            + "SRCFILE(  " + libraryName + "/" + fileName + "  ) SRCMBR(" + memberName + ") "
                             + "FILETYPE(  *DATA  ) MBR(  *FILE  ) OPTION(  *LIST  )";
                 }
                 break;
@@ -1165,7 +1165,8 @@ public class Compile extends JFrame {
                 } else {
                     commandText = compileCommand + " FILE(  " + libNamePar + "/" + objNamePar + "  ) "
                             + "SRCFILE(  " + libraryName + "/" + fileName
-                            + "  ) FILETYPE(  *DATA  ) MBR(  *FILE  ) DTAMBRS(  *ALL  ) OPTION(  *LIST  )";
+                            + "  ) SRCMBR(" + memberName + ") FILETYPE(  *DATA  ) MBR(  *FILE  ) "
+                            + "DTAMBRS(  *ALL  ) OPTION(  *LIST  )";
                 }
                 break;
             }
@@ -1177,7 +1178,7 @@ public class Compile extends JFrame {
                 } else {
                     commandText = compileCommand + " FILE(  " + libNamePar + "/" + objNamePar + "  ) "
                             + "SRCFILE(  " + libraryName + "/" + fileName
-                            + "  ) DEV(  *REQUESTER  ) OPTION(  *LIST  )";
+                            + "  ) DEV(  *REQUESTER  ) OPTION(  *LIST  ) SRCMBR(" + memberName + ") ";
                 }
                 break;
             }
@@ -1188,7 +1189,7 @@ public class Compile extends JFrame {
                     return null;
                 } else {
                     commandText = compileCommand + " FILE(  " + libNamePar + "/" + objNamePar + "  ) "
-                            + "SRCFILE(" + libraryName + "/" + fileName + "  ) OPTION(  *LIST  )";
+                            + "SRCFILE(" + libraryName + "/" + fileName + "  ) OPTION(  *LIST  ) SRCMBR(" + memberName + ") ";
                 }
                 break;
             }
@@ -1200,7 +1201,7 @@ public class Compile extends JFrame {
                 } else {
                     commandText = compileCommand + " CMD(  " + libNamePar + "/" + objNamePar
                             + "  ) PGM(  *LIBL/" + memberName + "  ) " + "SRCFILE(  " + libraryName + "/"
-                            + fileName + "  )";
+                            + fileName + "  ) SRCMBR(" + memberName + ") ";
                 }
                 break;
             }
@@ -1212,7 +1213,7 @@ public class Compile extends JFrame {
                 } else {
                     commandText = compileCommand + " TBL(  " + libNamePar + "/" + objNamePar
                             + "  ) PGM(*LIBL/" + memberName + "  ) " + "SRCFILE(  " + libraryName + "/"
-                            + fileName + "  )";
+                            + fileName + "  ) SRCMBR(" + memberName + ") ";
                 }
                 break;
             }
