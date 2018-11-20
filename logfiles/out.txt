@@ -1,9 +1,0 @@
-chkConn.execute()
-chkConn.execute()
-chkConn.execute()
-chkConn.execute()
-chkConn.execute()
-Right click IBMi: /QSYS.LIB/VZCOBOL.LIB/QCBLLESRC.FILE/CALLING.MBR
-Right click IBMi: /QSYS.LIB/VZCOBOL.LIB/QCLSRC.FILE/CRTDTAQ.MBR
-Right click IBMi: /QSYS.LIB/VZC.LIB/QCLSRC.FILE/PTRCL.MBR
-Right click IBMi: /QSYS.LIB/VZC.LIB/QCSRC.FILE/CRTUDF.MBR

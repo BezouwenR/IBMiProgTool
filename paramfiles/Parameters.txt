@@ -1,5 +1,5 @@
 #Copy files between IBM i and PC, edit and compile.
-#Tue Nov 20 11:33:37 CET 2018
+#Tue Nov 20 11:36:49 CET 2018
 EDITOR_FONT=Monospaced
 OVERWRITE_FILE=Y
 COMPILE_WINDOW_Y=366
