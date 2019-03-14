@@ -3,6 +3,7 @@ package copyfiles;
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400JPing;
 import com.ibm.as400.access.IFSFile;
+import com.ibm.as400.access.SocketProperties;
 import com.ibm.as400.access.SystemValue;
 
 import java.awt.BorderLayout;
@@ -552,7 +553,7 @@ public class MainWindow extends JFrame {
             connectReconnectButton.setForeground(DIM_BLUE);
 
             chkConn = new CheckConnection(remoteServer);
-            
+
             printDebugCheckBox.setSelected(properties.getProperty("PRINT_DEBUG").isEmpty() ? false : true);
 
             /// Force checking connection in background
@@ -1155,7 +1156,9 @@ public class MainWindow extends JFrame {
         connectReconnectButton.addActionListener(ae -> {
             connectReconnectRefresh();
         });
+
         //
+        // ==============================????
         // Print debug info check box - Yes = "Y", No = ""
         // -----------------------------------------------
         printDebugCheckBox.addItemListener(il -> {
@@ -1192,6 +1195,8 @@ public class MainWindow extends JFrame {
                 }
             }
         });
+        // ==============================????
+
         //
         // PC charset combo box
         // --------------------
@@ -1874,9 +1879,25 @@ public class MainWindow extends JFrame {
     }
 
     /**
-     *
+     *   Getting a new connection to the remote server
      */
     protected boolean connectReconnect() {
+
+        // Update properties from Library, File, Member input fields
+        try {
+            infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
+            properties.load(infile);
+            infile.close();
+            properties.setProperty("LIBRARY_PATTERN", libraryPatternTextField.getText());
+            properties.setProperty("FILE_PATTERN", filePatternTextField.getText());
+            properties.setProperty("MEMBER_PATTERN", memberPatternTextField.getText());
+            outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
+            properties.store(outfile, PROP_COMMENT);
+            outfile.close();
+        } catch (Exception exc) {
+            exc.printStackTrace();
+        }
+
         // Set wait-cursor (rotating wheel?)
         //      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         // Keeps the scroll pane at the LAST MESSAGE.
@@ -1900,6 +1921,14 @@ public class MainWindow extends JFrame {
             // Reload LEFT side. Do not use Right side! It would enter a loop.
             showMessages(noNodes);
 
+            // Set socket properties 
+            SocketProperties socketProperties = new SocketProperties();
+            socketProperties.setLoginTimeout(0); // Login timeout - no limit
+            socketProperties.setSoTimeout(0);    // Receive timeout - no limit
+            socketProperties.setKeepAlive(true); // Set keep alive
+            remoteServer.setSocketProperties(socketProperties);
+
+            // Connect FILE service beforehand
             remoteServer.connectService(AS400.FILE);
 
             SystemValue sysVal = new SystemValue(remoteServer, "QCCSID");
@@ -1907,20 +1936,6 @@ public class MainWindow extends JFrame {
             msgVector.add(row);
             // Reload LEFT side. Do not use Right side! It would enter a loop.
             showMessages(noNodes);
-
-            try {
-                infile = Files.newBufferedReader(parPath, Charset.forName(encoding));
-                properties.load(infile);
-                infile.close();
-                properties.setProperty("LIBRARY_PATTERN", libraryPatternTextField.getText());
-                properties.setProperty("FILE_PATTERN", filePatternTextField.getText());
-                properties.setProperty("MEMBER_PATTERN", memberPatternTextField.getText());
-                outfile = Files.newBufferedWriter(parPath, Charset.forName(encoding));
-                properties.store(outfile, PROP_COMMENT);
-                outfile.close();
-            } catch (Exception exc) {
-                exc.printStackTrace();
-            }
         } catch (Exception exc) {
             exc.printStackTrace();
             row = "Error: Connection to server  " + properties.getProperty("HOST") + "  failed.  -  " + exc.toString();
@@ -1931,9 +1946,9 @@ public class MainWindow extends JFrame {
             // Remove setting last element of messages
             scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
 
-            // Check connection and keep connection alive in background.
-///            chkConn = new CheckConnection(remoteServer);
-///            chkConn.execute();
+//????            // Check connection and keep connection alive in background.
+//????            chkConn = new CheckConnection(remoteServer);
+//????            chkConn.execute();
 
             return true;
         }
@@ -1952,19 +1967,21 @@ public class MainWindow extends JFrame {
         // Remove setting last element of messages
         scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(messageScrollPaneAdjustmentListenerMax);
 
-        if (printDebugCheckBox.isSelected()) {
-            // Check connection and keep connection alive in background.
-            chkConn = new CheckConnection(remoteServer);
-            System.out.println("chkConn.execute()");
-            chkConn.execute();
-        } else {
-            // Stop checking connection.
-            System.out.println("chkConn.cancel()");
-            if (chkConn != null) {
-                chkConn.cancel(true);
-                chkConn = null;
-            }
-        }
+//????        // =================????
+//????        if (printDebugCheckBox.isSelected()) {
+//????            // Check connection and keep connection alive in background.
+//????            chkConn = new CheckConnection(remoteServer);
+//????            System.out.println("chkConn.execute()");
+//????            chkConn.execute();
+//????        } else {
+//????            // Stop checking connection.
+//????            System.out.println("chkConn.cancel()");
+//????            if (chkConn != null) {
+//????                chkConn.cancel(true);
+//????                chkConn = null;
+//????            }
+//????        }
+//????        // =================????
 
         return true;
     }
@@ -2824,7 +2841,7 @@ public class MainWindow extends JFrame {
             rightPathString = getStringFromRightPath(rightSelectedPath);
             // Remove trailing file separator from the path string
             rightPathString = correctRightPathString(rightPathString);
-            IFSFile ifsFile = new IFSFile(remoteServer, rightPathString);
+            ifsFile = new IFSFile(remoteServer, rightPathString);
             try {
                 /// remoteServer.connectService(AS400.FILE);
                 fileName = ifsFile.getName();
@@ -2873,8 +2890,6 @@ public class MainWindow extends JFrame {
             rightTreeMap.put(rightPathString, rightRow);
 
             try {
-                ifsFile = new IFSFile(remoteServer, rightPathString);
-
                 // Add or remove menu items in the right pop-up menu
                 if (ifsFile.isDirectory()) {
                     if (rightPathString.startsWith("/QSYS.LIB")) {
@@ -3023,8 +3038,12 @@ public class MainWindow extends JFrame {
                     remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
                     remoteServer.connectService(AS400.FILE);
                     remoteServer.connectService(AS400.RECORDACCESS);
+                    System.out.println("A new connection to the server was obtained.");
+                    row = "Info: A new connection to the server was obtained.";
+                    msgVector.add(row);
+                    showMessages(noNodes);
                 } catch (Exception ex) {
-                    row = "Error: Getting new connection to the server." + ex.toString();
+                    row = "Error: Getting a new connection to the server." + ex.toString();
                     msgVector.add(row);
                     showMessages(noNodes);
                     exc.printStackTrace();
@@ -3435,10 +3454,10 @@ public class MainWindow extends JFrame {
             int delay = 10000;
             // Endless loop
             while (true) {
-                boolean isCancelled = isCancelled();
+                // boolean isCancelled = isCancelled();
                 // System.out.println("isCancelled: " + isCancelled);
                 // When cancel(true) was issued on this object stop running
-                if (isCancelled) {
+                if (isCancelled()) {
                     return null;
                 }
                 // Ping to the server for host server services.
