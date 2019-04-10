@@ -1,17 +1,17 @@
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             TANDEM_IP/RGTANDEM       PASSIST2   03/11/19 17:15:41        Page      1
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/GETTIME           PASSIST2   04/08/19 16:29:35        Page      1
 
   Command  . . . . . . . . . . . . :   CRTBNDRPG
     Issued by  . . . . . . . . . . :     VZUPKA
-  Program  . . . . . . . . . . . . :   RGTANDEM
-    Library  . . . . . . . . . . . :     TANDEM_IP
+  Program  . . . . . . . . . . . . :   GETTIME
+    Library  . . . . . . . . . . . :     VZTOOL
   Text 'description' . . . . . . . :   *SRCMBRTXT
 
-  Source Member  . . . . . . . . . :   RGTANDEM
+  Source Member  . . . . . . . . . :   GETTIME
   Source File  . . . . . . . . . . :   QRPGLESRC
-    Library  . . . . . . . . . . . :     TANDEM_IP
-    CCSID  . . . . . . . . . . . . :     500
+    Library  . . . . . . . . . . . :     VZTOOL
+    CCSID  . . . . . . . . . . . . :     870
   Text 'description' . . . . . . . :
-  Last Change  . . . . . . . . . . :   03/11/19  16:55:13
+  Last Change  . . . . . . . . . . :   01/09/19  17:37:14
 
   Generation severity level  . . . :   10
   Default activation group . . . . :   *YES
@@ -40,328 +40,73 @@
   Generate program interface . . . :   *NO
   Include directory  . . . . . . . :
   Preprocessor options . . . . . . :   *NONE
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             TANDEM_IP/RGTANDEM       PASSIST2   03/11/19 17:15:41        Page      2
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/GETTIME           PASSIST2   04/08/19 16:29:35        Page      2
 
 Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
 Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
 
                           S o u r c e   L i s t i n g
 
-     1  **************************************************************************                               000000     000100
-     2  *                                                                                                        000000     000200
-     3  *    Datum: 2019-03-08 VZ                                                                                000000     000300
-     4  *                                                                                                        000000     000400
-     5  *    RGTANDEM -   Parametry pro Tandem                                                                   000000     000500
-     6  *                                                                                                        000000     000600
-     7  *    Program se vola takto:                                                                              000000     000700
-     8  *    ----------------------                                                                              000000     000800
-     9  *    CALL RGTANDEM                                                                                       000000     000900
-    10  *                                                                                                        000000     001000
-    11  *=========================================================================                               000000     001100
-    12  *   D a t o v e   s o u b o r y                                                                          000000     001200
-    13  *=========================================================================                               000000     001300
+     1  //************************************************************************                               000000     000100
+     2  //                                                                                                       000000     000200
+     3  //  Datum: 2019-09-01                                                                                    000000     000300
+     4  //                                                                                                       000000     000400
+     5  //  Procedura GETTIME ziska cas ve formatu ISO, prevede jej do znakove                                   000000     000500
+     6  //  podoby a vrati pointer, ktery na nej ukazuje.                                                        000000     000600
+     7  //                                                                                                       000000     000700
+     8  //  Kompiluje se jako modul, tedy volbou 15, a pak se musi pripojit                                      000000     000800
+     9  //  ----------------------------------------                                                             000000     000900
+    10  //  k nekteremu hlavnimu programu.                                                                       000000     001000
+    11  //************************************************************************                               000000     001100
+    12                                                                                                           000000     001200
+    13   ctl-opt nomain;                                                                                         000000     001300
+======>          aaaaaa
+*RNF1304 20 a      001300  The NOMAIN keyword is not valid when the CRTBNDRPG command
+                           is used to create a program.
     14                                                                                                           000000     001400
-    15   // Databazovy soubor hlavickovy pro Tandem                                                              000000     001500
-
-
-    16   dcl-f PFTANDEMH usage(*output: *update);                                                                000000     001600
-======>        aaaaaaaaa
-*RNF2120 40 a      001600  External descriptions for file PFTANDEMH not found; file is
-                           ignored.
+    15  // Procedura GETTIME                                                                                     000000     001500
+    16  // =================                                                                                     000000     001600
     17                                                                                                           000000     001700
-    18   // Databazovy soubor strankovaci pro Tandem                                                             000000     001800
-    19   dcl-f PFTANDEM  keyed usage(*output: *update: *delete);                                                 000000     001900
-======>        aaaaaaaa
-*RNF2120 40 a      001900  External descriptions for file PFTANDEM not found; file is
-                           ignored.
-    20                                                                                                           000000     002000
-    21  // Obrazovkovy soubor                                                                                    000000     002100
-    22   dcl-f DFTANDEM workstn sfile(DFTANDEMP: idx);                                                           000000     002200
-======>        aaaaaaaa
-*RNF2120 40 a      002200  External descriptions for file DFTANDEM not found; file is
-                           ignored.
+
+
+    18   dcl-proc GETTIME   export;                                                                              000000     001800
+======>           aaaaaaa
+*RNF1520 20 a      001800  The procedure cannot be defined with DFTACTGRP(*YES).
+    19                                                                                                           000000     001900
+    20  //  procedure interface                                                                                  000000     002000
+
+
+    21   dcl-pi *n          pointer;                                                                             000000     002100
+    22   end-pi;                                                                                                 000000     002200
     23                                                                                                           000000     002300
-    24  *=========================================================================                               000000     002400
-    25  *   P o p i s   d a t                                                                                    000000     002500
-    26  *=========================================================================                               000000     002600
+    24  //  local variables                                                                                      000000     002400
+    25   dcl-s ISOtime      timestamp(12);                                                                       000000     002500
+    26   dcl-s current_time      char(32) static;                                                                000000     002600
     27                                                                                                           000000     002700
+    28  //  procedure body                                                                                       000000     002800
+    29  //  --------------                                                                                       000000     002900
+    30                                                                                                           000000     003000
+    31  //  get current time                                                                                     000000     003100
 
 
-    28   dcl-s   pocet        int(10);                                                                           000000     002800
-    29   dcl-s   idx          int(10);                                                                           000000     002900
-    30   dcl-s   pomocnyKlic  like(KEYFIELD);                                                                    000000     003000
-    31                                                                                                           000000     003100
-    32   // datove struktury pro vstup a vystup                                                                  000000     003200
-    33   dcl-ds  PF_Hds   likerec(PFTANDEMHR: *all) inz; // DS for PF Header                                     000000     003300
-    34   dcl-ds  DF_Hds   likerec(DFTANDEMH:  *all) inz; // DS for DSPF Header                                   000000     003400
-    35   dcl-ds  PF_Pds   likerec(PFTANDEMR:  *all);     // DS for PF Pages                                      000000     003500
-    36   dcl-ds  DF_Pds   likerec(DFTANDEMP:  *all);     // DS for DSPF Pages                                    000000     003600
-    37                                                                                                           000000     003700
-    38  *=========================================================================                               000000     003800
-    39  *   H l a v n i   p r o g r a m                                                                          000000     003900
-    40  *=========================================================================                               000000     004000
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             TANDEM_IP/RGTANDEM       PASSIST2   03/11/19 17:15:41        Page      3
-
-Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
-Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
-    41                                                                                                           000000     004100
-    42   // Ctu prvni zaznam z HLAVICKOVE databaze                                                               000000     004200
-
-
-    43   setll   *start PFTANDEMH;  // Nastavim ukazatel na zacatek souboru                                      000000     004300
-    44   read(n)  PFTANDEMH  PF_Hds;  // Ctu prvni zaznam souboru                                                000000     004400
-    45   // neexistuje-li zaznam, zapisu ho s prazdnymi hodnotami                                                000000     004500
-    46   if  %eof;                                                                                     B01       000000     004600
-    47       clear  PF_Hds;                                                                             01       000000     004700
-    48       write  PFTANDEMHR PF_Hds;                                                                  01       000000     004800
-    49   endif;                                                                                        E01       000000     004900
-    50                                                                                                           000000     005000
-    51   exsr   plnitPods;   // Naplnim podsoubor STRANEK poprve                                                 000000     005100
-    52   DF_Hds.KURZOR = 1;  // Nastavim ukazatel na 1. zaznam podsouboru                                        000000     005200
-    53                                                                                                           000000     005300
-    54   dou   DF_Hds.in03;     // Cyklus 1 - zpracovat podsoubor (do stisku klavesy F3)               B01       000000     005400
-    55       exsr   zobrPods;       // Zobrazim stranku podsouboru                                      01       000000     005500
-    56       if DF_Hds.SFKUR0 > 0;                                                                     B02       000000     005600
-    57          DF_Hds.KURZOR = DF_Hds.SFKUR0; // Nastavim kurzor na soucasny zaznam pro pristi zobraz  02       000000     005700
-    58       endif;                                                                                    E02       000000     005800
-    59                                                                                                           000000     005900
-    60       if       DF_Hds.in05;      // Po F5 obnovim obsah podsouboru a pokracuji                  B02       000000     006000
-    61          exsr   plnitPods;                                                                       02       000000     006100
-    62       elseif   DF_Hds.in06;      // Po F6 zpracuji vlozeni noveho zaznamu do souboru a opakuji  X02       000000     006200
-    63          exsr   novyZaznam;                                                                      02       000000     006300
-    64          exsr   plnitPods ; // znovu naplnim podsoubor                                           02       000000     006400
-    65          iter;                                                                                   02       000000     006500
-    66       elseif   DF_Hds.in12;      // Po F12 Navrat                                               X02       000000     006600
-    67          iter;                                                                                   02       000000     006700
-    68       elseif   DF_Hds.in18;      // Po F18 Smazat                                               X02       000000     006800
-    69          exsr   smazatZaznam;                                                                    02       000000     006900
-    70          exsr   plnitPods;                                                                       02       000000     007000
-    71          DF_Hds.KURZOR = 1;                                                                      02       000000     007100
-    72          iter;                                                                                   02       000000     007200
-    73       endif;                                                                                    E02       000000     007300
-    74                                  // Po Enter, PgDwn, PgUp                                                 000000     007400
-    75       // Zpracovat zmenene zaznamy                                                                        000000     007500
-    76       // -------------------------                                                                        000000     007600
-    77       if DF_Hds.in51;         // Neni-li podsoubor prazdny - zpracuji data podsouboru           B02       000000     007700
-    78          readc  DFTANDEMP  DF_Pds;  // Ctu prvni zmeneny zaznam podsouboru                       02       000000     007800
-    79                                                                                                           000000     007900
-    80          dow   not %eof;     // Cyklus 2 - zpracovat zmenene zaznamy                            B03       000000     008000
-    81              chain  DF_Pds.KEYFIELD  PFTANDEM  PF_Pds;  // Prectu PF podle klice pro update      03       000000     008100
-    82              eval-corr PF_Pds = DF_Pds;    // Data z obrazovky pro PF                            03       000000     008200
-    83                                                                                                           000000     008300
-    84              // Kontrola vstupu z klávesnice                                                              000000     008400
-    85              if  DF_Pds.ACOMPRS <> 'Y' and DF_Pds.ACOMPRS <> 'N';                               B04       000000     008500
-    86                  DF_Pds.ACOMPRS = 'N';                                                           04       000000     008600
-    87              endif;                                                                             E04       000000     008700
-    88              if DF_Pds.BCOMPRS <> 'Y' and DF_Pds.BCOMPRS <> 'N';                                B04       000000     008800
-    89                  DF_Pds.BCOMPRS = 'N';                                                           04       000000     008900
-    90              endif;                                                                             E04       000000     009000
-    91              if DF_Pds.CCOMPRS <> 'Y' and DF_Pds.CCOMPRS <> 'N';                                B04       000000     009100
-    92                  DF_Pds.CCOMPRS = 'N';                                                           04       000000     009200
-    93              endif;                                                                             E04       000000     009300
-    94              if DF_Pds.DCOMPRS <> 'Y' and DF_Pds.DCOMPRS <> 'N';                                B04       000000     009400
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             TANDEM_IP/RGTANDEM       PASSIST2   03/11/19 17:15:41        Page      4
-
-Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
-Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
-    95                  DF_Pds.DCOMPRS = 'N';                                                           04       000000     009500
-    96              endif;                                                                             E04       000000     009600
-    97              if DF_Pds.ECOMPRS <> 'Y' and DF_Pds.ECOMPRS <> 'N';                                B04       000000     009700
-    98                  DF_Pds.ECOMPRS = 'N';                                                           04       000000     009800
-    99              endif;                                                                             E04       000000     009900
-   100              if DF_Pds.FCOMPRS <> 'Y' and DF_Pds.FCOMPRS <> 'N';                                B04       000000     010000
-   101                  DF_Pds.FCOMPRS = 'N';                                                           04       000000     010100
-   102              endif;                                                                             E04       000000     010200
-   103                                                                                                           000000     010300
-   104              update(e)   PFTANDEMR  PF_Pds;   // Prepisu zaznam PF (neni-li chyba)               03       000000     010400
-   105              DF_Pds.REMDTAQ = 'IPA_COM_' + DF_Pds.REMCOMCH; // Dodatecne pole                    03       000000     010500
-   106              update      DFTANDEMP  DF_Pds;   // Prepisu taky zaznam podsouboru                  03       000000     010600
-   107              readc  DFTANDEMP  DF_Pds;     // Ctu dalsi zmeneny zaznam podsoubou                 03       000000     010700
-   108          enddo;              // Cyklus 2 - konec                                                E03       000000     010800
-   109       endif;             // Konec podminky *in51 "zobrazeni stranky povoleno"                   E02       000000     010900
-   110                                                                                                           000000     011000
-   111       // Prepsat HLAVICKOVY soubor                                                                        000000     011100
-   112       // -------------------------                                                                        000000     011200
-   113       setll  *start PFTANDEMH;   // Nastavim ukazatel na zacatek souboru                         01       000000     011300
-   114       read   PFTANDEMH  PF_Hds;  // Ctu prvni zaznam souboru pro update                          01       000000     011400
-   115       eval-corr PF_Hds = DF_Hds; // Data z obrazovky pro fyzicky soubor                          01       000000     011500
-   116       update PFTANDEMHR  PF_Hds; // Prepisu zaznam souboru daty z datove struktury               01       000000     011600
-   117                                                                                                           000000     011700
-   118   enddo;           // Cyklus 1 - konec                                                          E01       000000     011800
-   119                                                                                                           000000     011900
-   120   // Ukonceni vypoctu po F3                                                                               000000     012000
-   121   *inlr = *on;                                                                                            000000     012100
-   122   return;                                                                                                 000000     012200
-   123                                                                                                           000000     012300
-   124  *=========================================================================                               000000     012400
-   125  *   P o d p r o g r a m y                                                                                000000     012500
-   126  *=========================================================================                               000000     012600
-   127   //  ---------------------------------------                                                             000000     012700
-   128   //   plnitPods - plneni podsouboru STRANEK                                                              000000     012800
-   129   //  ---------------------------------------                                                             000000     012900
-   130   begsr plnitPods;                                                                                        000000     013000
-   131                                                                                                           000000     013100
-   132       DF_Hds.in56 = *on;                                                                                  000000     013200
-   133       write   DFTANDEMH DF_Hds; // Vymazu podsoubor stranek                                               000000     013300
-   134       DF_Hds.in56 = *off;                                                                                 000000     013400
-   135                                                                                                           000000     013500
-   136       idx = 0 ;                 // Nastavim cislo zaznamu podsouboru = 0                                  000000     013600
-   137       setll *start PFTANDEM;    // Nastavim ukazatel na zacatek fyzickeho souboru                         000000     013700
-   138       read(n) PFTANDEM PF_Pds;  // Ctu prvni zaznam souboru do datove struktury                           000000     013800
-   139                                                                                                           000000     013900
-   140       dow   not %eof;   // Naplnim podsoubor daty ze souboru                                    B01       000000     014000
-   141          idx += 1 ;      // Zvysim citac zaznamu                                                 01       000000     014100
-   142          eval-corr DF_Pds = PF_Pds;  // Data z PF pro podsoubor                                  01       000000     014200
-   143          DF_Pds.REMDTAQ = 'IPA_COM_' + DF_Pds.REMCOMCH; // Dodatecne pole                        01       000000     014300
-   144          write   DFTANDEMP DF_Pds;   // Zapisu zaznam do podsouboru z dat. struktury             01       000000     014400
-   145          read(n) PFTANDEM PF_Pds;    // Ctu dalsi zaznam podsouboru do dat. struktury            01       000000     014500
-   146       enddo ;                                                                                   E01       000000     014600
-   147                                                                                                           000000     014700
-   148       pocet = idx;    // Zapamatuji si pocet zaznamu podsouboru                                           000000     014800
-   149       DF_Hds.KURZOR = 1;     // Nastavim cislo 1. zaznamu pro pristi zobrazeni                            000000     014900
-   150   endsr;                                                                                                  000000     015000
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             TANDEM_IP/RGTANDEM       PASSIST2   03/11/19 17:15:41        Page      5
-
-Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
-Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
-   151   //  -------------------------------                                                                     000000     015100
-   152   //  Zobrazeni podsouboru                                                                                000000     015200
-   153   //  -------------------------------                                                                     000000     015300
-   154   begsr   zobrPods;                                                                                       000000     015400
-   155       if   pocet > 0;   // Je-li v podsouboru aspon 1 zaznam, povolim zobrazeni stranky         B01       000000     015500
-   156          DF_Hds.in51 = *on;                                                                      01       000000     015600
-   157       else;             // jinak to zakazu                                                      X01       000000     015700
-   158          DF_Hds.in51 = *off;                                                                     01       000000     015800
-   159       endif;                                                                                    E01       000000     015900
-   160       write   DFTANDEMF;         // Zobrazim navod na pouziti funkcnich klaves                            000000     016000
-   161       eval-corr DF_Hds = PF_Hds; // Data z PF pro obrazovku                                               000000     016100
-   162       exfmt   DFTANDEMH  DF_Hds; // Zobrazim zahlavi a stranku a cekam na data z klavesnice               000000     016200
-   163   endsr ;                                                                                                 000000     016300
-   164   //  -------------------------------                                                                     000000     016400
-   165   //  Zapis noveho zaznamu do souboru                                                                     000000     016500
-   166   //  -------------------------------                                                                     000000     016600
-   167   begsr   novyZaznam;                                                                                     000000     016700
-   168       clear DF_Pds;                     // vycistim data pro obrazovku                                    000000     016800
-   169       if pocet > 0;  // neprazdny podsoubor?                                                    B01       000000     016900
-   170           DF_Pds.KEYFIELD = pocet + 1;      // dosadim zvyseny klic pro obrazovku                01       000000     017000
-   171       else;                                                                                     X01       000000     017100
-   172           DF_Pds.KEYFIELD = 1;              // dosadim novy klic 1, je-li podsoubor prazdny      01       000000     017200
-   173       endif;                                                                                    E01       000000     017300
-   174       eval-corr PF_Pds = DF_Pds;         // Data z obrazovky pro fyzicky soubor                           000000     017400
-   175       write(e)  PFTANDEMR  PF_Pds;       // Zapisu novy zaznam do PF na konec                             000000     017500
-   176   endsr ;                                                                                                 000000     017600
-   177   //  -------------------------------                                                                     000000     017700
-   178   //  Smazani zaznamu ze souboru                                                                          000000     017800
-   179   //  -------------------------------                                                                     000000     017900
-   180   begsr   smazatZaznam;                                                                                   000000     018000
-   181       if pocet > 0;                                                                             B01       000000     018100
-   182           // Prectu zaznam podsouboru podle poradoveho cisla prave zpracovavaneho zaznamu                 000000     018200
-   183           chain   DF_Hds.SFKUR0   DFTANDEMP; // najdu zaznam podsouboru podle cisla              01       000000     018300
-   184           delete  KEYFIELD  PFTANDEM;        // smazu zaznam PF                                  01       000000     018400
-   185       endif;                                                                                    E01       000000     018500
-   186   endsr;                                                                                                  000000     018600
-   187                                                                                                           000000     018700
+    32   ISOtime = %timestamp(*SYS: 12);                                                                         000000     003200
+    33   current_time = %char(ISOtime);                                                                          000000     003300
+    34   return    %addr(current_time);                                                                          000000     003400
+    35                                                                                                           000000     003500
+    36   end-proc GETTIME;                                                                                       000000     003600
+*RNF1514 30     18 001800  A procedure cannot be exported when the external name is
+                           the same as the main procedure.
 
        * * * * *   E N D   O F   S O U R C E   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             TANDEM_IP/RGTANDEM       PASSIST2   03/11/19 17:15:41        Page      6
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/GETTIME           PASSIST2   04/08/19 16:29:35        Page      3
 
           A d d i t i o n a l   D i a g n o s t i c   M e s s a g e s
 
  Msg id  Sv Number Seq     Message text
-*RNF7030 30     85 008500  The name or indicator ACOMPRS is not defined.
-*RNF7030 30     88 008800  The name or indicator BCOMPRS is not defined.
-*RNF7030 30     91 009100  The name or indicator CCOMPRS is not defined.
-*RNF7030 30     94 009400  The name or indicator DCOMPRS is not defined.
-*RNF7030 30     34 003400  The name or indicator DF_HDS is not defined.
-*RNF7030 30     36 003600  The name or indicator DF_PDS is not defined.
-*RNF7089 00     22 002200  RPG provides Separate-Indicator area for file DFTANDEM.
-*RNF7030 30    160 016000  The name or indicator DFTANDEMF is not defined.
-*RNF7030 30     34 003400  The name or indicator DFTANDEMH is not defined.
-*RNF7030 30     36 003600  The name or indicator DFTANDEMP is not defined.
-*RNF7030 30     97 009700  The name or indicator ECOMPRS is not defined.
-*RNF7030 30    100 010000  The name or indicator FCOMPRS is not defined.
-*RNF7030 30     54 005400  The name or indicator IN03 is not defined.
-*RNF7030 30     60 006000  The name or indicator IN05 is not defined.
-*RNF7030 30     62 006200  The name or indicator IN06 is not defined.
-*RNF7030 30     66 006600  The name or indicator IN12 is not defined.
-*RNF7030 30     68 006800  The name or indicator IN18 is not defined.
-*RNF7030 30     77 007700  The name or indicator IN51 is not defined.
-*RNF7030 30    132 013200  The name or indicator IN56 is not defined.
-*RNF7030 30     30 003000  The name or indicator KEYFIELD is not defined.
-*RNF7030 30     81 008100  The name or indicator KEYFIELD is not defined.
-*RNF7030 30     52 005200  The name or indicator KURZOR is not defined.
-*RNF7030 30     33 003300  The name or indicator PF_HDS is not defined.
-*RNF7030 30     35 003500  The name or indicator PF_PDS is not defined.
-*RNF7030 30     33 003300  The name or indicator PFTANDEMHR is not defined.
-*RNF7030 30     35 003500  The name or indicator PFTANDEMR is not defined.
-*RNF7030 30     30 003000  The name or indicator POMOCNY... is not defined.
-*RNF7030 30    105 010500  The name or indicator REMCOMCH is not defined.
-*RNF7030 30    105 010500  The name or indicator REMDTAQ is not defined.
-*RNF7030 30     56 005600  The name or indicator SFKUR0 is not defined.
-*RNF7503 30     43 004300  Expression contains an operand that is not defined.
-*RNF7503 30     44 004400  Expression contains an operand that is not defined.
-*RNF7503 30     47 004700  Expression contains an operand that is not defined.
-*RNF7503 30     48 004800  Expression contains an operand that is not defined.
-*RNF7503 30     52 005200  Expression contains an operand that is not defined.
-*RNF7503 30     54 005400  Expression contains an operand that is not defined.
-*RNF7503 30     56 005600  Expression contains an operand that is not defined.
-*RNF7503 30     57 005700  Expression contains an operand that is not defined.
-*RNF7503 30     60 006000  Expression contains an operand that is not defined.
-*RNF7503 30     62 006200  Expression contains an operand that is not defined.
-*RNF7503 30     66 006600  Expression contains an operand that is not defined.
-*RNF7503 30     68 006800  Expression contains an operand that is not defined.
-*RNF7503 30     71 007100  Expression contains an operand that is not defined.
-*RNF7503 30     77 007700  Expression contains an operand that is not defined.
-*RNF7503 30     78 007800  Expression contains an operand that is not defined.
-*RNF7503 30     81 008100  Expression contains an operand that is not defined.
-*RNF7503 30     82 008200  Expression contains an operand that is not defined.
-*RNF7503 30     85 008500  Expression contains an operand that is not defined.
-*RNF7503 30     86 008600  Expression contains an operand that is not defined.
-*RNF7503 30     88 008800  Expression contains an operand that is not defined.
-*RNF7503 30     89 008900  Expression contains an operand that is not defined.
-*RNF7503 30     91 009100  Expression contains an operand that is not defined.
-*RNF7503 30     92 009200  Expression contains an operand that is not defined.
-*RNF7503 30     94 009400  Expression contains an operand that is not defined.
-*RNF7503 30     95 009500  Expression contains an operand that is not defined.
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             TANDEM_IP/RGTANDEM       PASSIST2   03/11/19 17:15:41        Page      7
-
-*RNF7503 30     97 009700  Expression contains an operand that is not defined.
-*RNF7503 30     98 009800  Expression contains an operand that is not defined.
-*RNF7503 30    100 010000  Expression contains an operand that is not defined.
-*RNF7503 30    101 010100  Expression contains an operand that is not defined.
-*RNF7503 30    104 010400  Expression contains an operand that is not defined.
-*RNF7503 30    105 010500  Expression contains an operand that is not defined.
-*RNF7503 30    106 010600  Expression contains an operand that is not defined.
-*RNF7503 30    107 010700  Expression contains an operand that is not defined.
-*RNF7503 30    113 011300  Expression contains an operand that is not defined.
-*RNF7503 30    114 011400  Expression contains an operand that is not defined.
-*RNF7503 30    115 011500  Expression contains an operand that is not defined.
-*RNF7503 30    116 011600  Expression contains an operand that is not defined.
-*RNF7503 30    132 013200  Expression contains an operand that is not defined.
-*RNF7503 30    133 013300  Expression contains an operand that is not defined.
-*RNF7503 30    134 013400  Expression contains an operand that is not defined.
-*RNF7503 30    137 013700  Expression contains an operand that is not defined.
-*RNF7503 30    138 013800  Expression contains an operand that is not defined.
-*RNF7503 30    142 014200  Expression contains an operand that is not defined.
-*RNF7503 30    143 014300  Expression contains an operand that is not defined.
-*RNF7503 30    144 014400  Expression contains an operand that is not defined.
-*RNF7503 30    145 014500  Expression contains an operand that is not defined.
-*RNF7503 30    149 014900  Expression contains an operand that is not defined.
-*RNF7503 30    156 015600  Expression contains an operand that is not defined.
-*RNF7503 30    158 015800  Expression contains an operand that is not defined.
-*RNF7503 30    160 016000  Expression contains an operand that is not defined.
-*RNF7503 30    161 016100  Expression contains an operand that is not defined.
-*RNF7503 30    162 016200  Expression contains an operand that is not defined.
-*RNF7503 30    168 016800  Expression contains an operand that is not defined.
-*RNF7503 30    170 017000  Expression contains an operand that is not defined.
-*RNF7503 30    172 017200  Expression contains an operand that is not defined.
-*RNF7503 30    174 017400  Expression contains an operand that is not defined.
-*RNF7503 30    175 017500  Expression contains an operand that is not defined.
-*RNF7503 30    183 018300  Expression contains an operand that is not defined.
-*RNF7503 30    184 018400  Expression contains an operand that is not defined.
+*RNF7023 40      0         The Compiler cannot determine how the program can end.
 
  * * * * *   E N D   O F   A D D I T I O N A L   D I A G N O S T I C   M E S S A G E S   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             TANDEM_IP/RGTANDEM       PASSIST2   03/11/19 17:15:41        Page      8
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/GETTIME           PASSIST2   04/08/19 16:29:35        Page      4
 
                           C r o s s   R e f e r e n c e
 
@@ -369,62 +114,26 @@ Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+...
 
          File              Device             References (D=Defined)
            Record
-         DFTANDEM          WORKSTN                22D
-         PFTANDEM          DISK                   19D     81     137     138
-                                                 145     184
-         PFTANDEMH         DISK                   16D     43      44     113
-                                                 114
+
+         No references in the source.
 
       Global Field References:
 
          Field             Attributes         References (D=Defined M=Modified)
-         *INLR             N(1)                  121M
-*RNF7030 DF_HDS            **UNDEF**              34D     52M     54      56
-                                                  57M     57      60      62
-                                                  66      68      71M     77
-                                                 115     132M    133     134M
-                                                 149M    156M    158M    161M
-                                                 162M    183
-*RNF7030 DF_PDS            **UNDEF**              36D     78M     81      82
-                                                  85      85      86M     88
-                                                  88      89M     91      91
-                                                  92M     94      94      95M
-                                                  97      97      98M    100
-                                                 100     101M    105M    105
-                                                 106     107M    142M    143M
-                                                 143     144     168M    170M
-                                                 172M    174
-*RNF7030 DFTANDEMF         **UNDEF**             160
-*RNF7030 DFTANDEMH         **UNDEF**              34     133     162
-*RNF7030 DFTANDEMP         **UNDEF**              36      78     106     107
-                                                 144     183
-         IDX               I(10,0)                29D    136M    141M    148
-*RNF7030 KEYFIELD          **UNDEF**              30     184
-         NOVYZAZNAM        BEGSR                  63     167D
-*RNF7030 PF_HDS            **UNDEF**              33D     44M     47M     48
-                                                 114M    115M    116     161
-*RNF7030 PF_PDS            **UNDEF**              35D     81M     82M    104
-                                                 138M    142     145M    174M
-                                                 175
-*RNF7030 PFTANDEMHR        **UNDEF**              33      48     116
-*RNF7030 PFTANDEMR         **UNDEF**              35     104     175
-         PLNITPODS         BEGSR                  51      61      64      70
-                                                 130D
-         POCET             I(10,0)                28D    148M    155     169
-                                                 170     181
-*RNF7030 POMOCNYKLIC       **UNDEF**              30D
-         SMAZATZAZNAM      BEGSR                  69     180D
-         ZOBRPODS          BEGSR                  55     154D
+         GETTIME           *(16)                  18      36
+                           PROTOTYPE
+      Field References for subprocedure GETTIME
+
+         Field             Attributes         References (D=Defined M=Modified)
+         CURRENT_TIME      A(32)                  26D     33M     34
+         ISOTIME           Z(32)                  25D     32M     33
 
       Indicator References:
 
          Indicator                            References (D=Defined M=Modified)
-         LR                                      121M
 
        * * * * *   E N D   O F   C R O S S   R E F E R E N C E   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             TANDEM_IP/RGTANDEM       PASSIST2   03/11/19 17:15:41        Page      9
-
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             TANDEM_IP/RGTANDEM       PASSIST2   03/11/19 17:15:41        Page     10
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/GETTIME           PASSIST2   04/08/19 16:29:35        Page      5
 
                       E x t e r n a l   R e f e r e n c e s
 
@@ -441,38 +150,39 @@ Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+...
          No references in the source.
 
    * * * * *   E N D   O F   E X T E R N A L   R E F E R E N C E S   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             TANDEM_IP/RGTANDEM       PASSIST2   03/11/19 17:15:41        Page     11
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/GETTIME           PASSIST2   04/08/19 16:29:35        Page      6
 
                           M e s s a g e   S u m m a r y
 
  Msg id  Sv Number Message text
-*RNF7089 00      1 RPG provides Separate-Indicator area for file.
-*RNF7030 30     29 The name or indicator is not defined.
-*RNF7503 30     59 Expression contains an operand that is not defined.
-*RNF2120 40      3 External description not found for file specified as
-                   externally described; file ignored.
+*RNF1304 20      1 The NOMAIN keyword is not valid when the CRTBNDRPG command is
+                   used to create a program.
+*RNF1520 20      1 The procedure cannot be defined with DFTACTGRP(*YES).
+*RNF1514 30      1 A procedure cannot be exported when the external name is the
+                   same as the main procedure.
+*RNF7023 40      1 The Compiler cannot determine how the program can end.
 
        * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             TANDEM_IP/RGTANDEM       PASSIST2   03/11/19 17:15:41        Page     12
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/GETTIME           PASSIST2   04/08/19 16:29:35        Page      7
 
                             F i n a l   S u m m a r y
 
   Message Totals:
 
-    Information  (00) . . . . . . . :        1
+    Information  (00) . . . . . . . :        0
     Warning      (10) . . . . . . . :        0
-    Error        (20) . . . . . . . :        0
-    Severe Error (30+)  . . . . . . :       91
+    Error        (20) . . . . . . . :        2
+    Severe Error (30+)  . . . . . . :        2
     ---------------------------------  -------
-    Total . . . . . . . . . . . . . :       92
+    Total . . . . . . . . . . . . . :        4
 
 
   Source Totals:
 
-    Records . . . . . . . . . . . . :      187
-    Specifications  . . . . . . . . :      116
+    Records . . . . . . . . . . . . :       36
+    Specifications  . . . . . . . . :        8
     Data records  . . . . . . . . . :        0
-    Comments  . . . . . . . . . . . :       48
+    Comments  . . . . . . . . . . . :       18
 
          * * * * *   E N D   O F   F I N A L   S U M M A R Y   * * * * *
 Compilation stopped. Severity 40 errors found in program.

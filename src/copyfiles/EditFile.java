@@ -1756,9 +1756,28 @@ public final class EditFile extends JFrame {
             }
             exc.printStackTrace();
             row = "Error: 3 Data cannot be written to the source member  " + libraryName
-                    + "/" + fileName + "(" + memberName + ")  -  " + exc.toString();
+                    + "/" + fileName + "(" + memberName + ")  -  " + exc.toString() + ". Trying to connect again.";
+            System.out.println(row);
             mainWindow.msgVector.add(row);
             mainWindow.showMessages();
+                // Remove message scroll listener (cancel scrolling to the last message)
+                mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
+                // Try to reconnect server - FILE and RECORDACCESS services
+                try {
+                    remoteServer = new AS400(mainWindow.hostTextField.getText(), mainWindow.userNameTextField.getText());
+                    remoteServer.connectService(AS400.FILE);
+                    remoteServer.connectService(AS400.RECORDACCESS);
+                    System.out.println("Info 3: A new connection to the server was obtained.");
+                    row = "Info 3: A new connection to the server was obtained.";
+                    mainWindow.msgVector.add(row);
+                    mainWindow.showMessages(noNodes);
+                    return "";
+                } catch (Exception ex) {
+                    row = "Error 3: Getting a new connection to the server." + ex.toString();
+                    mainWindow.msgVector.add(row);
+                    mainWindow.showMessages(noNodes);
+                    exc.printStackTrace();
+                }
             return "ERROR"; // Must not continue in order not to lock an object
         }
     }

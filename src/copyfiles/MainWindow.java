@@ -1879,7 +1879,7 @@ public class MainWindow extends JFrame {
     }
 
     /**
-     *   Getting a new connection to the remote server
+     * Getting a new connection to the remote server
      */
     protected boolean connectReconnect() {
 
@@ -1908,29 +1908,30 @@ public class MainWindow extends JFrame {
         // ======================================== Connetion to the server
         //
 
-        // Get connection to the IBM i SERVER.
+        // Introductory message - waiting for the server.
+        row = "Wait: Connecting to server  " + properties.getProperty("HOST") + " . . .";
+        msgVector.add(row);
+        // Reload LEFT side. Do not use Right side! It would enter a loop.
+        showMessages(noNodes);
+
+        // Create AS400 object for IBM i SERVER.
         // The third parameter (password) should NOT be specified. The user must sign on.
         remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
-        // The following statement can replace the preceding one when debugging in order to better comfort.
+        // The following statement can replace the preceding one when debugging for better comfort.
         // !!!!remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText(), "......");
-        // Connect FILE service of the IBM i server.
+
+        // Set socket different properties 
+        SocketProperties socketProperties = new SocketProperties();
+        socketProperties.setLoginTimeout(0); // Login timeout - no limit
+        socketProperties.setSoTimeout(0);    // Receive timeout - no limit
+        socketProperties.setKeepAlive(true); // Set keep alive
+        remoteServer.setSocketProperties(socketProperties);
+
         try {
-            // Introductory message - waiting for the server.
-            row = "Wait: Connecting to server  " + properties.getProperty("HOST") + " . . .";
-            msgVector.add(row);
-            // Reload LEFT side. Do not use Right side! It would enter a loop.
-            showMessages(noNodes);
-
-            // Set socket properties 
-            SocketProperties socketProperties = new SocketProperties();
-            socketProperties.setLoginTimeout(0); // Login timeout - no limit
-            socketProperties.setSoTimeout(0);    // Receive timeout - no limit
-            socketProperties.setKeepAlive(true); // Set keep alive
-            remoteServer.setSocketProperties(socketProperties);
-
-            // Connect FILE service beforehand
+            // Connect FILE service in advance
             remoteServer.connectService(AS400.FILE);
 
+            // Obtain and show he system value QCCSID
             SystemValue sysVal = new SystemValue(remoteServer, "QCCSID");
             row = "Info: System value QCCSID is " + sysVal.getValue() + ".";
             msgVector.add(row);
@@ -3027,8 +3028,8 @@ public class MainWindow extends JFrame {
                 }
             } catch (Exception exc) {
                 exc.printStackTrace();
-                System.out.println("Error: Connection to the server lost. - " + exc.toString() + ". Trying to connect again.");
                 row = "Error: Connection to the server lost. - " + exc.toString() + ". Trying to connect again.";
+                System.out.println(row);
                 msgVector.add(row);
                 showMessages(noNodes);
                 // Remove message scroll listener (cancel scrolling to the last message)
@@ -3038,7 +3039,7 @@ public class MainWindow extends JFrame {
                     remoteServer = new AS400(hostTextField.getText(), userNameTextField.getText());
                     remoteServer.connectService(AS400.FILE);
                     remoteServer.connectService(AS400.RECORDACCESS);
-                    System.out.println("A new connection to the server was obtained.");
+                    System.out.println("Info: A new connection to the server was obtained.");
                     row = "Info: A new connection to the server was obtained.";
                     msgVector.add(row);
                     showMessages(noNodes);
