@@ -374,6 +374,8 @@ public class SearchWindow extends JFrame {
             pattern = pattern.replace("(", "\\(");
             pattern = pattern.replace(")", "\\)");
             pattern = pattern.replace("`", "\\`");
+            pattern = pattern.replace("%", "\\%");
+            
             int flags = matchCaseButton.getSelectedIcon().equals(matchCaseIconDark) ? 0
                     : Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
             return Pattern.compile(pattern, flags);

@@ -518,12 +518,15 @@ public class WrkSplF extends JFrame {
                 mainWindow.scrollMessagePane.getVerticalScrollBar().removeAdjustmentListener(mainWindow.messageScrollPaneAdjustmentListenerMax);
                 return;
             }
-            // Create the spool table
+            // Create a new spool table
             spoolTable = createSpoolTable();
-            // Refresh spool table in the window for the current user name
+            // Refresh the spool table in the window for the current user name
             refreshSpoolTable(userPar);
 
             scrollPane.getVerticalScrollBar().removeAdjustmentListener(scrollPaneAdjustmentListenerMax);
+
+            // Register mouse listener to the new table
+            spoolTable.addMouseListener(spoolTableMouseListener);
         });
 
 

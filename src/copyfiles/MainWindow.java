@@ -1909,7 +1909,7 @@ public class MainWindow extends JFrame {
         //
 
         // Introductory message - waiting for the server.
-        row = "Wait: Connecting to server  " + properties.getProperty("HOST") + " . . .";
+        row = "Wait: Connecting to server  " + hostTextField.getText() + " . . .";
         msgVector.add(row);
         // Reload LEFT side. Do not use Right side! It would enter a loop.
         showMessages(noNodes);
@@ -1939,7 +1939,7 @@ public class MainWindow extends JFrame {
             showMessages(noNodes);
         } catch (Exception exc) {
             exc.printStackTrace();
-            row = "Error: Connection to server  " + properties.getProperty("HOST") + "  failed.  -  " + exc.toString();
+            row = "Error: Connection to server  " + hostTextField.getText() + "  failed.  -  " + exc.toString();
             msgVector.add(row);
             showMessages(noNodes);
             // Change cursor to default
@@ -1959,7 +1959,7 @@ public class MainWindow extends JFrame {
         // *****
 
         // Show completion message when connection to IBM i server connected.
-        row = "Comp: Server IBM i  " + properties.getProperty("HOST") + "  has been connected to user  " + remoteServer.getUserId()
+        row = "Comp: Server IBM i  " + hostTextField.getText() + "  has been connected to user  " + remoteServer.getUserId()
                 + "  and is retrieving the Integrated File System.";
         msgVector.add(row);
         showMessages(noNodes);

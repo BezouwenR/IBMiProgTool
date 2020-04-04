@@ -18,9 +18,11 @@ public class RenameIfsObject {
 
     /**
      Constructor.
-
-     @param mainWindow
-     @param pcFileSep
+     
+     @parm remoteServer
+     @parm mainWindow
+     @parm currentX
+     @parm currentY
      */
     RenameIfsObject(AS400 remoteServer, MainWindow mainWindow, int currentX, int currentY) {
         this.remoteServer = remoteServer;

@@ -1,17 +1,17 @@
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/GETTIME           PASSIST2   04/08/19 16:29:35        Page      1
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/A_RGDIFF          PASSIST3   04/01/20 15:27:03        Page      1
 
   Command  . . . . . . . . . . . . :   CRTBNDRPG
     Issued by  . . . . . . . . . . :     VZUPKA
-  Program  . . . . . . . . . . . . :   GETTIME
+  Program  . . . . . . . . . . . . :   A_RGDIFF
     Library  . . . . . . . . . . . :     VZTOOL
   Text 'description' . . . . . . . :   *SRCMBRTXT
 
-  Source Member  . . . . . . . . . :   GETTIME
+  Source Member  . . . . . . . . . :   A_RGDIFF
   Source File  . . . . . . . . . . :   QRPGLESRC
     Library  . . . . . . . . . . . :     VZTOOL
     CCSID  . . . . . . . . . . . . :     870
-  Text 'description' . . . . . . . :
-  Last Change  . . . . . . . . . . :   01/09/19  17:37:14
+  Text 'description' . . . . . . . :   A_RGDIFF
+  Last Change  . . . . . . . . . . :   10/17/17  20:38:40
 
   Generation severity level  . . . :   10
   Default activation group . . . . :   *YES
@@ -40,73 +40,53 @@
   Generate program interface . . . :   *NO
   Include directory  . . . . . . . :
   Preprocessor options . . . . . . :   *NONE
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/GETTIME           PASSIST2   04/08/19 16:29:35        Page      2
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/A_RGDIFF          PASSIST3   04/01/20 15:27:03        Page      2
 
 Line   <---------------------- Source Specifications ----------------------------><---- Comments ----> Do  Page  Change Src Seq
 Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+...10 Num Line  Date   Id  Number
 
                           S o u r c e   L i s t i n g
 
-     1  //************************************************************************                               000000     000100
-     2  //                                                                                                       000000     000200
-     3  //  Datum: 2019-09-01                                                                                    000000     000300
-     4  //                                                                                                       000000     000400
-     5  //  Procedura GETTIME ziska cas ve formatu ISO, prevede jej do znakove                                   000000     000500
-     6  //  podoby a vrati pointer, ktery na nej ukazuje.                                                        000000     000600
-     7  //                                                                                                       000000     000700
-     8  //  Kompiluje se jako modul, tedy volbou 15, a pak se musi pripojit                                      000000     000800
-     9  //  ----------------------------------------                                                             000000     000900
-    10  //  k nekteremu hlavnimu programu.                                                                       000000     001000
-    11  //************************************************************************                               000000     001100
-    12                                                                                                           000000     001200
-    13   ctl-opt nomain;                                                                                         000000     001300
-======>          aaaaaa
-*RNF1304 20 a      001300  The NOMAIN keyword is not valid when the CRTBNDRPG command
-                           is used to create a program.
-    14                                                                                                           000000     001400
-    15  // Procedura GETTIME                                                                                     000000     001500
-    16  // =================                                                                                     000000     001600
-    17                                                                                                           000000     001700
 
 
-    18   dcl-proc GETTIME   export;                                                                              000000     001800
-======>           aaaaaaa
-*RNF1520 20 a      001800  The procedure cannot be defined with DFTACTGRP(*YES).
-    19                                                                                                           000000     001900
-    20  //  procedure interface                                                                                  000000     002000
+     1 d time2           s               z   inz(Z'2014-09-04-23.59.59.999999')                                  000000     000100
+     2 d time1           s               z   inz(Z'2014-09-04-00.00.00.000000')                                  000000     000200
+     3 d mseconds        s             20p 0                                                                     000000     000300
+     4 d msec            s              6p 0                                                                     000000     000400
+     5 d seconds         s             10p 0                                                                     000000     000500
+     6 d sec             s              2p 0                                                                     000000     000600
+     7 d minutes         s             10p 0                                                                     000000     000700
+     8 d min             s              2p 0                                                                     000000     000800
+     9 d hours           s              2p 0                                                                     000000     000900
+    10                                                                                                           000000     001000
+    11 d duration        s             15a                                                                       000000     001100
+    12  /free                                                                                                    000000     001200
+    13                                                                                                           000000     001300
 
 
-    21   dcl-pi *n          pointer;                                                                             000000     002100
-    22   end-pi;                                                                                                 000000     002200
-    23                                                                                                           000000     002300
-    24  //  local variables                                                                                      000000     002400
-    25   dcl-s ISOtime      timestamp(12);                                                                       000000     002500
-    26   dcl-s current_time      char(32) static;                                                                000000     002600
-    27                                                                                                           000000     002700
-    28  //  procedure body                                                                                       000000     002800
-    29  //  --------------                                                                                       000000     002900
-    30                                                                                                           000000     003000
-    31  //  get current time                                                                                     000000     003100
-
-
-    32   ISOtime = %timestamp(*SYS: 12);                                                                         000000     003200
-    33   current_time = %char(ISOtime);                                                                          000000     003300
-    34   return    %addr(current_time);                                                                          000000     003400
-    35                                                                                                           000000     003500
-    36   end-proc GETTIME;                                                                                       000000     003600
-*RNF1514 30     18 001800  A procedure cannot be exported when the external name is
-                           the same as the main procedure.
+    14   mseconds = %diff(time2: time1: *mseconds);                                                              000000     001400
+    15   seconds = %div(mseconds: 1000000);                                                                      000000     001500
+    16   msec    = %rem(mseconds: 1000000);                                                                      000000     001600
+    17   minutes = %div(seconds: 60);                                                                            000000     001700
+    18   sec     = %rem(seconds:60);                                                                             000000     001800
+    19   hours   = %div(minutes: 60);                                                                            000000     001900
+    20   min     = %rem(minutes: 60);                                                                            000000     002000
+    21                                                                                                           000000     002100
+    22   duration = %editc(hours: 'X') + '.' +                                                                   000000     002200
+    23              %editc(min: 'X') + '.' +                                                                     000000     002300
+    24              %editc(sec: 'X') + '.' +                                                                     000000     002400
+    25              %editc(msec: 'X');                                                                           000000     002500
+    26   return;                                                                                                 000000     002600
 
        * * * * *   E N D   O F   S O U R C E   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/GETTIME           PASSIST2   04/08/19 16:29:35        Page      3
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/A_RGDIFF          PASSIST3   04/01/20 15:27:03        Page      3
 
           A d d i t i o n a l   D i a g n o s t i c   M e s s a g e s
 
  Msg id  Sv Number Seq     Message text
-*RNF7023 40      0         The Compiler cannot determine how the program can end.
 
  * * * * *   E N D   O F   A D D I T I O N A L   D I A G N O S T I C   M E S S A G E S   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/GETTIME           PASSIST2   04/08/19 16:29:35        Page      4
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/A_RGDIFF          PASSIST3   04/01/20 15:27:03        Page      4
 
                           C r o s s   R e f e r e n c e
 
@@ -120,20 +100,23 @@ Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+...
       Global Field References:
 
          Field             Attributes         References (D=Defined M=Modified)
-         GETTIME           *(16)                  18      36
-                           PROTOTYPE
-      Field References for subprocedure GETTIME
-
-         Field             Attributes         References (D=Defined M=Modified)
-         CURRENT_TIME      A(32)                  26D     33M     34
-         ISOTIME           Z(32)                  25D     32M     33
+         DURATION          A(15)                  11D     22M
+         HOURS             P(2,0)                  9D     19M     22
+         MIN               P(2,0)                  8D     20M     23
+         MINUTES           P(10,0)                 7D     17M     19      20
+         MSEC              P(6,0)                  4D     16M     25
+         MSECONDS          P(20,0)                 3D     14M     15      16
+         SEC               P(2,0)                  6D     18M     24
+         SECONDS           P(10,0)                 5D     15M     17      18
+         TIME1             Z(26)                   2D     14
+         TIME2             Z(26)                   1D     14
 
       Indicator References:
 
          Indicator                            References (D=Defined M=Modified)
 
        * * * * *   E N D   O F   C R O S S   R E F E R E N C E   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/GETTIME           PASSIST2   04/08/19 16:29:35        Page      5
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/A_RGDIFF          PASSIST3   04/01/20 15:27:03        Page      5
 
                       E x t e r n a l   R e f e r e n c e s
 
@@ -150,20 +133,14 @@ Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+...
          No references in the source.
 
    * * * * *   E N D   O F   E X T E R N A L   R E F E R E N C E S   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/GETTIME           PASSIST2   04/08/19 16:29:35        Page      6
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/A_RGDIFF          PASSIST3   04/01/20 15:27:03        Page      6
 
                           M e s s a g e   S u m m a r y
 
  Msg id  Sv Number Message text
-*RNF1304 20      1 The NOMAIN keyword is not valid when the CRTBNDRPG command is
-                   used to create a program.
-*RNF1520 20      1 The procedure cannot be defined with DFTACTGRP(*YES).
-*RNF1514 30      1 A procedure cannot be exported when the external name is the
-                   same as the main procedure.
-*RNF7023 40      1 The Compiler cannot determine how the program can end.
 
        * * * * *   E N D   O F   M E S S A G E   S U M M A R Y   * * * * *
- 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/GETTIME           PASSIST2   04/08/19 16:29:35        Page      7
+ 5770WDS V7R3M0  160422 RN        IBM ILE RPG             VZTOOL/A_RGDIFF          PASSIST3   04/01/20 15:27:03        Page      7
 
                             F i n a l   S u m m a r y
 
@@ -171,19 +148,19 @@ Number ....1....+....2....+....3....+....4....+....5....+....6....+....7....+...
 
     Information  (00) . . . . . . . :        0
     Warning      (10) . . . . . . . :        0
-    Error        (20) . . . . . . . :        2
-    Severe Error (30+)  . . . . . . :        2
+    Error        (20) . . . . . . . :        0
+    Severe Error (30+)  . . . . . . :        0
     ---------------------------------  -------
-    Total . . . . . . . . . . . . . :        4
+    Total . . . . . . . . . . . . . :        0
 
 
   Source Totals:
 
-    Records . . . . . . . . . . . . :       36
-    Specifications  . . . . . . . . :        8
+    Records . . . . . . . . . . . . :       26
+    Specifications  . . . . . . . . :       22
     Data records  . . . . . . . . . :        0
-    Comments  . . . . . . . . . . . :       18
+    Comments  . . . . . . . . . . . :        0
 
          * * * * *   E N D   O F   F I N A L   S U M M A R Y   * * * * *
-Compilation stopped. Severity 40 errors found in program.
+Program A_RGDIFF placed in library VZTOOL. 00 highest severity. Created on 04/01/20 at 15:27:03.
           * * * * *   E N D   O F   C O M P I L A T I O N   * * * * *

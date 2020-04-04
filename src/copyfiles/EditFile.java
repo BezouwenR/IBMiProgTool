@@ -609,9 +609,9 @@ public final class EditFile extends JFrame {
         // Set selection mode as the button text
         selectionModeButton.setText(selectionMode);
 
-        compileButton.setPreferredSize(new Dimension(80, 20));
-        compileButton.setMinimumSize(new Dimension(80, 20));
-        compileButton.setMaximumSize(new Dimension(80, 20));
+        compileButton.setPreferredSize(new Dimension(90, 20));
+        compileButton.setMinimumSize(new Dimension(90, 20));
+        compileButton.setMaximumSize(new Dimension(90, 20));
         compileButton.setFont(compileButton.getFont().deriveFont(Font.BOLD, 12));
         compileButton.setToolTipText("Open window with compile settings.");
 
@@ -2211,6 +2211,7 @@ public final class EditFile extends JFrame {
                 stmtsBeg.add("ORDER");
                 stmtsBeg.add("ORDER");
                 stmtsBeg.add("JOIN");
+                stmtsBeg.add("USING");
                 stmtsBeg.add("INNER");
                 stmtsBeg.add("LEFT");
                 stmtsBeg.add("RIGHT");
@@ -2578,6 +2579,7 @@ public final class EditFile extends JFrame {
                 stmtsBeg.add("CONNECT");
                 stmtsBeg.add("FETCH");
                 stmtsBeg.add("JOIN");
+                stmtsBeg.add("USING");
                 stmtsBeg.add("INNER");
                 stmtsBeg.add("LEFT");
                 stmtsBeg.add("RIGHT");
@@ -2834,7 +2836,10 @@ public final class EditFile extends JFrame {
         } else if (beg && blockStmt.equals("JOIN")) {
             // in SQL
             blockPainter = blockGreenLighter;
-        } else if (beg && blockStmt.equals("INNER")) {
+        } else if (beg && blockStmt.equals("USING")) {
+            // in SQL
+            blockPainter = blockGreenLighter;
+        }else if (beg && blockStmt.equals("INNER")) {
             // in SQL
             blockPainter = blockGreenLighter;
         } else if (beg && blockStmt.equals("LEFT")) {

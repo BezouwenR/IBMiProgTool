@@ -157,7 +157,7 @@ public class Compile extends JFrame {
     ActionListener librariesComboBoxListener;
 
     JLabel libraryPatternLabel = new JLabel("Library pattern:");
-    JTextField libraryPatternTextField;
+    JTextField libraryPatternTextField = new JTextField();
     String libraryPattern;
     String libraryField;
     String libraryWildCard;
@@ -426,9 +426,7 @@ public class Compile extends JFrame {
                         .addGap(10)
                         .addComponent(changeLibraryListButton)));
 
-        libraryPatternTextField = new JTextField();
         libraryPatternTextField.setToolTipText("Library search pattern. Can use * and ? wild cards.");
-        libraryPattern = ((String) properties.get("LIBRARY_PATTERN")).toUpperCase();
         libraryPatternTextField.setText(libraryPattern);
         libraryPatternTextField.setPreferredSize(new Dimension(100, 20));
         libraryPatternTextField.setMinimumSize(new Dimension(100, 20));
@@ -602,7 +600,7 @@ public class Compile extends JFrame {
             libraryPattern = libraryPatternTextField.getText().toUpperCase();
             libraryPatternTextField.setText(libraryPattern);
             String[] librariesArr = getListOfLibraries(libraryPattern);
-            // Disable Libraries combo box listener so tat writing in the box list does not invoke its listener.
+            // Disable Libraries combo box listener so tHat writing in the box list does not invoke its listener.
             //librariesComboBox.removeActionListener(librariesComboBoxListener);
             librariesComboBox.removeAllItems();
             for (int idx = 0; idx < librariesArr.length; idx++) {
@@ -1624,6 +1622,7 @@ public class Compile extends JFrame {
         compileWindowX = new Integer(compileWindowXString);
         compileWindowY = new Integer(compileWindowYString);
         libraryPattern = properties.getProperty("LIBRARY_PATTERN");
+        libraryPatternTextField.setText(libraryPattern);
         sourceTypePar = properties.getProperty("SOURCE_TYPE");
         ibmCcsid = properties.getProperty("IBM_CCSID");
         try {

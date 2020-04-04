@@ -56,6 +56,11 @@ Version 03.04
 
 - Editor now enables color hihglighting SQL statements - in standalone script files or in programs (preprocessor EXEC SQL).
 
+Version 03.05 April 2020
+
+- Several functions were improved.
+- Documentation was improved.
+
 - - - - - - - - - - 
 
 Tento projekt se neinstaluje, je okamžitě k použití jako Java aplikace v adresáři projektu. Aplikace vyžaduje Javu SE 8 instalovanou v PC.
@@ -107,3 +112,9 @@ Version 03.03
 Version 03.04
 
 - Editor nyní umožňuje barevné zvýraznění SQL příkazů - v samostatných souborech skriptů nebo v programech (EXEC SQL předkompilátoru).
+
+Version 03.05 duben 2020
+
+- Byly zlepšeny některé funkce.
+- Byla zlepšena dokumentace.
+
